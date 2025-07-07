@@ -5,7 +5,7 @@ import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Play, Pause, RotateCcw, Eye, ExternalLink } from "lucide-react"
+import { Play, Pause, RotateCcw, Eye } from "lucide-react"
 import { agvSimulation, warehouseLayout, type AGV } from "@/lib/agv-simulation"
 import AGVStatusModal from "./agv-status-modal"
 
@@ -16,7 +16,6 @@ export default function WarehouseSimulation() {
   const [selectedAGV, setSelectedAGV] = useState<string | null>(null)
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
-  const [showWebView, setShowWebView] = useState(true) // 웹뷰 표시 상태
 
   // 토스트 표시 함수
   const showToast = (message: string, type: "success" | "error" = "success") => {
@@ -32,8 +31,6 @@ export default function WarehouseSimulation() {
   }, [])
 
   useEffect(() => {
-    if (showWebView) return // 웹뷰 모드일 때는 캔버스 그리기 안함
-
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -46,7 +43,7 @@ export default function WarehouseSimulation() {
 
     drawWarehouse(ctx)
     drawAGVs(ctx)
-  }, [agvs, showWebView])
+  }, [agvs])
 
   const drawWarehouse = (ctx: CanvasRenderingContext2D) => {
     // 배경 그리기 - 더 밝은 회색으로 변경
@@ -248,17 +245,6 @@ export default function WarehouseSimulation() {
                 </div>
               </div>
 
-              {/* 웹뷰 토글 버튼 */}
-              <Button
-                onClick={() => setShowWebView(!showWebView)}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 bg-transparent"
-              >
-                <ExternalLink className="w-4 h-4" />
-                {showWebView ? "시뮬레이션 보기" : "웹뷰 보기"}
-              </Button>
-
               {/* 전체 AGV 상태 보기 버튼 */}
               <Button
                 onClick={() => setIsStatusModalOpen(true)}
@@ -270,103 +256,86 @@ export default function WarehouseSimulation() {
                 전체 AGV 상태
               </Button>
 
-              {/* 제어 버튼 - 웹뷰 모드일 때는 숨김 */}
-              {!showWebView && (
-                <div className="flex gap-1">
-                  {!isRunning ? (
-                    <Button onClick={handleStart} size="sm" className="flex items-center gap-1 text-xs px-2 py-1">
-                      <Play className="w-3 h-3" />
-                      시작
-                    </Button>
-                  ) : (
-                    <Button
-                      onClick={handleStop}
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1 bg-transparent text-xs px-2 py-1"
-                    >
-                      <Pause className="w-3 h-3" />
-                      정지
-                    </Button>
-                  )}
+              {/* 제어 버튼 */}
+              <div className="flex gap-1">
+                {!isRunning ? (
+                  <Button onClick={handleStart} size="sm" className="flex items-center gap-1 text-xs px-2 py-1">
+                    <Play className="w-3 h-3" />
+                    시작
+                  </Button>
+                ) : (
                   <Button
-                    onClick={handleReset}
+                    onClick={handleStop}
                     variant="outline"
                     size="sm"
                     className="flex items-center gap-1 bg-transparent text-xs px-2 py-1"
                   >
-                    <RotateCcw className="w-3 h-3" />
-                    리셋
+                    <Pause className="w-3 h-3" />
+                    정지
                   </Button>
-                </div>
-              )}
+                )}
+                <Button
+                  onClick={handleReset}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1 bg-transparent text-xs px-2 py-1"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  리셋
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
         <CardContent className="h-full pb-6 bg-white">
-          {showWebView ? (
-            // 웹뷰 모드
-            <div className="border rounded-lg overflow-hidden bg-white mb-4 h-full">
-              <iframe
-                src="https://2hyeoksang.github.io/Web_Build_Test/"
-                className="w-full h-full border-0"
-                title="AGV 시뮬레이션 웹뷰"
-                style={{ minHeight: "600px" }}
-              />
+          <div className="border rounded-lg overflow-hidden bg-white mb-4">
+            <canvas
+              ref={canvasRef}
+              onClick={handleCanvasClick}
+              className="cursor-crosshair w-full h-auto bg-white"
+              style={{ maxWidth: "100%", height: "auto" }}
+            />
+          </div>
+
+          <div className="flex justify-between items-start">
+            <div className="text-sm text-gray-600 space-y-1">
+              <p>• 점선: 이동 통로</p>
+              <p>• 갈색 사각형: 선반</p>
+              <p>• 컬러 영역: 창고 구역</p>
+              {selectedAGV && (
+                <p className="text-blue-600 font-medium">
+                  • {agvs.find((a) => a.id === selectedAGV)?.name} 선택됨 - 지도 클릭으로 이동 명령
+                </p>
+              )}
             </div>
-          ) : (
-            // 기존 캔버스 시뮬레이션 모드
-            <>
-              <div className="border rounded-lg overflow-hidden bg-white mb-4">
-                <canvas
-                  ref={canvasRef}
-                  onClick={handleCanvasClick}
-                  className="cursor-crosshair w-full h-auto bg-white"
-                  style={{ maxWidth: "100%", height: "auto" }}
-                />
-              </div>
 
-              <div className="flex justify-between items-start">
-                <div className="text-sm text-gray-600 space-y-1">
-                  <p>• 점선: 이동 통로</p>
-                  <p>• 갈색 사각형: 선반</p>
-                  <p>• 컬러 영역: 창고 구역</p>
-                  {selectedAGV && (
-                    <p className="text-blue-600 font-medium">
-                      • {agvs.find((a) => a.id === selectedAGV)?.name} 선택됨 - 지도 클릭으로 이동 명령
-                    </p>
-                  )}
+            {/* 상태 범례 */}
+            <div className="text-sm">
+              <div className="font-medium text-gray-700 mb-2">상태 범례</div>
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500" />
+                  <span>대기</span>
                 </div>
-
-                {/* 상태 범례 */}
-                <div className="text-sm">
-                  <div className="font-medium text-gray-700 mb-2">상태 범례</div>
-                  <div className="space-y-1 text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-green-500" />
-                      <span>대기</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-blue-500" />
-                      <span>이동중</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-orange-500" />
-                      <span>적재중</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500" />
-                      <span>하역중</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-purple-500" />
-                      <span>충전중</span>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500" />
+                  <span>이동중</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-orange-500" />
+                  <span>적재중</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500" />
+                  <span>하역중</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-purple-500" />
+                  <span>충전중</span>
                 </div>
               </div>
-            </>
-          )}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
