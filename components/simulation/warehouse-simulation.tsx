@@ -215,8 +215,8 @@ export default function WarehouseSimulation() {
   }
 
   return (
-    <div className="h-full">
-      <Card className="h-full">
+    <div className="h-full flex flex-col">
+      <Card className="flex-1 min-h-0">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>AGV 현황</CardTitle>
@@ -287,51 +287,55 @@ export default function WarehouseSimulation() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="h-full pb-6">
-          <div className="border rounded-lg overflow-hidden bg-white mb-4">
-            <canvas
-              ref={canvasRef}
-              onClick={handleCanvasClick}
-              className="cursor-crosshair w-full h-auto"
-              style={{ maxWidth: "100%", height: "auto" }}
-            />
-          </div>
-
-          <div className="flex justify-between items-start">
-            <div className="text-sm text-gray-600 space-y-1">
-              <p>• 점선: 이동 통로</p>
-              <p>• 갈색 사각형: 선반</p>
-              <p>• 컬러 영역: 창고 구역</p>
-              {selectedAGV && (
-                <p className="text-blue-600 font-medium">
-                  • {agvs.find((a) => a.id === selectedAGV)?.name} 선택됨 - 지도 클릭으로 이동 명령
-                </p>
-              )}
+        <CardContent className="flex-1 pb-6">
+          {/* 창고 레이아웃 - 전체 높이 사용 */}
+          <div className="h-full flex flex-col">
+            <div className="flex-1 border rounded-lg overflow-hidden bg-white shadow-sm">
+              <canvas
+                ref={canvasRef}
+                onClick={handleCanvasClick}
+                className="cursor-crosshair w-full h-full object-contain"
+                style={{ maxWidth: "100%", maxHeight: "100%" }}
+              />
             </div>
 
-            {/* 상태 범례 */}
-            <div className="text-sm">
-              <div className="font-medium text-gray-700 mb-2">상태 범례</div>
-              <div className="space-y-1 text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
-                  <span>대기</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-500" />
-                  <span>이동중</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-orange-500" />
-                  <span>적재중</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
-                  <span>하역중</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-purple-500" />
-                  <span>충전중</span>
+            {/* 하단 정보 및 범례 */}
+            <div className="flex justify-between items-start mt-4 pt-4 border-t">
+              <div className="text-sm text-gray-600 space-y-1">
+                <p>• 점선: 이동 통로</p>
+                <p>• 갈색 사각형: 선반</p>
+                <p>• 컬러 영역: 창고 구역</p>
+                {selectedAGV && (
+                  <p className="text-blue-600 font-medium">
+                    • {agvs.find((a) => a.id === selectedAGV)?.name} 선택됨 - 지도 클릭으로 이동 명령
+                  </p>
+                )}
+              </div>
+
+              {/* 상태 범례 */}
+              <div className="text-sm">
+                <div className="font-medium text-gray-700 mb-2">상태 범례</div>
+                <div className="space-y-1 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                    <span>대기</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-blue-500" />
+                    <span>이동중</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-orange-500" />
+                    <span>적재중</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                    <span>하역중</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-purple-500" />
+                    <span>충전중</span>
+                  </div>
                 </div>
               </div>
             </div>
