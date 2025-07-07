@@ -1445,50 +1445,66 @@ export default function WMSSystem() {
     setIsPanelCollapsed(true)
   }
 
-  const renderSidePanel = () => {
-    if (!sidePanel) return null
+const PANEL_WIDTH = 320; // 80 * 4
 
-    const panelContent =
-      sidePanel === "inbound" ? (
-        <InboundForm onSubmit={handleInboundSubmit} onClose={closeSidePanel} />
-      ) : (
-        <OutboundForm onSubmit={handleOutboundSubmit} onClose={closeSidePanel} />
-      )
 
-    return (
+
+
+const renderSidePanel = () => {
+  const panelContent =
+    sidePanel === "inbound" ? (
+      <InboundForm onSubmit={handleInboundSubmit} onClose={closeSidePanel} />
+    ) : (
+      <OutboundForm onSubmit={handleOutboundSubmit} onClose={closeSidePanel} />
+    );
+
+  return (
+    <>
+      {/* 사이드 패널 */}
       <div
-        className={`fixed top-0 right-0 h-full bg-white shadow-2xl border-l flex transition-all duration-300 z-50 ${
-          isPanelCollapsed ? "w-0" : "w-80"
-        }`}
+        className={`fixed top-0 right-0 h-full bg-white shadow-2xl border-l transition-all duration-300 z-40 overflow-hidden`}
+        style={{
+          width: isPanelCollapsed ? 0 : PANEL_WIDTH,
+        }}
       >
-        {/* 접기/펼치기 버튼 - 자연스럽게 연결 */}
-        <div className="relative">
-          <button
-            onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
-            className={`absolute top-1/2 transform -translate-y-1/2 w-8 h-16 bg-white border border-gray-300 shadow-lg hover:bg-gray-50 flex items-center justify-center transition-all duration-300 z-10 ${
-              isPanelCollapsed ? "-left-8 rounded-l-lg border-r-0" : "-left-4 rounded-l-full border-r-0"
-            }`}
-          >
-            {isPanelCollapsed ? (
-              <ChevronLeft className="w-4 h-4 text-gray-600" />
-            ) : (
-              <ChevronRight className="w-4 h-4 text-gray-600" />
-            )}
-          </button>
-        </div>
-
-        {/* 패널 내용 */}
         <div
-          className={`flex-1 flex flex-col transition-all duration-300 ${isPanelCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+          className={`h-full flex flex-col transition-opacity duration-300 ${
+            isPanelCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}
         >
           <div className="p-4 border-b bg-gray-50">
-            <h3 className="text-lg font-semibold">{sidePanel === "inbound" ? "입고 등록" : "출고 등록"}</h3>
+            <h3 className="text-lg font-semibold">
+              {sidePanel === "inbound" ? "입고 등록" : "출고 등록"}
+            </h3>
           </div>
           <div className="p-4 flex-1 overflow-y-auto">{panelContent}</div>
         </div>
       </div>
-    )
-  }
+
+      {/* 접기/펼치기 버튼 */}
+      <button
+        onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
+        style={{
+          position: "fixed",
+          top: "50%",
+          right: isPanelCollapsed ? 0 : PANEL_WIDTH,
+          transform: "translateY(-50%)",
+          zIndex: 50,
+          boxShadow: "none",
+          border: '1px solid #d1d5db',
+          background: "#fff",
+        }}
+        className="w-8 h-14 flex items-center justify-center rounded-l-full transition-all duration-300"
+      >
+        {isPanelCollapsed ? (
+          <ChevronLeft className="w-5 h-5 text-gray-600" />
+        ) : (
+          <ChevronRight className="w-5 h-5 text-gray-600" />
+        )}
+      </button>
+    </>
+  );
+};
 
   // Show loading spinner while checking authentication
   if (isLoading) {
