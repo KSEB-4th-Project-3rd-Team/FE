@@ -1452,53 +1452,36 @@ export default function WMSSystem() {
       )
 
     return (
-      <>
-        {/* 오버레이 배경 - 패널이 열려있을 때만 표시 */}
-        {!isPanelCollapsed && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-30 transition-opacity duration-300 z-40"
-            onClick={() => setIsPanelCollapsed(true)}
-          />
-        )}
-
-        {/* 사이드 패널 */}
-        <div
-          className={`fixed top-0 right-0 h-full bg-white shadow-2xl border-l flex transition-all duration-300 z-50 ${
-            isPanelCollapsed ? "w-0" : "w-80"
-          }`}
-        >
-          {/* 접기/펼치기 버튼 - 더 자연스러운 디자인 */}
-          <div className="relative flex items-center">
-            <button
-              onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
-              className={`absolute top-1/2 transform -translate-y-1/2 w-8 h-16 bg-white border border-gray-300 shadow-lg hover:bg-gray-50 hover:shadow-xl flex items-center justify-center transition-all duration-300 z-10 ${
-                isPanelCollapsed ? "-left-8 rounded-l-full border-r-0" : "-left-4 rounded-l-full border-r-0"
-              }`}
-              style={{
-                clipPath: isPanelCollapsed
-                  ? "polygon(0 0, 100% 0, 100% 100%, 0 100%)"
-                  : "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
-              }}
-            >
-              {isPanelCollapsed ? (
-                <ChevronLeft className="w-4 h-4 text-gray-600" />
-              ) : (
-                <ChevronRight className="w-4 h-4 text-gray-600" />
-              )}
-            </button>
-          </div>
-
-          {/* 패널 내용 */}
-          <div
-            className={`flex-1 flex flex-col overflow-hidden ${isPanelCollapsed ? "opacity-0" : "opacity-100"} transition-opacity duration-300`}
+      <div
+        className={`fixed top-0 right-0 h-full bg-white shadow-2xl border-l flex transition-all duration-300 z-50 ${
+          isPanelCollapsed ? "w-12" : "w-80"
+        }`}
+      >
+        {/* 접기/펼치기 버튼 - 반원 모양 */}
+        <div className="relative flex items-center">
+          <button
+            onClick={() => setIsPanelCollapsed(!isPanelCollapsed)}
+            className="absolute -left-6 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white border border-gray-300 rounded-l-full shadow-lg hover:bg-gray-50 flex items-center justify-center transition-colors z-10"
+            style={{
+              borderRight: "none",
+            }}
           >
-            <div className="p-4 border-b bg-gray-50 flex-shrink-0">
-              <h3 className="text-lg font-semibold">{sidePanel === "inbound" ? "입고 등록" : "출고 등록"}</h3>
-            </div>
-            <div className="p-4 flex-1 overflow-y-auto">{panelContent}</div>
-          </div>
+            {isPanelCollapsed ? (
+              <ChevronLeft className="w-4 h-4 text-gray-600" />
+            ) : (
+              <ChevronRight className="w-4 h-4 text-gray-600" />
+            )}
+          </button>
         </div>
-      </>
+
+        {/* 패널 내용 */}
+        <div className={`flex-1 flex flex-col ${isPanelCollapsed ? "hidden" : ""}`}>
+          <div className="p-4 border-b bg-gray-50">
+            <h3 className="text-lg font-semibold">{sidePanel === "inbound" ? "입고 등록" : "출고 등록"}</h3>
+          </div>
+          <div className="p-4 flex-1 overflow-y-auto">{panelContent}</div>
+        </div>
+      </div>
     )
   }
 
