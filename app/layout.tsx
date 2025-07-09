@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/images/tap-logo.png' },
-      new URL('/images/tap-logo.png', 'https://localhost:3000'),
+      { url: '/images/tap-logo.png' },
       { url: '/images/tap-logo.png', media: '(prefers-color-scheme: dark)' },
     ],
     apple: [
