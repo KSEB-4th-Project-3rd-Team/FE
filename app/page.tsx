@@ -16,6 +16,9 @@ import {
   Building2,
   Box,
   BarChart3,
+  Settings,
+  FileText,
+  Search,
 } from "lucide-react"
 import { authService, type User } from "@/lib/auth"
 import { scheduleService, type Schedule } from "@/lib/schedule"
@@ -33,6 +36,11 @@ import InventoryManagement from "@/components/inventory/inventory-management"
 import InOutHistory from "@/components/inout/inout-history"
 import InOutStatus from "@/components/inout/inout-status"
 import RealTimeDashboard from "@/components/dashboard/real-time-dashboard"
+import UserManagement from "@/components/admin/user-management"
+import SystemSettings from "@/components/admin/system-settings"
+import ReportsAnalytics from "@/components/reports/reports-analytics"
+import NotificationCenter from "@/components/notifications/notification-center"
+import GlobalSearch from "@/components/search/global-search"
 
 // 날짜를 YYYY-MM-DD 형식으로 변환하는 함수 (시간대 문제 해결)
 const formatDateToString = (date: Date): string => {
@@ -53,13 +61,17 @@ type ViewType =
   | "inout-status"
   | "inout-history"
   | "inout-request"
+  | "user-management"
+  | "system-settings"
+  | "reports"
+  | "notifications"
 
 type SidePanelType = "inbound" | "outbound" | null
 
 export default function WMSSystem() {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [currentView, setCurrentView] = useState<ViewType>("simulation")
+  const [currentView, setCurrentView] = useState<ViewType>("dashboard")
   const [sidePanel, setSidePanel] = useState<SidePanelType>(null)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [schedules, setSchedules] = useState<Schedule[]>([])
@@ -68,16 +80,20 @@ export default function WMSSystem() {
   const [selectedDate, setSelectedDate] = useState<string>("")
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [notificationCount, setNotificationCount] = useState(3)
 
   // 네비게이션 확장 상태
   const [expandedMenus, setExpandedMenus] = useState<{
     basicInfo: boolean
     inoutManagement: boolean
     inventoryManagement: boolean
+    systemManagement: boolean
   }>({
     basicInfo: false,
     inoutManagement: false,
     inventoryManagement: false,
+    systemManagement: false,
   })
 
   useEffect(() => {
@@ -103,7 +119,7 @@ export default function WMSSystem() {
   const handleLogout = () => {
     authService.logout()
     setUser(null)
-    setCurrentView("simulation")
+    setCurrentView("dashboard")
     setSidePanel(null)
   }
 
@@ -271,6 +287,14 @@ export default function WMSSystem() {
         return <InOutHistory />
       case "inventory":
         return <InventoryManagement />
+      case "user-management":
+        return <UserManagement />
+      case "system-settings":
+        return <SystemSettings />
+      case "reports":
+        return <ReportsAnalytics />
+      case "notifications":
+        return <NotificationCenter />
       default:
         return (
           <div className="flex-1 h-screen bg-white">
@@ -358,12 +382,17 @@ export default function WMSSystem() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-blue-600 rounded-lg mx-auto mb-4 flex items-center justify-center">
-            <Warehouse className="w-8 h-8 text-white animate-pulse" />
+          <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl mx-auto mb-6 flex items-center justify-center shadow-lg">
+            <Warehouse className="w-10 h-10 text-white animate-pulse" />
           </div>
-          <p className="text-gray-600">로딩 중...</p>
+          <div className="space-y-2">
+            <div className="w-32 h-2 bg-gray-200 rounded-full mx-auto">
+              <div className="w-16 h-2 bg-blue-600 rounded-full animate-pulse"></div>
+            </div>
+            <p className="text-gray-600 font-medium">시스템 로딩 중...</p>
+          </div>
         </div>
       </div>
     )
@@ -374,35 +403,75 @@ export default function WMSSystem() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-50">
       {/* 사이드바 */}
-      <div className="w-64 bg-white shadow-lg flex flex-col fixed top-0 bottom-0 left-0 z-20 overflow-y-auto">
+      <div className="w-64 bg-white shadow-xl flex flex-col fixed top-0 bottom-0 left-0 z-20 overflow-y-auto border-r border-gray-200">
         {/* 헤더 */}
-        <div className="p-4 border-b" style={{ height: "120px" }}>
+        <div
+          className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600"
+          style={{ height: "120px" }}
+        >
           <div
-            className="flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity h-full"
-            onClick={() => handleMenuClick("simulation")}
+            className="flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity h-full"
+            onClick={() => handleMenuClick("dashboard")}
           >
             <img
               src="/images/smart-wms-logo.png"
               alt="Smart WMS Logo"
-              className="h-full w-full object-contain"
+              className="h-full w-full object-contain filter brightness-0 invert"
             />
+          </div>
+        </div>
+
+        {/* 사용자 정보 */}
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-semibold">
+              {user.fullName.charAt(0)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">{user.fullName}</p>
+              <p className="text-xs text-gray-500 truncate">@{user.username}</p>
+            </div>
           </div>
         </div>
 
         {/* 메뉴 */}
         <div className="flex-1 p-3">
           <nav className="space-y-1">
+            {/* 대시보드 */}
+            <Button
+              variant={currentView === "dashboard" ? "default" : "ghost"}
+              className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"
+              onClick={() => handleMenuClick("dashboard")}
+            >
+              <div className="flex items-center">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                <span>대시보드</span>
+              </div>
+            </Button>
+
             {/* 일정 */}
             <Button
               variant={currentView === "schedule" ? "default" : "ghost"}
-              className="w-full justify-start text-sm"
+              className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"
               onClick={() => handleMenuClick("schedule")}
             >
               <div className="flex items-center">
                 <Calendar className="w-4 h-4 mr-2" />
-                <span>일정</span>
+                <span>일정 관리</span>
+              </div>
+            </Button>
+
+            {/* AGV 시뮬레이션 */}
+            <Button
+              variant={currentView === "simulation" ? "default" : "ghost"}
+              className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"
+              onClick={() => handleMenuClick("simulation")}
+            >
+              <div className="flex items-center">
+                <Warehouse className="w-4 h-4 mr-2" />
+                <span>AGV 시뮬레이션</span>
               </div>
             </Button>
 
@@ -410,38 +479,34 @@ export default function WMSSystem() {
             <div>
               <Button
                 variant="ghost"
-                className="w-full justify-between text-sm"
+                className="w-full justify-between text-sm hover:bg-blue-50 hover:text-blue-700"
                 onClick={() => toggleMenu("basicInfo")}
               >
                 <div className="flex items-center">
                   <Building2 className="w-4 h-4 mr-2" />
                   <span>기초 정보</span>
                 </div>
-                {expandedMenus.basicInfo ? (
-                  <ChevronUp className="w-4 h-4" />
-                ) : (
-                  <ChevronDown className="w-4 h-4" />
-                )}
+                {expandedMenus.basicInfo ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </Button>
               {expandedMenus.basicInfo && (
                 <div className="ml-6 mt-1 space-y-1">
                   <Button
                     variant={currentView === "company-list" ? "default" : "ghost"}
                     size="sm"
-                    className="w-full justify-start text-xs pl-4"
+                    className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
                     onClick={() => handleMenuClick("company-list")}
                   >
                     <span className="mr-2">•</span>
-                    거래처 리스트
+                    거래처 관리
                   </Button>
                   <Button
                     variant={currentView === "item-list" ? "default" : "ghost"}
                     size="sm"
-                    className="w-full justify-start text-xs pl-4"
+                    className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
                     onClick={() => handleMenuClick("item-list")}
                   >
                     <span className="mr-2">•</span>
-                    품목 리스트
+                    품목 관리
                   </Button>
                 </div>
               )}
@@ -451,7 +516,7 @@ export default function WMSSystem() {
             <div>
               <Button
                 variant="ghost"
-                className="w-full justify-between text-sm"
+                className="w-full justify-between text-sm hover:bg-blue-50 hover:text-blue-700"
                 onClick={() => toggleMenu("inoutManagement")}
               >
                 <div className="flex items-center">
@@ -467,26 +532,18 @@ export default function WMSSystem() {
               {expandedMenus.inoutManagement && (
                 <div className="ml-6 mt-1 space-y-1">
                   <Button
-                    variant={
-                      currentView === "simulation" && sidePanel === "inbound"
-                        ? "default"
-                        : "ghost"
-                    }
+                    variant={currentView === "simulation" && sidePanel === "inbound" ? "default" : "ghost"}
                     size="sm"
-                    className="w-full justify-start text-xs pl-4"
+                    className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
                     onClick={() => handleMenuClick("simulation", "inbound")}
                   >
                     <span className="mr-2">•</span>
                     입고 등록
                   </Button>
                   <Button
-                    variant={
-                      currentView === "simulation" && sidePanel === "outbound"
-                        ? "default"
-                        : "ghost"
-                    }
+                    variant={currentView === "simulation" && sidePanel === "outbound" ? "default" : "ghost"}
                     size="sm"
-                    className="w-full justify-start text-xs pl-4"
+                    className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
                     onClick={() => handleMenuClick("simulation", "outbound")}
                   >
                     <span className="mr-2">•</span>
@@ -495,7 +552,7 @@ export default function WMSSystem() {
                   <Button
                     variant={currentView === "inout-status" ? "default" : "ghost"}
                     size="sm"
-                    className="w-full justify-start text-xs pl-4"
+                    className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
                     onClick={() => handleMenuClick("inout-status")}
                   >
                     <span className="mr-2">•</span>
@@ -504,7 +561,7 @@ export default function WMSSystem() {
                   <Button
                     variant={currentView === "inout-history" ? "default" : "ghost"}
                     size="sm"
-                    className="w-full justify-start text-xs pl-4"
+                    className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
                     onClick={() => handleMenuClick("inout-history")}
                   >
                     <span className="mr-2">•</span>
@@ -513,7 +570,7 @@ export default function WMSSystem() {
                   <Button
                     variant={currentView === "inout-request" ? "default" : "ghost"}
                     size="sm"
-                    className="w-full justify-start text-xs pl-4"
+                    className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
                     onClick={() => handleMenuClick("inout-request")}
                   >
                     <span className="mr-2">•</span>
@@ -526,7 +583,7 @@ export default function WMSSystem() {
             {/* 재고 관리 */}
             <Button
               variant={currentView === "inventory" ? "default" : "ghost"}
-              className="w-full justify-start text-sm"
+              className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"
               onClick={() => handleMenuClick("inventory")}
             >
               <div className="flex items-center">
@@ -535,23 +592,90 @@ export default function WMSSystem() {
               </div>
             </Button>
 
-            {/* 대시보드 */}
+            {/* 보고서 및 분석 */}
             <Button
-              variant={currentView === "dashboard" ? "default" : "ghost"}
-              className="w-full justify-start text-sm"
-              onClick={() => handleMenuClick("dashboard")}
+              variant={currentView === "reports" ? "default" : "ghost"}
+              className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"
+              onClick={() => handleMenuClick("reports")}
             >
               <div className="flex items-center">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                <span>대시보드</span>
+                <FileText className="w-4 h-4 mr-2" />
+                <span>보고서 및 분석</span>
               </div>
             </Button>
+
+            {/* 시스템 관리 */}
+            <div>
+              <Button
+                variant="ghost"
+                className="w-full justify-between text-sm hover:bg-blue-50 hover:text-blue-700"
+                onClick={() => toggleMenu("systemManagement")}
+              >
+                <div className="flex items-center">
+                  <Settings className="w-4 h-4 mr-2" />
+                  <span>시스템 관리</span>
+                </div>
+                {expandedMenus.systemManagement ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </Button>
+              {expandedMenus.systemManagement && (
+                <div className="ml-6 mt-1 space-y-1">
+                  <Button
+                    variant={currentView === "user-management" ? "default" : "ghost"}
+                    size="sm"
+                    className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
+                    onClick={() => handleMenuClick("user-management")}
+                  >
+                    <span className="mr-2">•</span>
+                    사용자 관리
+                  </Button>
+                  <Button
+                    variant={currentView === "system-settings" ? "default" : "ghost"}
+                    size="sm"
+                    className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
+                    onClick={() => handleMenuClick("system-settings")}
+                  >
+                    <span className="mr-2">•</span>
+                    시스템 설정
+                  </Button>
+                  <Button
+                    variant={currentView === "notifications" ? "default" : "ghost"}
+                    size="sm"
+                    className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
+                    onClick={() => handleMenuClick("notifications")}
+                  >
+                    <span className="mr-2">•</span>
+                    알림 센터
+                    {notificationCount > 0 && (
+                      <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                        {notificationCount}
+                      </span>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
           </nav>
         </div>
 
-        {/* 사용자 정보 및 로그아웃 */}
-        <div className="border-t bg-gray-50">
-          <div className="p-3">
+        {/* 하단 액션 */}
+        <div className="border-t border-gray-200 bg-gray-50">
+          <div className="p-3 space-y-2">
+            {/* 전역 검색 */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full justify-center text-sm bg-white hover:bg-gray-50"
+              onClick={() => setIsSearchOpen(true)}
+            >
+              <Search className="w-4 h-4 mr-2" />
+              전역 검색
+            </Button>
+
+            {/* 로그아웃 */}
             <Button
               variant="ghost"
               size="sm"
@@ -562,11 +686,6 @@ export default function WMSSystem() {
               로그아웃
             </Button>
           </div>
-          <div className="p-3 border-t">
-            <p className="text-xs text-gray-600 text-center">
-              {user.fullName} @{user.username}
-            </p>
-          </div>
         </div>
       </div>
 
@@ -575,16 +694,23 @@ export default function WMSSystem() {
         {renderMainContent()}
         {/* 사이드 패널 */}
         {renderSidePanel()}
+
         {/* 토스트 알림 */}
         {toast && (
-          <div className="fixed top-4 right-4 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4 transition-all duration-300">
-            <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${toast.type === "success" ? "bg-green-500" : "bg-red-500"}`}></div>
-              <span className="text-gray-800 font-medium">{toast.message}</span>
+          <div className="fixed top-4 right-4 z-50 bg-white border border-gray-200 rounded-lg shadow-xl p-4 transition-all duration-300 min-w-[300px]">
+            <div className="flex items-center gap-3">
+              <div className={`w-3 h-3 rounded-full ${toast.type === "success" ? "bg-green-500" : "bg-red-500"}`}></div>
+              <span className="text-gray-800 font-medium flex-1">{toast.message}</span>
+              <button onClick={() => setToast(null)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                ×
+              </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* 전역 검색 모달 */}
+      <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* 모달들 */}
       <ScheduleModal
