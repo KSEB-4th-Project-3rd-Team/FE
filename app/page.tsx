@@ -378,12 +378,16 @@ export default function WMSSystem() {
       {/* 사이드바 */}
       <div className="w-64 bg-white shadow-lg flex flex-col fixed top-0 bottom-0 left-0 z-20 overflow-y-auto">
         {/* 헤더 */}
-        <div className="p-4 border-b">
+        <div className="p-4 border-b" style={{ height: "120px" }}>
           <div
-            className="flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity h-full"
             onClick={() => handleMenuClick("simulation")}
           >
-            <img src="/images/smart-wms-logo.png" alt="Smart WMS Logo" className="h-12 w-auto" />
+            <img
+              src="/images/smart-wms-logo.png"
+              alt="Smart WMS Logo"
+              className="h-full w-full object-contain"
+            />
           </div>
         </div>
 
@@ -396,18 +400,28 @@ export default function WMSSystem() {
               className="w-full justify-start text-sm"
               onClick={() => handleMenuClick("schedule")}
             >
-              <Calendar className="w-4 h-4 mr-2" />
-              일정
+              <div className="flex items-center">
+                <Calendar className="w-4 h-4 mr-2" />
+                <span>일정</span>
+              </div>
             </Button>
 
             {/* 기초 정보 */}
             <div>
-              <Button variant="ghost" className="w-full justify-start text-sm" onClick={() => toggleMenu("basicInfo")}>
+              <Button
+                variant="ghost"
+                className="w-full justify-between text-sm"
+                onClick={() => toggleMenu("basicInfo")}
+              >
                 <div className="flex items-center">
                   <Building2 className="w-4 h-4 mr-2" />
-                  기초 정보
+                  <span>기초 정보</span>
                 </div>
-                {expandedMenus.basicInfo ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                {expandedMenus.basicInfo ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
               </Button>
               {expandedMenus.basicInfo && (
                 <div className="ml-6 mt-1 space-y-1">
@@ -437,12 +451,12 @@ export default function WMSSystem() {
             <div>
               <Button
                 variant="ghost"
-                className="w-full justify-start text-sm"
+                className="w-full justify-between text-sm"
                 onClick={() => toggleMenu("inoutManagement")}
               >
                 <div className="flex items-center">
                   <Box className="w-4 h-4 mr-2" />
-                  입/출고 관리
+                  <span>입/출고 관리</span>
                 </div>
                 {expandedMenus.inoutManagement ? (
                   <ChevronUp className="w-4 h-4" />
@@ -453,7 +467,11 @@ export default function WMSSystem() {
               {expandedMenus.inoutManagement && (
                 <div className="ml-6 mt-1 space-y-1">
                   <Button
-                    variant={currentView === "simulation" && sidePanel === "inbound" ? "default" : "ghost"}
+                    variant={
+                      currentView === "simulation" && sidePanel === "inbound"
+                        ? "default"
+                        : "ghost"
+                    }
                     size="sm"
                     className="w-full justify-start text-xs pl-4"
                     onClick={() => handleMenuClick("simulation", "inbound")}
@@ -462,7 +480,11 @@ export default function WMSSystem() {
                     입고 등록
                   </Button>
                   <Button
-                    variant={currentView === "simulation" && sidePanel === "outbound" ? "default" : "ghost"}
+                    variant={
+                      currentView === "simulation" && sidePanel === "outbound"
+                        ? "default"
+                        : "ghost"
+                    }
                     size="sm"
                     className="w-full justify-start text-xs pl-4"
                     onClick={() => handleMenuClick("simulation", "outbound")}
@@ -507,18 +529,22 @@ export default function WMSSystem() {
               className="w-full justify-start text-sm"
               onClick={() => handleMenuClick("inventory")}
             >
-              <Package className="w-4 h-4 mr-2" />
-              재고 관리
+              <div className="flex items-center">
+                <Package className="w-4 h-4 mr-2" />
+                <span>재고 관리</span>
+              </div>
             </Button>
 
-            {/* 대시보드 - 맨 밑으로 이동 */}
+            {/* 대시보드 */}
             <Button
               variant={currentView === "dashboard" ? "default" : "ghost"}
               className="w-full justify-start text-sm"
               onClick={() => handleMenuClick("dashboard")}
             >
-              <BarChart3 className="w-4 h-4 mr-2" />
-              대시보드
+              <div className="flex items-center">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                <span>대시보드</span>
+              </div>
             </Button>
           </nav>
         </div>

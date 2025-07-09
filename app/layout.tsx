@@ -2,9 +2,26 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: 'Smart WMS',
+  description: 'Smart WMS',
+  generator: 'Smart WMS',
+  icons: {
+    icon: [
+      { url: '/images/tap-logo.png' },
+      new URL('/images/tap-logo.png', 'https://localhost:3000'),
+      { url: '/images/tap-logo.png', media: '(prefers-color-scheme: dark)' },
+    ],
+    apple: [
+      { url: '/images/tap-logo.png' },
+      { url: '/images/tap-logo.png', sizes: '180x180', type: 'image/png' },
+    ],
+    other: [
+      {
+        rel: 'apple-touch-icon-precomposed',
+        url: '/images/tap-logo.png',
+      },
+    ],
+  },
 }
 
 export default function RootLayout({
