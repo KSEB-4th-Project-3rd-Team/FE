@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "description": " 대충 이 저장공간에 대한 설명(안써도됨)",
+    "last_ai_process_timestamp": null,
+    "last_user_interaction_timestamp": null
+  },
+  "context": {
+    "project_snapshot": {
+      "name": "MyAwesomeproject",
+      "version": "4.2.1",
+      "current_feature_module": null,
+      "main_focus": [],
+      "project_state_flags": []
+    },
+    "architectural_focus_areas": [],
+    "decision_impact_log": [],
+    "priority_tags": []
+  },
+  "current_session_log": {
+    "session_id": null,
+    "start_timestamp": null,
+    "analysis_summary": null,
+    "findings": [],
+    "user_feedback_on_suggestions": {}
+  },
+  "history": [
+    {
+      "session_id": "initial_setup",
+      "timestamp": "2023-10-26T09:00:00Z",
+      "summary": "Project initialization. AI analysis module configured. Basic structure established.",
+      "high_impact_focus_areas_added": []
+    },
+    {
+      "session_id": "20250709-session",
+      "timestamp": "2025-07-09T12:00:00Z",
+      "summary": "AI가 프로젝트 구조를 파악함. Next.js와 TypeScript 기반의 스마트 창고 ��리 시스템(WMS)으로, 재고 관리, 입출고 처리, AGV 시뮬레이션 등의 기능을 포함하고 있음을 인지함.",
+      "high_impact_focus_areas_added": ["WMS", "Next.js", "TypeScript"]
+    }
+  ]
+}

@@ -71,7 +71,7 @@ type SidePanelType = "inbound" | "outbound" | null
 export default function WMSSystem() {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [currentView, setCurrentView] = useState<ViewType>("dashboard")
+  const [currentView, setCurrentView] = useState<ViewType>("simulation")
   const [sidePanel, setSidePanel] = useState<SidePanelType>(null)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [schedules, setSchedules] = useState<Schedule[]>([])
@@ -413,7 +413,7 @@ export default function WMSSystem() {
         >
           <div
             className="flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity h-full"
-            onClick={() => handleMenuClick("dashboard")}
+            onClick={() => handleMenuClick("simulation")}
           >
             <img
               src="/images/smart-wms-logo.png"
@@ -439,15 +439,15 @@ export default function WMSSystem() {
         {/* 메뉴 */}
         <div className="flex-1 p-3">
           <nav className="space-y-1">
-            {/* 대시보드 */}
+            {/* AGV 시뮬레이션 */}
             <Button
-              variant={currentView === "dashboard" ? "default" : "ghost"}
+              variant={currentView === "simulation" ? "default" : "ghost"}
               className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"
-              onClick={() => handleMenuClick("dashboard")}
+              onClick={() => handleMenuClick("simulation")}
             >
               <div className="flex items-center">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                <span>대시보드</span>
+                <Warehouse className="w-4 h-4 mr-2" />
+                <span>AGV 시뮬레이션</span>
               </div>
             </Button>
 
@@ -460,18 +460,6 @@ export default function WMSSystem() {
               <div className="flex items-center">
                 <Calendar className="w-4 h-4 mr-2" />
                 <span>일정 관리</span>
-              </div>
-            </Button>
-
-            {/* AGV 시뮬레이션 */}
-            <Button
-              variant={currentView === "simulation" ? "default" : "ghost"}
-              className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"
-              onClick={() => handleMenuClick("simulation")}
-            >
-              <div className="flex items-center">
-                <Warehouse className="w-4 h-4 mr-2" />
-                <span>AGV 시뮬레이션</span>
               </div>
             </Button>
 
@@ -589,6 +577,18 @@ export default function WMSSystem() {
               <div className="flex items-center">
                 <Package className="w-4 h-4 mr-2" />
                 <span>재고 관리</span>
+              </div>
+            </Button>
+
+            {/* 대시보드 */}
+            <Button
+              variant={currentView === "dashboard" ? "default" : "ghost"}
+              className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"
+              onClick={() => handleMenuClick("dashboard")}
+            >
+              <div className="flex items-center">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                <span>대시보드</span>
               </div>
             </Button>
 
