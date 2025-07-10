@@ -472,7 +472,7 @@ export default function InOutHistory() {
                     이전
                   </Button>
                   {Array.from({ length: Math.min(historyTotalPages, 5) }, (_, i) => {
-                    let page
+                    let page: number
                     if (historyTotalPages <= 5) {
                       page = i + 1
                     } else if (historyCurrentPage <= 3) {
