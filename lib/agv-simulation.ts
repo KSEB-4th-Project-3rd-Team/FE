@@ -390,8 +390,14 @@ export class AGVSimulationService {
       } else {
         // 출고 - 창고에서 출고장으로
         targetZone = zones.find((zone) => zone.id === "outbound-dock")
-        availableAGV.targetX = targetZone?.x + targetZone?.width / 2 || 125
-        availableAGV.targetY = targetZone?.y + targetZone?.height / 2 || 410
+        if (targetZone) {
+          availableAGV.targetX = targetZone.x + targetZone.width / 2
+          availableAGV.targetY = targetZone.y + targetZone.height / 2
+        } else {
+          // Fallback values if outbound-dock is not found
+          availableAGV.targetX = 125
+          availableAGV.targetY = 410
+        }
         availableAGV.currentTask = `${location} 출고 작업`
       }
 

@@ -33,8 +33,8 @@ export default function UserManagement() {
     username: "",
     fullName: "",
     email: "",
-    role: "operator" as const,
-    status: "active" as const,
+    role: "operator" as "admin" | "manager" | "operator" | "viewer",
+    status: "active" as "active" | "inactive" | "suspended",
     password: "",
     permissions: [] as string[],
   })
