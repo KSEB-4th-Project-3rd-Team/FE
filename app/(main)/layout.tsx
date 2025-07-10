@@ -39,17 +39,28 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
   const pathname = usePathname()
 
-  const [expandedMenus, setExpandedMenus] = useState<{
-    basicInfo: boolean
-    inoutManagement: boolean
-    systemManagement: boolean
-  }>({
-    basicInfo: pathname.startsWith("/company-list") || pathname.startsWith("/item-list"),
-    inoutManagement:
+  const [expandedMenus, setExpandedMenus] = useState({
+    basicInfo: false,
+    inoutManagement: false,
+    systemManagement: false,
+  });
+
+  useEffect(() => {
+    const isBasicInfoActive = pathname.startsWith("/company-list") || pathname.startsWith("/item-list");
+    const isInOutManagementActive =
       pathname.startsWith("/inout") ||
-      (pathname.startsWith("/simulation") && (sidePanel === "inbound" || sidePanel === "outbound")),
-    systemManagement: pathname.startsWith("/user-management") || pathname.startsWith("/system-settings"),
-  })
+      (pathname.startsWith("/simulation") && (sidePanel === "inbound" || sidePanel === "outbound"));
+    const isSystemManagementActive =
+      pathname.startsWith("/user-management") ||
+      pathname.startsWith("/system-settings") ||
+      pathname.startsWith("/notifications");
+
+    setExpandedMenus({
+      basicInfo: isBasicInfoActive,
+      inoutManagement: isInOutManagementActive,
+      systemManagement: isSystemManagementActive,
+    });
+  }, [pathname, sidePanel]);
 
   useEffect(() => {
     const checkAuthStatus = () => {
