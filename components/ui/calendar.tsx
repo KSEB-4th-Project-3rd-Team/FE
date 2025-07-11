@@ -29,12 +29,8 @@ function Calendar({
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
-        nav_button_previous: "absolute left-1 flex items-center justify-center w-7 h-7 [&:not([data-outside-month])]:hover:bg-accent [&:not([data-outside-month])]:hover:text-accent-foreground",
-        nav_button_next: "absolute right-1 flex items-center justify-center w-7 h-7 [&:not([data-outside-month])]:hover:bg-accent [&:not([data-outside-month])]:hover:text-accent-foreground",
-        nav_icon_previous: "h-4 w-4",
-        nav_icon_next: "h-4 w-4",
-      }}
-      
+        nav_button_previous: "absolute left-1 flex items-center justify-center w-7 h-7",
+        nav_button_next: "absolute right-1 flex items-center justify-center w-7 h-7",
         table: "w-full border-collapse space-y-1",
         head_row: "flex",
         head_cell:
@@ -57,6 +53,7 @@ function Calendar({
         day_hidden: "invisible",
         ...classNames,
       }}
+      
       
       
       {...props}
