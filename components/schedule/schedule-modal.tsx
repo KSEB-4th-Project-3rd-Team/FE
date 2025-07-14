@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { X, Calendar, MapPin, Clock } from "lucide-react"
-import { scheduleService, type Schedule } from "@/lib/schedule"
+// import { scheduleService, type Schedule } from "@/lib/schedule" // Removed for Spring backend integration
+import type { Schedule } from "@/app/(main)/schedule/page"
 
 interface ScheduleModalProps {
   isOpen: boolean
@@ -43,7 +44,12 @@ export default function ScheduleModal({ isOpen, onClose, onScheduleAdded, select
       return
     }
 
-    const newSchedule = scheduleService.addSchedule(formData)
+    // const newSchedule = scheduleService.addSchedule(formData) // Removed for Spring backend integration
+    const newSchedule: Schedule = {
+      id: new Date().toISOString(),
+      ...formData,
+      details: formData.details,
+    }
     onScheduleAdded(newSchedule)
 
     // 폼 초기화

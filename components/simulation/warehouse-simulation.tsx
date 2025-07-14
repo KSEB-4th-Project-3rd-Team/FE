@@ -6,8 +6,53 @@ import { useEffect, useRef, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Play, Pause, RotateCcw, Eye, ExternalLink } from "lucide-react"
-import { agvSimulation, warehouseLayout, type AGV } from "@/lib/agv-simulation"
+// import { agvSimulation, warehouseLayout, type AGV } from "@/lib/agv-simulation" // Removed for Spring backend integration
 import AGVStatusModal from "./agv-status-modal"
+import type { AGV } from "./agv-status-modal"
+
+// Mock warehouse layout data
+const warehouseLayout = {
+  width: 1000,
+  height: 600,
+  zones: [
+    { name: "입고 구역", x: 0, y: 0, width: 200, height: 200, color: "#e3f2fd" },
+    { name: "출고 구역", x: 800, y: 0, width: 200, height: 200, color: "#ffebee" },
+    { name: "보관 구역 A", x: 200, y: 0, width: 600, height: 300, color: "#f3e5f5" },
+    { name: "보관 구역 B", x: 0, y: 200, width: 1000, height: 300, color: "#e8f5e9" },
+    { name: "충전소", x: 0, y: 500, width: 200, height: 100, color: "#fffde7" },
+  ],
+  obstacles: [
+    { id: "shelf1", type: "shelf", x: 300, y: 50, width: 400, height: 50 },
+    { id: "shelf2", type: "shelf", x: 300, y: 150, width: 400, height: 50 },
+    { id: "shelf3", type: "shelf", x: 100, y: 300, width: 800, height: 50 },
+    { id: "shelf4", type: "shelf", x: 100, y: 400, width: 800, height: 50 },
+  ],
+}
+
+// Mock AGV simulation service
+const agvSimulation = {
+  getAGVs: (): AGV[] => [
+    { id: "agv1", name: "AGV-1", x: 50, y: 50, color: "#42a5f5", status: "idle", batteryLevel: 85, path: [{ x: 50, y: 50 }], targetX: 50, targetY: 50 },
+    { id: "agv2", name: "AGV-2", x: 850, y: 50, color: "#ef5350", status: "moving", batteryLevel: 92, path: [{ x: 850, y: 50 }], targetX: 850, targetY: 50 },
+    { id: "agv3", name: "AGV-3", x: 450, y: 250, color: "#66bb6a", status: "loading", batteryLevel: 78, path: [{ x: 450, y: 250 }], targetX: 450, targetY: 250 },
+  ],
+  subscribe: (callback: (agvs: AGV[]) => void) => {
+    const interval = setInterval(() => {
+      // Mock AGV movement
+      const agvs = agvSimulation.getAGVs().map((agv) => ({
+        ...agv,
+        x: agv.x + (Math.random() - 0.5) * 10,
+        y: agv.y + (Math.random() - 0.5) * 10,
+        path: [...agv.path, { x: agv.x, y: agv.y }], // Add current position to path
+      }))
+      callback(agvs)
+    }, 1000)
+    return () => clearInterval(interval)
+  },
+  startSimulation: () => console.log("Start simulation"),
+  stopSimulation: () => console.log("Stop simulation"),
+  moveAGVTo: (id: string, x: number, y: number) => console.log(`Move AGV ${id} to (${x}, ${y})`),
+}
 
 export default function WarehouseSimulation() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -107,7 +152,7 @@ export default function WarehouseSimulation() {
   const drawAGVs = (ctx: CanvasRenderingContext2D) => {
     agvs.forEach((agv) => {
       // AGV 경로 그리기
-      if (agv.path.length > 1) {
+      if (agv.path && agv.path.length > 1) {
         ctx.strokeStyle = agv.color + "40" // 투명도 추가
         ctx.lineWidth = 3
         ctx.beginPath()
@@ -383,7 +428,7 @@ export default function WarehouseSimulation() {
       {toast && (
         <div
           className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg transition-all duration-300 ${
-            toast.type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
+            toast.type === "success" ? "bg-green-500" : "bg-red-500"}
           }`}
         >
           {toast.message}

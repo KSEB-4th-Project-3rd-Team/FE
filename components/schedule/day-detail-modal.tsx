@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { X, Calendar, MapPin, Clock, Trash2, Package, TruckIcon } from "lucide-react"
-import { scheduleService, type Schedule } from "@/lib/schedule"
+// import { scheduleService, type Schedule } from "@/lib/schedule" // Removed for Spring backend integration
+import type { Schedule } from "@/app/(main)/schedule/page"
 
 interface DayDetailModalProps {
   isOpen: boolean
@@ -13,20 +14,61 @@ interface DayDetailModalProps {
   onScheduleDeleted: () => void
 }
 
+// Mock schedule data for a specific date
+const mockSchedules: Schedule[] = [
+  {
+    id: "1",
+    title: "입고 예정: A-01",
+    date: "2024-07-20",
+    time: "10:00",
+    location: "Dock 1",
+    details: "Apple boxes from Supplier X",
+    type: "inbound",
+  },
+  {
+    id: "2",
+    title: "출고 예정: B-02",
+    date: "2024-07-20",
+    time: "14:00",
+    location: "Dock 3",
+    details: "Samsung TVs to Retailer Y",
+    type: "outbound",
+  },
+  {
+    id: "3",
+    title: "정기 회의",
+    date: "2024-07-21",
+    time: "09:00",
+    location: "회의실 1",
+    details: "주간 업무 보고",
+    type: "meeting",
+  },
+  {
+    id: "4",
+    title: "창고 정리",
+    date: "2024-07-22",
+    time: "13:00",
+    location: "창고 전체",
+    details: "재고 실사 및 정리",
+    type: "work",
+  },
+]
+
 export default function DayDetailModal({ isOpen, onClose, selectedDate, onScheduleDeleted }: DayDetailModalProps) {
   const [schedules, setSchedules] = useState<Schedule[]>([])
   const [activeTab, setActiveTab] = useState<"schedule" | "inbound" | "outbound">("schedule")
 
   useEffect(() => {
     if (isOpen && selectedDate) {
-      const daySchedules = scheduleService.getSchedulesByDate(selectedDate)
+      // const daySchedules = scheduleService.getSchedulesByDate(selectedDate) // Removed for Spring backend integration
+      const daySchedules = mockSchedules.filter((s) => s.date === selectedDate)
       setSchedules(daySchedules)
     }
   }, [isOpen, selectedDate])
 
   const handleDeleteSchedule = (id: string) => {
     if (confirm("이 일정을 삭제하시겠습니까?")) {
-      scheduleService.deleteSchedule(id)
+      // scheduleService.deleteSchedule(id) // Removed for Spring backend integration
       const updatedSchedules = schedules.filter((schedule) => schedule.id !== id)
       setSchedules(updatedSchedules)
       onScheduleDeleted()

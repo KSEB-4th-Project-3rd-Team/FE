@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Warehouse, Eye, EyeOff, Loader2 } from "lucide-react"
-import { authService, type User } from "@/lib/auth"
+// import { authService, type User } from "@/lib/auth" // Removed for Spring backend integration
+import type { User } from "@/app/(main)/layout"
 
 interface AuthFormProps {
   onAuthSuccess: (user: User) => void
@@ -68,17 +69,14 @@ export default function AuthForm({ onAuthSuccess }: AuthFormProps) {
 
     try {
       if (isLogin) {
-        const result = await authService.login(formData.username, formData.password)
-
-        if (result.success && result.user) {
-          onAuthSuccess(result.user)
-        } else {
-          setError(result.message)
-        }
+        // Mock login success
+        setTimeout(() => {
+          onAuthSuccess({ id: "1", username: formData.username, fullName: "Test User", role: "Admin" })
+          setIsLoading(false)
+        }, 1000)
       } else {
-        const result = await authService.register(formData.username, formData.password, formData.fullName)
-
-        if (result.success) {
+        // Mock registration success
+        setTimeout(() => {
           alert("회원가입이 완료되었습니다. 로그인해주세요.")
           setIsLogin(true)
           setFormData({
@@ -87,13 +85,11 @@ export default function AuthForm({ onAuthSuccess }: AuthFormProps) {
             fullName: "",
             confirmPassword: "",
           })
-        } else {
-          setError(result.message)
-        }
+          setIsLoading(false)
+        }, 1000)
       }
     } catch (err) {
       setError("오류가 발생했습니다. 다시 시도해주세요.")
-    } finally {
       setIsLoading(false)
     }
   }

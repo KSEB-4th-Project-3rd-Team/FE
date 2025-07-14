@@ -6,7 +6,74 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Check, X, Package, TruckIcon, Search } from "lucide-react"
-import { inoutRequestService, type InOutRequest } from "@/lib/inout-request"
+
+// import { inoutRequestService, type InOutRequest } from "@/lib/inout-request" // Removed for Spring backend integration
+
+// Temporary InOutRequest type until API is connected
+export type InOutRequest = {
+  id: string
+  type: "inbound" | "outbound"
+  itemCode: string
+  itemName: string
+  quantity: number
+  companyCode: string
+  companyName: string
+  requestDate: string
+  notes: string
+  status: "pending" | "approved" | "rejected"
+}
+
+// Mock in-out request data
+const mockRequests: InOutRequest[] = [
+  {
+    id: "1",
+    type: "inbound",
+    itemCode: "ITEM001",
+    itemName: "노트북 - ThinkPad X1",
+    quantity: 50,
+    companyCode: "COMP001",
+    companyName: "삼성전자",
+    requestDate: new Date().toISOString().split("T")[0],
+    notes: "앱에서 요청된 입고",
+    status: "pending",
+  },
+  {
+    id: "2",
+    type: "outbound",
+    itemCode: "ITEM002",
+    itemName: "무선 마우스",
+    quantity: 30,
+    companyCode: "COMP002",
+    companyName: "LG전자",
+    requestDate: new Date().toISOString().split("T")[0],
+    notes: "앱에서 요청된 출고",
+    status: "pending",
+  },
+  {
+    id: "3",
+    type: "inbound",
+    itemCode: "ITEM003",
+    itemName: "기계식 키보드",
+    quantity: 25,
+    companyCode: "COMP003",
+    companyName: "로지텍",
+    requestDate: "2024-01-14",
+    notes: "정기 입고",
+    status: "approved",
+  },
+  {
+    id: "4",
+    type: "outbound",
+    itemCode: "ITEM004",
+    itemName: "모니터 - 27인치",
+    quantity: 15,
+    companyCode: "COMP004",
+    companyName: "델",
+    requestDate: "2024-01-13",
+    notes: "긴급 출고",
+    status: "rejected",
+  },
+]
 
 export default function InOutRequestPage() {
   const [requests, setRequests] = useState<InOutRequest[]>([])
@@ -32,69 +99,11 @@ export default function InOutRequestPage() {
 
   useEffect(() => {
     loadRequests()
-    simulateAppRequests()
   }, [])
 
   const loadRequests = () => {
-    const allRequests = inoutRequestService.getRequests()
-    setRequests(allRequests)
-  }
-
-  const simulateAppRequests = () => {
-    const dummyRequests = [
-      {
-        type: "inbound" as const,
-        itemCode: "ITEM001",
-        itemName: "노트북 - ThinkPad X1",
-        quantity: 50,
-        companyCode: "COMP001",
-        companyName: "삼성전자",
-        requestDate: new Date().toISOString().split("T")[0],
-        notes: "앱에서 요청된 입고",
-        status: "pending" as const,
-      },
-      {
-        type: "outbound" as const,
-        itemCode: "ITEM002",
-        itemName: "무선 마우스",
-        quantity: 30,
-        companyCode: "COMP002",
-        companyName: "LG전자",
-        requestDate: new Date().toISOString().split("T")[0],
-        notes: "앱에서 요청된 출고",
-        status: "pending" as const,
-      },
-      {
-        type: "inbound" as const,
-        itemCode: "ITEM003",
-        itemName: "기계식 키보드",
-        quantity: 25,
-        companyCode: "COMP003",
-        companyName: "로지텍",
-        requestDate: "2024-01-14",
-        notes: "정기 입고",
-        status: "approved" as const,
-      },
-      {
-        type: "outbound" as const,
-        itemCode: "ITEM004",
-        itemName: "모니터 - 27인치",
-        quantity: 15,
-        companyCode: "COMP004",
-        companyName: "델",
-        requestDate: "2024-01-13",
-        notes: "긴급 출고",
-        status: "rejected" as const,
-      },
-    ]
-
-    const existingRequests = inoutRequestService.getRequests()
-    if (existingRequests.length === 0) {
-      dummyRequests.forEach((request) => {
-        inoutRequestService.addRequest(request)
-      })
-      loadRequests()
-    }
+    // const allRequests = inoutRequestService.getRequests() // Removed for Spring backend integration
+    setRequests(mockRequests)
   }
 
   const showNotification = (message: string, type: "success" | "error" = "success") => {
@@ -103,14 +112,14 @@ export default function InOutRequestPage() {
   }
 
   const handleApprove = (id: string) => {
-    inoutRequestService.updateRequestStatus(id, "approved")
-    loadRequests()
+    // inoutRequestService.updateRequestStatus(id, "approved") // Removed for Spring backend integration
+    setRequests(requests.map((r) => (r.id === id ? { ...r, status: "approved" } : r)))
     showNotification("요청이 승인되었습니다.", "success")
   }
 
   const handleReject = (id: string) => {
-    inoutRequestService.updateRequestStatus(id, "rejected")
-    loadRequests()
+    // inoutRequestService.updateRequestStatus(id, "rejected") // Removed for Spring backend integration
+    setRequests(requests.map((r) => (r.id === id ? { ...r, status: "rejected" } : r)))
     showNotification("요청이 거절되었습니다.", "error")
   }
 

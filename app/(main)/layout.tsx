@@ -20,17 +20,31 @@ import {
   FileText,
   Search,
 } from "lucide-react"
-import { authService, type User } from "@/lib/auth"
+// import { authService, type User } from "@/lib/auth" // Removed for Spring backend integration
 import AuthForm from "@/components/auth/auth-form"
 import InboundForm from "@/components/forms/inbound-form"
 import OutboundForm from "@/components/forms/outbound-form"
 import GlobalSearch from "@/components/search/global-search"
 
+// Temporary User type until API is connected
+export type User = {
+  id: string
+  username: string
+  fullName: string
+  role: string
+}
+
 type SidePanelType = "inbound" | "outbound" | null
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  // Mock user data for development
+  const [user, setUser] = useState<User | null>({
+    id: "1",
+    username: "johndoe",
+    fullName: "John Doe",
+    role: "Admin",
+  })
+  const [isLoading, setIsLoading] = useState(false) // Set to false as we are not fetching user
   const [sidePanel, setSidePanel] = useState<SidePanelType>(null)
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
@@ -63,12 +77,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }, [pathname, sidePanel]);
 
   useEffect(() => {
-    const checkAuthStatus = () => {
-      const currentUser = authService.getCurrentUser()
-      setUser(currentUser)
-      setIsLoading(false)
-    }
-    checkAuthStatus()
+    // const checkAuthStatus = () => {
+    //   const currentUser = authService.getCurrentUser()
+    //   setUser(currentUser)
+    //   setIsLoading(false)
+    // }
+    // checkAuthStatus()
   }, [])
 
   useEffect(() => {
@@ -84,7 +98,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }
 
   const handleLogout = () => {
-    authService.logout()
+    // authService.logout() // Removed for Spring backend integration
     setUser(null)
   }
 

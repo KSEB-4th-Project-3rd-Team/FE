@@ -8,7 +8,43 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Search, Edit, Trash2 } from "lucide-react"
-import { itemService, type Item } from "@/lib/item"
+// import { itemService, type Item } from "@/lib/item" // Removed for Spring backend integration"
+
+// Temporary Item type until API is connected
+export type Item = {
+  id: string
+  code: string
+  name: string
+  group: string
+  specification: string
+  barcode: string
+  inboundPrice: number
+  outboundPrice: number
+}
+
+// Mock item data
+const mockItems: Item[] = [
+  {
+    id: "1",
+    code: "ITEM001",
+    name: "노트북 - ThinkPad X1",
+    group: "전자기기",
+    specification: "14인치, 16GB RAM, 512GB SSD",
+    barcode: "8801234567890",
+    inboundPrice: 1500000,
+    outboundPrice: 1650000,
+  },
+  {
+    id: "2",
+    code: "ITEM002",
+    name: "무선 마우스",
+    group: "컴퓨터 주변기기",
+    specification: "블루투스 5.0, 저소음",
+    barcode: "8809876543210",
+    inboundPrice: 35000,
+    outboundPrice: 40000,
+  },
+]
 
 export default function ItemList() {
   const [items, setItems] = useState<Item[]>([])
@@ -39,17 +75,19 @@ export default function ItemList() {
   }, [])
 
   const loadItems = () => {
-    const allItems = itemService.getItems()
-    setItems(allItems)
+    // const allItems = itemService.getItems() // Removed for Spring backend integration
+    setItems(mockItems)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (editingItem) {
-      itemService.updateItem(editingItem.id, formData)
+      // itemService.updateItem(editingItem.id, formData) // Removed for Spring backend integration
+      setItems(items.map((i) => (i.id === editingItem.id ? { ...formData, id: i.id } : i)))
     } else {
-      itemService.addItem(formData)
+      // itemService.addItem(formData) // Removed for Spring backend integration
+      setItems([...items, { ...formData, id: (items.length + 1).toString() }])
     }
 
     loadItems()
@@ -86,7 +124,8 @@ export default function ItemList() {
 
   const handleDelete = (id: string) => {
     if (confirm("이 품목을 삭제하시겠습니까?")) {
-      itemService.deleteItem(id)
+      // itemService.deleteItem(id) // Removed for Spring backend integration
+      setItems(items.filter((i) => i.id !== id))
       loadItems()
     }
   }

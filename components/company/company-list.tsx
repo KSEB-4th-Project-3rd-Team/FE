@@ -8,7 +8,43 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Search, Edit, Trash2 } from "lucide-react"
-import { companyService, type Company } from "@/lib/company"
+// import { companyService, type Company } from "@/lib/company" // Removed for Spring backend integration"
+
+// Temporary Company type until API is connected
+export type Company = {
+  id: string
+  code: string
+  name: string
+  representative: string
+  phone: string
+  email: string
+  address: string
+  notes: string
+}
+
+// Mock company data
+const mockCompanies: Company[] = [
+  {
+    id: "1",
+    code: "C001",
+    name: "(주)가나다라",
+    representative: "홍길동",
+    phone: "02-1234-5678",
+    email: "contact@ganadara.com",
+    address: "서울시 강남구 테헤란로 123",
+    notes: "주요 공급업체",
+  },
+  {
+    id: "2",
+    code: "C002",
+    name: "(주)마바사",
+    representative: "김철수",
+    phone: "031-987-6543",
+    email: "sales@mabasa.co.kr",
+    address: "경기도 성남시 분당구 판교역로 456",
+    notes: "배송 파트너",
+  },
+]
 
 export default function CompanyList() {
   const [companies, setCompanies] = useState<Company[]>([])
@@ -38,17 +74,19 @@ export default function CompanyList() {
   }, [])
 
   const loadCompanies = () => {
-    const allCompanies = companyService.getCompanies()
-    setCompanies(allCompanies)
+    // const allCompanies = companyService.getCompanies() // Removed for Spring backend integration
+    setCompanies(mockCompanies)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (editingCompany) {
-      companyService.updateCompany(editingCompany.id, formData)
+      // companyService.updateCompany(editingCompany.id, formData) // Removed for Spring backend integration
+      setCompanies(companies.map((c) => (c.id === editingCompany.id ? { ...formData, id: c.id } : c)))
     } else {
-      companyService.addCompany(formData)
+      // companyService.addCompany(formData) // Removed for Spring backend integration
+      setCompanies([...companies, { ...formData, id: (companies.length + 1).toString() }])
     }
 
     loadCompanies()
@@ -85,7 +123,8 @@ export default function CompanyList() {
 
   const handleDelete = (id: string) => {
     if (confirm("이 거래처를 삭제하시겠습니까?")) {
-      companyService.deleteCompany(id)
+      // companyService.deleteCompany(id) // Removed for Spring backend integration
+      setCompanies(companies.filter((c) => c.id !== id))
       loadCompanies()
     }
   }

@@ -4,10 +4,61 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, Plus } from "lucide-react"
-import { scheduleService, type Schedule } from "@/lib/schedule"
+// import { scheduleService, type Schedule } from "@/lib/schedule" // Removed for Spring backend integration
 import ScheduleModal from "@/components/schedule/schedule-modal"
 import DayDetailModal from "@/components/schedule/day-detail-modal"
 import CalendarHeader from "@/components/schedule/calendar-header"
+
+// Temporary Schedule type until API is connected
+export type Schedule = {
+  id: string
+  title: string
+  date: string
+  time: string
+  location: string
+  details: string // Changed from description to details
+  type: "inbound" | "outbound" | "work" | "meeting" | "other" // Added type property
+}
+
+// Mock schedule data
+const mockSchedules: Schedule[] = [
+  {
+    id: "1",
+    title: "입고 예정: A-01",
+    date: "2024-07-20",
+    time: "10:00",
+    location: "Dock 1",
+    details: "Apple boxes from Supplier X", // Changed from description to details
+    type: "inbound", // Added type
+  },
+  {
+    id: "2",
+    title: "출고 예정: B-02",
+    date: "2024-07-20",
+    time: "14:00",
+    location: "Dock 3",
+    details: "Samsung TVs to Retailer Y", // Changed from description to details
+    type: "outbound", // Added type
+  },
+  {
+    id: "3",
+    title: "정기 회의",
+    date: "2024-07-21",
+    time: "09:00",
+    location: "회의실 1",
+    details: "주간 업무 보고", // Changed from description to details
+    type: "meeting", // Added type
+  },
+  {
+    id: "4",
+    title: "창고 정리",
+    date: "2024-07-22",
+    time: "13:00",
+    location: "창고 전체",
+    details: "재고 실사 및 정리", // Changed from description to details
+    type: "work", // Added type
+  },
+]
 
 // 날짜를 YYYY-MM-DD 형식으로 변환하는 함수 (시간대 문제 해결)
 const formatDateToString = (date: Date): string => {
@@ -29,8 +80,8 @@ export default function SchedulePage() {
   }, [])
 
   const loadSchedules = () => {
-    const allSchedules = scheduleService.getSchedules()
-    setSchedules(allSchedules)
+    // const allSchedules = scheduleService.getSchedules() // Removed for Spring backend integration
+    setSchedules(mockSchedules)
   }
 
   const handleScheduleAdded = (schedule: Schedule) => {
