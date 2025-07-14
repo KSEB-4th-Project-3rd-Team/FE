@@ -27,46 +27,81 @@ export default function ReportsAnalytics() {
   const [selectedReport, setSelectedReport] = useState("inventory")
 
   // 더미 데이터
-  const analyticsData = {
-    inventory: {
-      totalItems: 2707,
-      lowStockItems: 89,
-      outOfStockItems: 12,
-      totalValue: 15420000,
-      turnoverRate: 4.2,
-      topItems: [
-        { name: "노트북 - ThinkPad X1", quantity: 245, value: 2450000 },
-        { name: "무선 마우스", quantity: 189, value: 945000 },
-        { name: "기계식 키보드", quantity: 156, value: 780000 },
-      ],
-    },
-    inout: {
-      totalInbound: 1250,
-      totalOutbound: 980,
-      pendingRequests: 23,
-      completionRate: 97.5,
-      avgProcessingTime: 2.3,
-      monthlyTrend: [
-        { month: "1월", inbound: 120, outbound: 95 },
-        { month: "2월", inbound: 135, outbound: 110 },
-        { month: "3월", inbound: 150, outbound: 125 },
-      ],
-    },
-    agv: {
-      totalAGVs: 8,
-      activeAGVs: 6,
-      efficiency: 94.5,
-      totalDistance: 15420,
-      avgBatteryLevel: 78,
-      taskCompletion: 98.2,
-    },
-    users: {
-      totalUsers: 25,
-      activeUsers: 22,
-      loginRate: 88,
-      avgSessionTime: 4.2,
-    },
-  }
+  interface TopItem {
+  name: string;
+  quantity: number;
+  value: number;
+}
+
+interface MonthlyTrend {
+  month: string;
+  inbound: number;
+  outbound: number;
+}
+
+const analyticsData: {
+  inventory: {
+    totalItems: number;
+    lowStockItems: number;
+    outOfStockItems: number;
+    totalValue: number;
+    turnoverRate: number;
+    topItems: TopItem[];
+  };
+  inout: {
+    totalInbound: number;
+    totalOutbound: number;
+    pendingRequests: number;
+    completionRate: number;
+    avgProcessingTime: number;
+    monthlyTrend: MonthlyTrend[];
+  };
+  agv: {
+    totalAGVs: number;
+    activeAGVs: number;
+    efficiency: number;
+    totalDistance: number;
+    avgBatteryLevel: number;
+    taskCompletion: number;
+  };
+  users: {
+    totalUsers: number;
+    activeUsers: number;
+    loginRate: number;
+    avgSessionTime: number;
+  };
+} = {
+  inventory: {
+    totalItems: 0,
+    lowStockItems: 0,
+    outOfStockItems: 0,
+    totalValue: 0,
+    turnoverRate: 0,
+    topItems: [],
+  },
+  inout: {
+    totalInbound: 0,
+    totalOutbound: 0,
+    pendingRequests: 0,
+    completionRate: 0,
+    avgProcessingTime: 0,
+    monthlyTrend: [],
+  },
+  agv: {
+    totalAGVs: 0,
+    activeAGVs: 0,
+    efficiency: 0,
+    totalDistance: 0,
+    avgBatteryLevel: 0,
+    taskCompletion: 0,
+  },
+  users: {
+    totalUsers: 0,
+    activeUsers: 0,
+    loginRate: 0,
+    avgSessionTime: 0,
+  },
+};
 
   const reportTypes = [
     { id: "inventory", name: "재고 분석", icon: Package },

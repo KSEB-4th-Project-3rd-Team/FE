@@ -45,63 +45,7 @@ export default function UserManagement() {
 
   const loadUsers = () => {
     // 더미 사용자 데이터
-    const dummyUsers: User[] = [
-      {
-        id: "1",
-        username: "admin",
-        fullName: "시스템 관리자",
-        email: "admin@smartwms.com",
-        role: "admin",
-        status: "active",
-        lastLogin: "2024-01-15 14:30",
-        createdAt: "2024-01-01",
-        permissions: ["all"],
-      },
-      {
-        id: "2",
-        username: "manager1",
-        fullName: "김창고",
-        email: "manager@smartwms.com",
-        role: "manager",
-        status: "active",
-        lastLogin: "2024-01-15 13:45",
-        createdAt: "2024-01-02",
-        permissions: ["inventory", "inout", "reports"],
-      },
-      {
-        id: "3",
-        username: "operator1",
-        fullName: "이작업",
-        email: "operator1@smartwms.com",
-        role: "operator",
-        status: "active",
-        lastLogin: "2024-01-15 12:20",
-        createdAt: "2024-01-03",
-        permissions: ["inout", "inventory_view"],
-      },
-      {
-        id: "4",
-        username: "operator2",
-        fullName: "박물류",
-        email: "operator2@smartwms.com",
-        role: "operator",
-        status: "inactive",
-        lastLogin: "2024-01-10 16:30",
-        createdAt: "2024-01-04",
-        permissions: ["inout", "inventory_view"],
-      },
-      {
-        id: "5",
-        username: "viewer1",
-        fullName: "최조회",
-        email: "viewer@smartwms.com",
-        role: "viewer",
-        status: "active",
-        lastLogin: "2024-01-15 10:15",
-        createdAt: "2024-01-05",
-        permissions: ["view_only"],
-      },
-    ]
+    const dummyUsers: User[] = []
     setUsers(dummyUsers)
   }
 

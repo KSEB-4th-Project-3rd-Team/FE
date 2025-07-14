@@ -26,53 +26,7 @@ interface Notification {
 }
 
 export default function NotificationCenter() {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: "1",
-      type: "warning",
-      title: "재고 부족 알림",
-      message: "무선 마우스의 재고가 10개 이하로 떨어졌습니다.",
-      timestamp: "2024-01-15 14:30",
-      read: false,
-      category: "inventory",
-    },
-    {
-      id: "2",
-      type: "error",
-      title: "AGV 연결 오류",
-      message: "AGV-003의 연결이 끊어졌습니다. 점검이 필요합니다.",
-      timestamp: "2024-01-15 13:45",
-      read: false,
-      category: "agv",
-    },
-    {
-      id: "3",
-      type: "success",
-      title: "입고 완료",
-      message: "노트북 50대 입고가 성공적으로 완료되었습니다.",
-      timestamp: "2024-01-15 12:20",
-      read: true,
-      category: "inventory",
-    },
-    {
-      id: "4",
-      type: "info",
-      title: "시스템 업데이트",
-      message: "시스템이 v1.2.0으로 업데이트되었습니다.",
-      timestamp: "2024-01-15 10:15",
-      read: true,
-      category: "system",
-    },
-    {
-      id: "5",
-      type: "warning",
-      title: "사용자 로그인 실패",
-      message: "사용자 'operator1'의 로그인 시도가 5회 실패했습니다.",
-      timestamp: "2024-01-15 09:30",
-      read: false,
-      category: "user",
-    },
-  ])
+  const [notifications, setNotifications] = useState<Notification[]>([])
 
   const [filter, setFilter] = useState<"all" | "unread" | "info" | "warning" | "error" | "success">("all")
   const [categoryFilter, setCategoryFilter] = useState<"all" | "system" | "inventory" | "agv" | "user">("all")

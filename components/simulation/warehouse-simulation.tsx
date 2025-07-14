@@ -31,11 +31,7 @@ const warehouseLayout = {
 
 // Mock AGV simulation service
 const agvSimulation = {
-  getAGVs: (): AGV[] => [
-    { id: "agv1", name: "AGV-1", x: 50, y: 50, color: "#42a5f5", status: "idle", batteryLevel: 85, path: [{ x: 50, y: 50 }], targetX: 50, targetY: 50 },
-    { id: "agv2", name: "AGV-2", x: 850, y: 50, color: "#ef5350", status: "moving", batteryLevel: 92, path: [{ x: 850, y: 50 }], targetX: 850, targetY: 50 },
-    { id: "agv3", name: "AGV-3", x: 450, y: 250, color: "#66bb6a", status: "loading", batteryLevel: 78, path: [{ x: 450, y: 250 }], targetX: 450, targetY: 250 },
-  ],
+  getAGVs: (): AGV[] => [],
   subscribe: (callback: (agvs: AGV[]) => void) => {
     const interval = setInterval(() => {
       // Mock AGV movement

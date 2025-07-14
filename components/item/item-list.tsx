@@ -23,28 +23,7 @@ export type Item = {
 }
 
 // Mock item data
-const mockItems: Item[] = [
-  {
-    id: "1",
-    code: "ITEM001",
-    name: "노트북 - ThinkPad X1",
-    group: "전자기기",
-    specification: "14인치, 16GB RAM, 512GB SSD",
-    barcode: "8801234567890",
-    inboundPrice: 1500000,
-    outboundPrice: 1650000,
-  },
-  {
-    id: "2",
-    code: "ITEM002",
-    name: "무선 마우스",
-    group: "컴퓨터 주변기기",
-    specification: "블루투스 5.0, 저소음",
-    barcode: "8809876543210",
-    inboundPrice: 35000,
-    outboundPrice: 40000,
-  },
-]
+const mockItems: Item[] = []
 
 export default function ItemList() {
   const [items, setItems] = useState<Item[]>([])

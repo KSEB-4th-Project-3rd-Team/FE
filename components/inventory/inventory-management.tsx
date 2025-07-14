@@ -19,88 +19,18 @@ export default function InventoryManagement() {
   const itemsPerPage = 10
 
   // 더미 재고 데이터
-  const inventoryData = [
-    {
-      id: 1,
-      name: "노트북 - ThinkPad X1",
-      sku: "NB-TP-X1-001",
-      category: "전자제품",
-      quantity: 245,
-      location: "A구역-01",
-      status: "정상",
-      lastUpdate: "2024-01-15 14:30",
-    },
-    {
-      id: 2,
-      name: "무선 마우스",
-      sku: "MS-WL-001",
-      category: "주변기기",
-      quantity: 89,
-      location: "B구역-03",
-      status: "부족",
-      lastUpdate: "2024-01-15 11:20",
-    },
-    {
-      id: 3,
-      name: "기계식 키보드",
-      sku: "KB-MEC-001",
-      category: "주변기기",
-      quantity: 156,
-      location: "A구역-05",
-      status: "정상",
-      lastUpdate: "2024-01-15 09:45",
-    },
-    {
-      id: 4,
-      name: "모니터 - 27인치 4K",
-      sku: "MN-27-4K-001",
-      category: "디스플레이",
-      quantity: 78,
-      location: "C구역-02",
-      status: "정상",
-      lastUpdate: "2024-01-14 16:15",
-    },
-    {
-      id: 5,
-      name: "USB 허브",
-      sku: "HB-USB-001",
-      category: "주변기기",
-      quantity: 12,
-      location: "B구역-07",
-      status: "부족",
-      lastUpdate: "2024-01-14 13:22",
-    },
-    {
-      id: 6,
-      name: "웹캠 - HD",
-      sku: "WC-HD-001",
-      category: "주변기기",
-      quantity: 134,
-      location: "A구역-08",
-      status: "정상",
-      lastUpdate: "2024-01-14 10:30",
-    },
-    {
-      id: 7,
-      name: "스피커 - 블루투스",
-      sku: "SP-BT-001",
-      category: "오디오",
-      quantity: 67,
-      location: "C구역-04",
-      status: "정상",
-      lastUpdate: "2024-01-13 15:45",
-    },
-    {
-      id: 8,
-      name: "태블릿 - iPad Pro",
-      sku: "TB-IP-PRO-001",
-      category: "전자제품",
-      quantity: 45,
-      location: "A구역-12",
-      status: "정상",
-      lastUpdate: "2024-01-13 12:10",
-    },
-  ]
+  interface InventoryItem {
+  id: number;
+  name: string;
+  sku: string;
+  category: string;
+  quantity: number;
+  location: string;
+  status: string;
+  lastUpdate: string;
+}
+
+const inventoryData: InventoryItem[] = [];
 
   const handleFilterChange = (field: string, value: string) => {
     setSearchFilters((prev) => ({
@@ -140,7 +70,7 @@ export default function InventoryManagement() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">총 재고</p>
-                  <p className="text-2xl font-bold">2,707</p>
+                  <p className="text-2xl font-bold">0</p>
                 </div>
                 <Package className="w-8 h-8 text-blue-500" />
               </div>
@@ -151,7 +81,7 @@ export default function InventoryManagement() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">입고 대기</p>
-                  <p className="text-2xl font-bold text-green-600">156</p>
+                  <p className="text-2xl font-bold text-green-600">0</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-green-500" />
               </div>
@@ -162,7 +92,7 @@ export default function InventoryManagement() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">출고 예정</p>
-                  <p className="text-2xl font-bold text-red-600">89</p>
+                  <p className="text-2xl font-bold text-red-600">0</p>
                 </div>
                 <TrendingDown className="w-8 h-8 text-red-500" />
               </div>
@@ -173,7 +103,7 @@ export default function InventoryManagement() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">부족 재고</p>
-                  <p className="text-2xl font-bold text-yellow-600">23</p>
+                  <p className="text-2xl font-bold text-yellow-600">0</p>
                 </div>
                 <BarChart3 className="w-8 h-8 text-yellow-500" />
               </div>

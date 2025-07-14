@@ -23,28 +23,7 @@ export type Company = {
 }
 
 // Mock company data
-const mockCompanies: Company[] = [
-  {
-    id: "1",
-    code: "C001",
-    name: "(주)가나다라",
-    representative: "홍길동",
-    phone: "02-1234-5678",
-    email: "contact@ganadara.com",
-    address: "서울시 강남구 테헤란로 123",
-    notes: "주요 공급업체",
-  },
-  {
-    id: "2",
-    code: "C002",
-    name: "(주)마바사",
-    representative: "김철수",
-    phone: "031-987-6543",
-    email: "sales@mabasa.co.kr",
-    address: "경기도 성남시 분당구 판교역로 456",
-    notes: "배송 파트너",
-  },
-]
+const mockCompanies: Company[] = []
 
 export default function CompanyList() {
   const [companies, setCompanies] = useState<Company[]>([])

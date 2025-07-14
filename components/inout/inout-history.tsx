@@ -21,99 +21,27 @@ export default function InOutHistory() {
   const [showHistoryFilters, setShowHistoryFilters] = useState(false)
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1)
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false)
-  const [registrationItems, setRegistrationItems] = useState([
-    {
-      id: 1,
-      type: "inbound",
-      productName: "",
-      category: "",
-      quantity: "",
-      location: "창고1",
-      company: "",
-      destination: "",
-      notes: "",
-    },
-  ])
+  const [registrationItems, setRegistrationItems] = useState<any[]>([])
   const itemsPerPage = 10
 
   // 더미 입출고 내역 데이터
-  const historyData = [
-    {
-      id: 1,
-      type: "inbound",
-      productName: "노트북 - ThinkPad X1",
-      sku: "NB-TP-X1-001",
-      category: "전자제품",
-      quantity: 50,
-      location: "A구역-01",
-      company: "삼성전자",
-      status: "완료",
-      date: "2024-01-15",
-      time: "09:30",
-      destination: "",
-      notes: "정기 입고",
-    },
-    {
-      id: 2,
-      type: "outbound",
-      productName: "무선 마우스",
-      sku: "MS-WL-001",
-      category: "주변기기",
-      quantity: 30,
-      location: "B구역-03",
-      company: "LG전자",
-      status: "진행중",
-      date: "2024-01-15",
-      time: "14:20",
-      destination: "강남지점",
-      notes: "긴급 출고",
-    },
-    {
-      id: 3,
-      type: "inbound",
-      productName: "기계식 키보드",
-      sku: "KB-MEC-001",
-      category: "주변기기",
-      quantity: 25,
-      location: "C구역-05",
-      company: "로지텍",
-      status: "완료",
-      date: "2024-01-14",
-      time: "16:45",
-      destination: "",
-      notes: "",
-    },
-    {
-      id: 4,
-      type: "outbound",
-      productName: "모니터 - 27인치 4K",
-      sku: "MN-27-4K-001",
-      category: "디스플레이",
-      quantity: 15,
-      location: "C구역-02",
-      company: "델",
-      status: "완료",
-      date: "2024-01-14",
-      time: "11:30",
-      destination: "서초지점",
-      notes: "고객 주문",
-    },
-    {
-      id: 5,
-      type: "inbound",
-      productName: "USB 허브",
-      sku: "HB-USB-001",
-      category: "주변기기",
-      quantity: 100,
-      location: "B구역-07",
-      company: "애플",
-      status: "완료",
-      date: "2024-01-13",
-      time: "10:15",
-      destination: "",
-      notes: "대량 입고",
-    },
-  ]
+  interface InOutHistoryItem {
+  id: number;
+  type: "inbound" | "outbound";
+  productName: string;
+  sku: string;
+  category: string;
+  quantity: number;
+  location: string;
+  company: string;
+  status: string;
+  date: string;
+  time: string;
+  destination: string;
+  notes: string;
+}
+
+const historyData: InOutHistoryItem[] = [];
 
   const handleHistoryFilterChange = (field: string, value: string) => {
     setHistoryFilters((prev) => ({
@@ -181,19 +109,7 @@ export default function InOutHistory() {
     // 등록 로직 처리
     console.log("등록할 항목들:", registrationItems)
     setIsRegistrationModalOpen(false)
-    setRegistrationItems([
-      {
-        id: 1,
-        type: "inbound",
-        productName: "",
-        category: "",
-        quantity: "",
-        location: "창고1",
-        company: "",
-        destination: "",
-        notes: "",
-      },
-    ])
+    setRegistrationItems([])
   }
 
   return (
@@ -213,8 +129,8 @@ export default function InOutHistory() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">오늘 입고</p>
-                  <p className="text-2xl font-bold text-blue-600">125</p>
-                  <p className="text-xs text-green-600">+12% 전일대비</p>
+                  <p className="text-2xl font-bold text-blue-600">0</p>
+                  <p className="text-xs text-green-600">0% 전일대비</p>
                 </div>
                 <Package className="w-8 h-8 text-blue-500" />
               </div>
@@ -225,8 +141,8 @@ export default function InOutHistory() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">오늘 출고</p>
-                  <p className="text-2xl font-bold text-red-600">89</p>
-                  <p className="text-xs text-red-600">-5% 전일대비</p>
+                  <p className="text-2xl font-bold text-red-600">0</p>
+                  <p className="text-xs text-red-600">0% 전일대비</p>
                 </div>
                 <TruckIcon className="w-8 h-8 text-red-500" />
               </div>
@@ -237,8 +153,8 @@ export default function InOutHistory() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">이번 주 총량</p>
-                  <p className="text-2xl font-bold">1,456</p>
-                  <p className="text-xs text-green-600">+8% 전주대비</p>
+                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-xs text-green-600">0% 전주대비</p>
                 </div>
                 <BarChart3 className="w-8 h-8 text-purple-500" />
               </div>

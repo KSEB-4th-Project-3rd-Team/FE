@@ -27,35 +27,62 @@ export default function RealTimeDashboard() {
   }, [])
 
   // 실시간 데이터 시뮬레이션
-  const dashboardData = {
-    inventory: {
-      total: 2707,
-      inStock: 2456,
-      lowStock: 89,
-      outOfStock: 12,
-      trend: "+5.2%",
-    },
-    operations: {
-      todayInbound: 125,
-      todayOutbound: 89,
-      pending: 23,
-      completed: 191,
-      inboundTrend: "+12%",
-      outboundTrend: "-5%",
-    },
-    agv: {
-      total: 8,
-      active: 6,
-      charging: 1,
-      maintenance: 1,
-      efficiency: 94.5,
-    },
-    alerts: [
-      { id: 1, type: "warning", message: "창고 B구역 온도 상승", time: "2분 전" },
-      { id: 2, type: "info", message: "AGV-003 배터리 부족", time: "5분 전" },
-      { id: 3, type: "error", message: "출고 지연 발생", time: "8분 전" },
-    ],
-  }
+  interface Alert {
+  id: number;
+  type: "warning" | "info" | "error";
+  message: string;
+  time: string;
+}
+
+const dashboardData: {
+  inventory: {
+    total: number;
+    inStock: number;
+    lowStock: number;
+    outOfStock: number;
+    trend: string;
+  };
+  operations: {
+    todayInbound: number;
+    todayOutbound: number;
+    pending: number;
+    completed: number;
+    inboundTrend: string;
+    outboundTrend: string;
+  };
+  agv: {
+    total: number;
+    active: number;
+    charging: number;
+    maintenance: number;
+    efficiency: number;
+  };
+  alerts: Alert[];
+} = {
+  inventory: {
+    total: 0,
+    inStock: 0,
+    lowStock: 0,
+    outOfStock: 0,
+    trend: "0%",
+  },
+  operations: {
+    todayInbound: 0,
+    todayOutbound: 0,
+    pending: 0,
+    completed: 0,
+    inboundTrend: "0%",
+    outboundTrend: "0%",
+  },
+  agv: {
+    total: 0,
+    active: 0,
+    charging: 0,
+    maintenance: 0,
+    efficiency: 0,
+  },
+  alerts: [],
+};
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString("ko-KR", {

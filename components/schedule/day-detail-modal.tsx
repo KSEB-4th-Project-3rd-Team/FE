@@ -15,44 +15,7 @@ interface DayDetailModalProps {
 }
 
 // Mock schedule data for a specific date
-const mockSchedules: Schedule[] = [
-  {
-    id: "1",
-    title: "입고 예정: A-01",
-    date: "2024-07-20",
-    time: "10:00",
-    location: "Dock 1",
-    details: "Apple boxes from Supplier X",
-    type: "inbound",
-  },
-  {
-    id: "2",
-    title: "출고 예정: B-02",
-    date: "2024-07-20",
-    time: "14:00",
-    location: "Dock 3",
-    details: "Samsung TVs to Retailer Y",
-    type: "outbound",
-  },
-  {
-    id: "3",
-    title: "정기 회의",
-    date: "2024-07-21",
-    time: "09:00",
-    location: "회의실 1",
-    details: "주간 업무 보고",
-    type: "meeting",
-  },
-  {
-    id: "4",
-    title: "창고 정리",
-    date: "2024-07-22",
-    time: "13:00",
-    location: "창고 전체",
-    details: "재고 실사 및 정리",
-    type: "work",
-  },
-]
+const mockSchedules: Schedule[] = []
 
 export default function DayDetailModal({ isOpen, onClose, selectedDate, onScheduleDeleted }: DayDetailModalProps) {
   const [schedules, setSchedules] = useState<Schedule[]>([])

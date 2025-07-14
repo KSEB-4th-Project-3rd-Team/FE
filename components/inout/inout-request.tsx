@@ -24,56 +24,7 @@ export type InOutRequest = {
 }
 
 // Mock in-out request data
-const mockRequests: InOutRequest[] = [
-  {
-    id: "1",
-    type: "inbound",
-    itemCode: "ITEM001",
-    itemName: "노트북 - ThinkPad X1",
-    quantity: 50,
-    companyCode: "COMP001",
-    companyName: "삼성전자",
-    requestDate: new Date().toISOString().split("T")[0],
-    notes: "앱에서 요청된 입고",
-    status: "pending",
-  },
-  {
-    id: "2",
-    type: "outbound",
-    itemCode: "ITEM002",
-    itemName: "무선 마우스",
-    quantity: 30,
-    companyCode: "COMP002",
-    companyName: "LG전자",
-    requestDate: new Date().toISOString().split("T")[0],
-    notes: "앱에서 요청된 출고",
-    status: "pending",
-  },
-  {
-    id: "3",
-    type: "inbound",
-    itemCode: "ITEM003",
-    itemName: "기계식 키보드",
-    quantity: 25,
-    companyCode: "COMP003",
-    companyName: "로지텍",
-    requestDate: "2024-01-14",
-    notes: "정기 입고",
-    status: "approved",
-  },
-  {
-    id: "4",
-    type: "outbound",
-    itemCode: "ITEM004",
-    itemName: "모니터 - 27인치",
-    quantity: 15,
-    companyCode: "COMP004",
-    companyName: "델",
-    requestDate: "2024-01-13",
-    notes: "긴급 출고",
-    status: "rejected",
-  },
-]
+const mockRequests: InOutRequest[] = []
 
 export default function InOutRequestPage() {
   const [requests, setRequests] = useState<InOutRequest[]>([])

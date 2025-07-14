@@ -19,52 +19,19 @@ export default function InOutStatus() {
   const [showStatusFilters, setShowStatusFilters] = useState(false)
 
   // 입출고 현황 데이터 (예약/진행중)
-  const statusData = [
-    {
-      id: 1,
-      type: "inbound",
-      productName: "태블릿 - iPad Pro",
-      quantity: 20,
-      location: "A구역-12",
-      status: "예약",
-      scheduledDate: "2024-01-16",
-      scheduledTime: "10:00",
-      company: "애플",
-    },
-    {
-      id: 2,
-      type: "outbound",
-      productName: "헤드셋 - 게이밍",
-      quantity: 15,
-      location: "B구역-09",
-      status: "진행중",
-      scheduledDate: "2024-01-15",
-      scheduledTime: "15:30",
-      company: "레이저",
-    },
-    {
-      id: 3,
-      type: "inbound",
-      productName: "프린터 - 레이저",
-      quantity: 5,
-      location: "C구역-06",
-      status: "예약",
-      scheduledDate: "2024-01-17",
-      scheduledTime: "09:00",
-      company: "HP",
-    },
-    {
-      id: 4,
-      type: "outbound",
-      productName: "외장하드 - 2TB",
-      quantity: 35,
-      location: "A구역-15",
-      status: "진행중",
-      scheduledDate: "2024-01-15",
-      scheduledTime: "16:00",
-      company: "씨게이트",
-    },
-  ]
+  interface InOutStatusItem {
+  id: number;
+  type: "inbound" | "outbound";
+  productName: string;
+  quantity: number;
+  location: string;
+  status: string;
+  scheduledDate: string;
+  scheduledTime: string;
+  company: string;
+}
+
+const statusData: InOutStatusItem[] = [];
 
   const handleStatusFilterChange = (field: string, value: string) => {
     setStatusFilters((prev) => {

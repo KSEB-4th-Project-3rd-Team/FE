@@ -49,7 +49,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [notificationCount, setNotificationCount] = useState(3)
+  const [notificationCount, setNotificationCount] = useState(0)
 
   const pathname = usePathname()
 
