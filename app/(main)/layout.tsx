@@ -277,7 +277,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 onClick={() => toggleMenu("basicInfo")}
               >
                 <div className="flex items-center">
-                  <Building2 className="w-4 h-4 mr-2" />
+                  <Building2 className="w-4 h-4 mr-4" />
                   <span>기초 정보</span>
                 </div>
                 {expandedMenus.basicInfo ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -315,7 +315,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 onClick={() => toggleMenu("inoutManagement")}
               >
                 <div className="flex items-center">
-                  <Box className="w-4 h-4 mr-2" />
+                  <Box className="w-4 h-4 mr-4" />
                   <span>입/출고 관리</span>
                 </div>
                 {expandedMenus.inoutManagement ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -415,7 +415,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 onClick={() => toggleMenu("systemManagement")}
               >
                 <div className="flex items-center">
-                  <Settings className="w-4 h-4 mr-2" />
+                  <Settings className="w-4 h-4 mr-4" />
                   <span>시스템 관리</span>
                 </div>
                 {expandedMenus.systemManagement ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
