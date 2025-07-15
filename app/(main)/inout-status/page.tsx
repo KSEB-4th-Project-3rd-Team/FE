@@ -1,7 +1,5 @@
-"use client"
-
-import InOutStatus from "@/components/inout/inout-status"
+import { redirect } from "next/navigation"
 
 export default function InOutStatusPage() {
-  return <InOutStatus />
+  redirect("/simulation")
 }

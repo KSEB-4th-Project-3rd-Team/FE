@@ -395,7 +395,7 @@ export default function SystemSettings() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label htmlFor="enableAgvSimulation">AGV 시뮬레이션 활성화</Label>
+              <Label htmlFor="enableAgvSimulation">AMR 작동 현황 활성화</Label>
               <Switch
                 id="enableAgvSimulation"
                 checked={settings.enableAgvSimulation}

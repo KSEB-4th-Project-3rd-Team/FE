@@ -263,7 +263,7 @@ export default function WarehouseSimulation() {
       <Card className="h-full border-0 shadow-none">
         <CardHeader className="bg-white border-b">
           <div className="flex items-center justify-between">
-            <CardTitle>AGV 현황</CardTitle>
+            <CardTitle>AMR 작동 현황</CardTitle>
             <div className="flex items-center gap-6">
               {/* AGV 통계 - 색상 구분 */}
               <div className="flex items-center gap-3 text-sm">
@@ -351,7 +351,7 @@ export default function WarehouseSimulation() {
               <iframe
                 src="https://2hyeoksang.github.io/Web_Build_Test/"
                 className="w-full h-full border-0"
-                title="AGV 시뮬레이션 웹뷰"
+                title="AMR 작동 현황 웹뷰"
                 style={{ minHeight: "600px" }}
               />
             </div>

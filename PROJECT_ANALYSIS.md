@@ -2,7 +2,7 @@
 
 ## 1. 프로젝트 개요
 
-이 애플리케이션은 Next.js (App Router), TypeScript, Tailwind CSS, Shadcn UI를 기반으로 구축된 스마트 창고 관리 시스템(WMS)입니다. 재고, 입출고, AGV 시뮬레이션, 일정, 보고서 등 창고 운영의 다양한 측면을 관리하기 위한 사용자 인터페이스를 제공합니다.
+L5: 이 애플리케이션은 Next.js (App Router), TypeScript, Tailwind CSS, Shadcn UI를 기반으로 구축된 스마트 창고 관리 시스템(WMS)입니다. 재고, 입출고, AMR 작동 현황, 일정, 보고서 등 창고 운영의 다양한 측면을 관리하기 위한 사용자 인터페이스를 제공합니다.
 
 ## 2. 기술 스택
 
@@ -231,7 +231,7 @@
     *   "등록" 및 "취소" 버튼.
     *   **데이터 소스:** `scheduleService`를 통해 새 일정을 추가.
 
-### 4.11. AGV 시뮬레이션 (`app/(main)/simulation/page.tsx`, `components/simulation/warehouse-simulation.tsx`, `components/simulation/agv-status-modal.tsx`)
+L234: ### 4.11. AMR 작동 현황 (`app/(main)/simulation/page.tsx`, `components/simulation/warehouse-simulation.tsx`, `components/simulation/agv-status-modal.tsx`)
 
 *   **역할:** AGV가 있는 창고 환경의 시각적 시뮬레이션 제공. 캔버스 기반 시뮬레이션과 임베디드 웹 뷰의 두 가지 모드 제공. 시뮬레이션 제어 및 상세 AGV 상태 보기.
 *   **`simulation/page.tsx` (메인 페이지):**

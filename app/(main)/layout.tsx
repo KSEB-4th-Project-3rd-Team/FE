@@ -25,6 +25,7 @@ import AuthForm from "@/components/auth/auth-form"
 import InboundForm from "@/components/forms/inbound-form"
 import OutboundForm from "@/components/forms/outbound-form"
 import GlobalSearch from "@/components/search/global-search"
+import InOutStatusPanel from "@/components/inout/inout-status-panel"
 
 // Temporary User type until API is connected
 export type User = {
@@ -34,7 +35,7 @@ export type User = {
   role: string
 }
 
-type SidePanelType = "inbound" | "outbound" | null
+type SidePanelType = "inbound" | "outbound" | "inout-status" | null
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   // Mock user data for development
@@ -76,7 +77,21 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       setSidePanel(null)
       setIsPanelCollapsed(true)
     }
-  }, [pathname])
+
+    // Automatically expand '입/출고 관리' menu if an in/out related side panel is open on simulation page
+    if (pathname === "/simulation" && (sidePanel === "inbound" || sidePanel === "outbound" || sidePanel === "inout-status")) {
+      setExpandedMenus(prev => ({
+        ...prev,
+        inoutManagement: true,
+      }));
+    } else {
+      // Collapse if not on simulation page or no in/out side panel is active
+      setExpandedMenus(prev => ({
+        ...prev,
+        inoutManagement: false,
+      }));
+    }
+  }, [pathname, sidePanel]); // Add sidePanel to dependencies
 
   const handleAuthSuccess = (user: User) => {
     setUser(user)
@@ -140,9 +155,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     const panelContent =
       sidePanel === "inbound" ? (
         <InboundForm onSubmit={handleInboundSubmit} onClose={closeSidePanel} />
-      ) : (
+      ) : sidePanel === "outbound" ? (
         <OutboundForm onSubmit={handleOutboundSubmit} onClose={closeSidePanel} />
-      )
+      ) : sidePanel === "inout-status" ? (
+        <InOutStatusPanel onClose={closeSidePanel} />
+      ) : null
 
     return (
       <>
@@ -158,7 +175,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             }`}
           >
             <div className="p-4 border-b bg-gray-50">
-              <h3 className="text-lg font-semibold">{sidePanel === "inbound" ? "입고 등록" : "출고 등록"}</h3>
+              <h3 className="text-lg font-semibold">
+                {sidePanel === "inbound" ? "입고 등록" : sidePanel === "outbound" ? "출고 등록" : "입출고 현황"}
+              </h3>
             </div>
             <div className="p-4 flex-1 overflow-y-auto">{panelContent}</div>
           </div>
@@ -218,7 +237,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600"
           style={{ height: "120px" }}
         >
-          <Link href="/simulation">
+          <Link href="/dashboard">
             <div className="flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity h-full">
               <img
                 src="/images/smart-wms-logo.png"
@@ -243,23 +262,104 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
         <div className="flex-1 p-3">
           <nav className="space-y-1">
+            <Link href="/dashboard" passHref>
+              <Button
+                variant={isActive("/dashboard") ? "default" : "ghost"}
+                className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                <span>대시보드</span>
+              </Button>
+            </Link>
+
             <Link href="/simulation" passHref>
               <Button
                 variant={isActive("/simulation") ? "default" : "ghost"}
                 className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"
               >
                 <Warehouse className="w-4 h-4 mr-2" />
-                <span>AGV 시뮬레이션</span>
+                <span>AMR 작동 현황</span>
               </Button>
             </Link>
 
-            <Link href="/schedule" passHref>
+            <div>
               <Button
-                variant={isActive("/schedule") ? "default" : "ghost"}
+                variant="ghost"
+                className="w-full justify-between text-sm hover:bg-blue-50 hover:text-blue-700"
+                onClick={() => toggleMenu("inoutManagement")}
+              >
+                <div className="flex items-center">
+                  <Box className="w-4 h-4 mr-4" />
+                  <span>입/출고 관리</span>
+                </div>
+                {expandedMenus.inoutManagement ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </Button>
+              {expandedMenus.inoutManagement && (
+                <div className="ml-6 mt-1 space-y-1">
+                  <Link href="/simulation" passHref>
+                    <Button
+                      variant={isActive("/simulation") && sidePanel === "inbound" ? "default" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
+                      onClick={() => handleSidePanelToggle("inbound")}
+                    >
+                      <span className="mr-2">•</span>
+                      입고 등록
+                    </Button>
+                  </Link>
+                  <Link href="/simulation" passHref>
+                    <Button
+                      variant={isActive("/simulation") && sidePanel === "outbound" ? "default" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
+                      onClick={() => handleSidePanelToggle("outbound")}
+                    >
+                      <span className="mr-2">•</span>
+                      출고 등록
+                    </Button>
+                  </Link>
+                  <Link href="/simulation" passHref>
+                    <Button
+                      variant={isActive("/simulation") && sidePanel === "inout-status" ? "default" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
+                      onClick={() => handleSidePanelToggle("inout-status")}
+                    >
+                      <span className="mr-2">•</span>
+                      입출고 현황
+                    </Button>
+                  </Link>
+                  <Link href="/inout-history" passHref>
+                    <Button
+                      variant={isActive("/inout-history") ? "default" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      <span className="mr-2">•</span>
+                      입출고 내역
+                    </Button>
+                  </Link>
+                  <Link href="/inout-request" passHref>
+                    <Button
+                      variant={isActive("/inout-request") ? "default" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      <span className="mr-2">•</span>
+                      입출고 요청
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            <Link href="/inventory" passHref>
+              <Button
+                variant={isActive("/inventory") ? "default" : "ghost"}
                 className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"
               >
-                <Calendar className="w-4 h-4 mr-2" />
-                <span>일정 관리</span>
+                <Package className="w-4 h-4 mr-2" />
+                <span>재고 관리</span>
               </Button>
             </Link>
 
@@ -301,93 +401,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               )}
             </div>
 
-            <div>
+            <Link href="/schedule" passHref>
               <Button
-                variant="ghost"
-                className="w-full justify-between text-sm hover:bg-blue-50 hover:text-blue-700"
-                onClick={() => toggleMenu("inoutManagement")}
-              >
-                <div className="flex items-center">
-                  <Box className="w-4 h-4 mr-4" />
-                  <span>입/출고 관리</span>
-                </div>
-                {expandedMenus.inoutManagement ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </Button>
-              {expandedMenus.inoutManagement && (
-                <div className="ml-6 mt-1 space-y-1">
-                  <Link href="/simulation" passHref>
-                    <Button
-                      variant={isActive("/simulation") && sidePanel === "inbound" ? "default" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
-                      onClick={() => handleSidePanelToggle("inbound")}
-                    >
-                      <span className="mr-2">•</span>
-                      입고 등록
-                    </Button>
-                  </Link>
-                  <Link href="/simulation" passHref>
-                    <Button
-                      variant={isActive("/simulation") && sidePanel === "outbound" ? "default" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
-                      onClick={() => handleSidePanelToggle("outbound")}
-                    >
-                      <span className="mr-2">•</span>
-                      출고 등록
-                    </Button>
-                  </Link>
-                  <Link href="/inout-status" passHref>
-                    <Button
-                      variant={isActive("/inout-status") ? "default" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
-                    >
-                      <span className="mr-2">•</span>
-                      입출고 현황
-                    </Button>
-                  </Link>
-                  <Link href="/inout-history" passHref>
-                    <Button
-                      variant={isActive("/inout-history") ? "default" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
-                    >
-                      <span className="mr-2">•</span>
-                      입출고 내역
-                    </Button>
-                  </Link>
-                  <Link href="/inout-request" passHref>
-                    <Button
-                      variant={isActive("/inout-request") ? "default" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
-                    >
-                      <span className="mr-2">•</span>
-                      입출고 요청
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            <Link href="/inventory" passHref>
-              <Button
-                variant={isActive("/inventory") ? "default" : "ghost"}
+                variant={isActive("/schedule") ? "default" : "ghost"}
                 className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"
               >
-                <Package className="w-4 h-4 mr-2" />
-                <span>재고 관리</span>
-              </Button>
-            </Link>
-
-            <Link href="/dashboard" passHref>
-              <Button
-                variant={isActive("/dashboard") ? "default" : "ghost"}
-                className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"
-              >
-                <BarChart3 className="w-4 h-4 mr-2" />
-                <span>대시보드</span>
+                <Calendar className="w-4 h-4 mr-2" />
+                <span>일정 관리</span>
               </Button>
             </Link>
 
