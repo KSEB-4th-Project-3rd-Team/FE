@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Calendar,
@@ -53,6 +53,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const [notificationCount, setNotificationCount] = useState(0)
 
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   const [expandedMenus, setExpandedMenus] = useState({
     basicInfo: false,
@@ -69,29 +70,25 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     //   setIsLoading(false)
     // }
     // checkAuthStatus()
-  }, [])
 
-  useEffect(() => {
-    // If navigating away from simulation, close the side panel
-    if (pathname !== "/simulation") {
+    if (pathname === "/simulation") {
+      const panel = searchParams.get("panel")
+      if (panel === "inout-status") {
+        setSidePanel("inout-status")
+        setIsPanelCollapsed(false)
+        setExpandedMenus(prev => ({
+          ...prev,
+          inoutManagement: true,
+        }));
+      } else {
+        setSidePanel(null)
+        setIsPanelCollapsed(true)
+      }
+    } else {
       setSidePanel(null)
       setIsPanelCollapsed(true)
     }
-
-    // Automatically expand '입/출고 관리' menu if an in/out related side panel is open on simulation page
-    if (pathname === "/simulation" && (sidePanel === "inbound" || sidePanel === "outbound" || sidePanel === "inout-status")) {
-      setExpandedMenus(prev => ({
-        ...prev,
-        inoutManagement: true,
-      }));
-    } else {
-      // Collapse if not on simulation page or no in/out side panel is active
-      setExpandedMenus(prev => ({
-        ...prev,
-        inoutManagement: false,
-      }));
-    }
-  }, [pathname, sidePanel]); // Add sidePanel to dependencies
+  }, [pathname, searchParams]);
 
   const handleAuthSuccess = (user: User) => {
     setUser(user)
@@ -103,18 +100,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }
 
   const toggleMenu = (menu: keyof typeof expandedMenus) => {
-    setExpandedMenus(prev => {
-      const isCurrentlyOpen = prev[menu];
-      // Reset all to false
-      const newState = {
-        basicInfo: false,
-        inoutManagement: false,
-        systemManagement: false,
-      };
-      // Set the clicked one to the toggled value
-      newState[menu] = !isCurrentlyOpen;
-      return newState;
-    });
+    setExpandedMenus(prev => ({
+      ...prev,
+      [menu]: !prev[menu],
+    }));
   }
 
   const handleSidePanelToggle = (panel: SidePanelType) => {
@@ -147,7 +136,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     setIsPanelCollapsed(true)
   }
 
-  const PANEL_WIDTH = 320
+  const PANEL_WIDTH = 600
 
   const renderSidePanel = () => {
     if (!sidePanel) return null
@@ -318,12 +307,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                       출고 등록
                     </Button>
                   </Link>
-                  <Link href="/simulation" passHref>
+                  <Link href="/simulation?panel=inout-status" passHref>
                     <Button
                       variant={isActive("/simulation") && sidePanel === "inout-status" ? "default" : "ghost"}
                       size="sm"
                       className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
-                      onClick={() => handleSidePanelToggle("inout-status")}
                     >
                       <span className="mr-2">•</span>
                       입출고 현황
