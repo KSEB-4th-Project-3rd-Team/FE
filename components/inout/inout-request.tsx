@@ -7,24 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Check, X, Package, TruckIcon, Search } from "lucide-react"
 
-// import { inoutRequestService, type InOutRequest } from "@/lib/inout-request" // Removed for Spring backend integration
-
-// Temporary InOutRequest type until API is connected
-export type InOutRequest = {
-  id: string
-  type: "inbound" | "outbound"
-  itemCode: string
-  itemName: string
-  quantity: number
-  companyCode: string
-  companyName: string
-  requestDate: string
-  notes: string
-  status: "pending" | "approved" | "rejected"
-}
-
-// Mock in-out request data
-const mockRequests: InOutRequest[] = []
+import { InOutRequest, mockInOutRequests } from "@/components/utils" 
 
 export default function InOutRequestPage() {
   const [requests, setRequests] = useState<InOutRequest[]>([])
@@ -54,7 +37,7 @@ export default function InOutRequestPage() {
 
   const loadRequests = () => {
     // const allRequests = inoutRequestService.getRequests() // Removed for Spring backend integration
-    setRequests(mockRequests)
+    setRequests(mockInOutRequests)
   }
 
   const showNotification = (message: string, type: "success" | "error" = "success") => {

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Package, Search, Filter, BarChart3, TrendingUp, TrendingDown } from "lucide-react"
+import { InventoryItem, mockInventoryData } from "@/components/utils"
 
 export default function InventoryManagement() {
   const [searchFilters, setSearchFilters] = useState({
@@ -19,18 +20,7 @@ export default function InventoryManagement() {
   const itemsPerPage = 10
 
   // 더미 재고 데이터
-  interface InventoryItem {
-  id: number;
-  name: string;
-  sku: string;
-  category: string;
-  quantity: number;
-  location: string;
-  status: string;
-  lastUpdate: string;
-}
-
-const inventoryData: InventoryItem[] = [];
+const inventoryData: InventoryItem[] = mockInventoryData;
 
   const handleFilterChange = (field: string, value: string) => {
     setSearchFilters((prev) => ({

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Search, Package, TruckIcon } from "lucide-react"
+import { InOutStatusItem, mockInOutStatusData } from "@/components/utils"
 
 export default function InOutStatus() {
   const [statusFilters, setStatusFilters] = useState({
@@ -19,19 +20,7 @@ export default function InOutStatus() {
   const [showStatusFilters, setShowStatusFilters] = useState(false)
 
   // 입출고 현황 데이터 (예약/진행중)
-  interface InOutStatusItem {
-  id: number;
-  type: "inbound" | "outbound";
-  productName: string;
-  quantity: number;
-  location: string;
-  status: string;
-  scheduledDate: string;
-  scheduledTime: string;
-  company: string;
-}
-
-const statusData: InOutStatusItem[] = [];
+const statusData: InOutStatusItem[] = mockInOutStatusData;
 
   const handleStatusFilterChange = (field: string, value: string) => {
     setStatusFilters((prev) => {

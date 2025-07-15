@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, Filter, Package, TruckIcon, BarChart3, X } from "lucide-react"
+import { InOutHistoryItem, mockInOutHistoryData } from "@/components/utils"
 
 export default function InOutHistory() {
   const [historyFilters, setHistoryFilters] = useState({
@@ -25,23 +26,7 @@ export default function InOutHistory() {
   const itemsPerPage = 10
 
   // 더미 입출고 내역 데이터
-  interface InOutHistoryItem {
-  id: number;
-  type: "inbound" | "outbound";
-  productName: string;
-  sku: string;
-  category: string;
-  quantity: number;
-  location: string;
-  company: string;
-  status: string;
-  date: string;
-  time: string;
-  destination: string;
-  notes: string;
-}
-
-const historyData: InOutHistoryItem[] = [];
+const historyData: InOutHistoryItem[] = mockInOutHistoryData;
 
   const handleHistoryFilterChange = (field: string, value: string) => {
     setHistoryFilters((prev) => ({

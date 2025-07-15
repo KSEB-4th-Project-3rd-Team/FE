@@ -59,22 +59,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     systemManagement: false,
   });
 
-  useEffect(() => {
-    const isBasicInfoActive = pathname.startsWith("/company-list") || pathname.startsWith("/item-list");
-    const isInOutManagementActive =
-      pathname.startsWith("/inout") ||
-      (pathname.startsWith("/simulation") && (sidePanel === "inbound" || sidePanel === "outbound"));
-    const isSystemManagementActive =
-      pathname.startsWith("/user-management") ||
-      pathname.startsWith("/system-settings") ||
-      pathname.startsWith("/notifications");
-
-    setExpandedMenus({
-      basicInfo: isBasicInfoActive,
-      inoutManagement: isInOutManagementActive,
-      systemManagement: isSystemManagementActive,
-    });
-  }, [pathname, sidePanel]);
+  
 
   useEffect(() => {
     // const checkAuthStatus = () => {
@@ -103,10 +88,18 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }
 
   const toggleMenu = (menu: keyof typeof expandedMenus) => {
-    setExpandedMenus((prev) => ({
-      ...prev,
-      [menu]: !prev[menu],
-    }))
+    setExpandedMenus(prev => {
+      const isCurrentlyOpen = prev[menu];
+      // Reset all to false
+      const newState = {
+        basicInfo: false,
+        inoutManagement: false,
+        systemManagement: false,
+      };
+      // Set the clicked one to the toggled value
+      newState[menu] = !isCurrentlyOpen;
+      return newState;
+    });
   }
 
   const handleSidePanelToggle = (panel: SidePanelType) => {
