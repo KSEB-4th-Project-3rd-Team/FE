@@ -29,6 +29,7 @@ export default function InOutHistory() {
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false)
   const [registrationItems, setRegistrationItems] = useState<any[]>([])
   const [displayUnit, setDisplayUnit] = useState<DisplayUnit>('set')
+
   const itemsPerPage = 10
   const SET_QUANTITY = 14
 
@@ -114,14 +115,16 @@ export default function InOutHistory() {
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">입출고 내역</h2>
-        <Button onClick={() => setIsRegistrationModalOpen(true)} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          입출고 등록
-        </Button>
-      </div>
-      <div className="grid gap-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold">입출고 내역</h2>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setIsRegistrationModalOpen(true)} className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              입출고 등록
+            </Button>
+          </div>
+        </div>
+        <div className="grid gap-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="p-4">

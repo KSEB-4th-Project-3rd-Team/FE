@@ -165,7 +165,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           >
             <div className="p-4 border-b bg-gray-50">
               <h3 className="text-lg font-semibold">
-                {sidePanel === "inbound" ? "입고 등록" : sidePanel === "outbound" ? "출고 등록" : "입출고 현황"}
+                {sidePanel === "inbound" ? "입고 등록" : sidePanel === "outbound" ? "출고 등록" : "실시간 현황"}
               </h3>
             </div>
             <div className="p-4 flex-1 overflow-y-auto">{panelContent}</div>
@@ -314,7 +314,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                       className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
                     >
                       <span className="mr-2">•</span>
-                      입출고 현황
+                      실시간 현황
                     </Button>
                   </Link>
                   <Link href="/inout-history" passHref>

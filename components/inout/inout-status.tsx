@@ -93,7 +93,7 @@ export function InOutStatus() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>입출고 현황</CardTitle>
+        <CardTitle>실시간 입출고</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="all">

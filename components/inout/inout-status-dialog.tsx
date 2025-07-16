@@ -35,8 +35,7 @@ export default function InOutStatusDialog({ isOpen, onClose, data }: InOutStatus
   })
   const [showStatusFilters, setShowStatusFilters] = useState(false)
 
-  // 입출고 현황 데이터 (예약/진행중)
-const statusData: InOutRecord[] = mockInOutData;
+  const statusData: InOutRecord[] = mockInOutData;
 
   const handleStatusFilterChange = (field: string, value: string) => {
     setStatusFilters((prev) => {
@@ -45,7 +44,6 @@ const statusData: InOutRecord[] = mockInOutData;
         [field]: value,
       }
 
-      // 전체 버튼을 눌렀을 때 다른 필터들도 초기화
       if (field === "type" && value === "") {
         newFilters.status = ""
       }
@@ -54,7 +52,6 @@ const statusData: InOutRecord[] = mockInOutData;
     })
   }
 
-  // 필터링 로직
   const filteredStatus = statusData.filter((item) => {
     const typeMatch = statusFilters.type === "" || item.type === statusFilters.type
     const productNameMatch = item.productName.toLowerCase().includes(statusFilters.productName.toLowerCase())
@@ -74,14 +71,25 @@ const statusData: InOutRecord[] = mockInOutData;
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>입출고 현황</DialogTitle>
-          <DialogDescription>
-            현재 창고의 입출고 현황을 확인하고 필터링할 수 있습니다.
-          </DialogDescription>
+            <div className="flex items-center justify-between">
+                <div>
+                    <DialogTitle>입출고 현황</DialogTitle>
+                    <DialogDescription>
+                        현재 창고의 입출고 현황을 확인하고 필터링할 수 있습니다.
+                    </DialogDescription>
+                </div>
+                <Button
+                    variant="outline"
+                    onClick={() => setShowStatusFilters(!showStatusFilters)}
+                    className="flex items-center gap-2"
+                  >
+                    <Search className="w-4 h-4" />
+                    검색
+                </Button>
+            </div>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto p-2">
           <div className="grid gap-6">
-            {/* 필터 탭 */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -127,18 +135,9 @@ const statusData: InOutRecord[] = mockInOutData;
                       진행중
                     </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowStatusFilters(!showStatusFilters)}
-                    className="flex items-center gap-2"
-                  >
-                    <Search className="w-4 h-4" />
-                    검색
-                  </Button>
                 </div>
               </CardHeader>
               <CardContent>
-                {/* 검색 필터 */}
                 {showStatusFilters && (
                   <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
                     <div>
