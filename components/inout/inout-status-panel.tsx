@@ -174,7 +174,7 @@ export default function InOutStatusPanel({ onClose }: InOutStatusPanelProps) {
                 <div>
                   <Button
                     variant="outline"
-                    size="xs"
+                    size="sm"
                     onClick={resetFilters}
                     className="w-full mt-2 text-gray-600"
                   >

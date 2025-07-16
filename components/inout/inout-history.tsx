@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Search, Filter, Package, TruckIcon, BarChart3, X } from "lucide-react"
 import { InOutRecord, mockInOutData } from "@/components/utils"
+import { Separator } from "@/components/ui/separator"
 
 type DisplayUnit = "개수" | "set"
 
@@ -41,6 +42,14 @@ export default function InOutHistory() {
     setCurrentPage(1)
   }
 
+  const handleToggleFilter = (field: 'type' | 'status', value: string) => {
+    setFilters(prev => ({
+        ...prev,
+        [field]: prev[field] === value ? 'all' : value
+    }));
+    setCurrentPage(1);
+  };
+
   const filteredHistory = historyData.filter((item) => {
     return (
       (filters.type === "all" || item.type === filters.type) &&
@@ -65,7 +74,6 @@ export default function InOutHistory() {
   const addRegistrationItem = () => {
     const newItem = {
       id: registrationItems.length + 1,
-      type: "inbound",
       productName: "",
       specification: "",
       quantity: "",
@@ -156,20 +164,63 @@ export default function InOutHistory() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Package className="w-5 h-5" />
-                전체 입출고 내역
-              </CardTitle>
               <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center gap-2"
+                  variant={filters.type === "all" && filters.status === "all" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    setFilters(prev => ({...prev, type: 'all', status: 'all'}));
+                    setCurrentPage(1);
+                  }}
                 >
-                  <Search className="w-4 h-4" />
-                  검색
+                  전체
                 </Button>
-              </div>
+                <Separator orientation="vertical" className="mx-1 h-6" />
+                <Button
+                  variant={filters.type === "inbound" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleToggleFilter("type", "inbound")}
+                >
+                  입고
+                </Button>
+                <Button
+                  variant={filters.type === "outbound" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleToggleFilter("type", "outbound")}
+                >
+                  출고
+                </Button>
+                <Separator orientation="vertical" className="mx-1 h-6" />
+                <Button
+                  variant={filters.status === "진행 중" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleToggleFilter("status", "진행 중")}
+                >
+                  진행 중
+                </Button>
+                <Button
+                  variant={filters.status === "예약" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleToggleFilter("status", "예약")}
+                >
+                  예약
+                </Button>
+                <Button
+                  variant={filters.status === "완료" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleToggleFilter("status", "완료")}
+                >
+                  완료
+                </Button>
+            </div>
+            <Button
+                variant="outline"
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2"
+              >
+                <Search className="w-4 h-4" />
+                검색
+              </Button>
             </div>
           </CardHeader>
           <CardContent className="overflow-x-auto">
@@ -182,23 +233,7 @@ export default function InOutHistory() {
                 <Input placeholder="거래처" value={filters.company} onChange={(e) => handleFilterChange("company", e.target.value)} />
                 <Input placeholder="목적지" value={filters.destination} onChange={(e) => handleFilterChange("destination", e.target.value)} />
                 <Input type="date" value={filters.date} onChange={(e) => handleFilterChange("date", e.target.value)} />
-                <Select value={filters.type} onValueChange={(value) => handleFilterChange("type", value)}>
-                  <SelectTrigger><SelectValue placeholder="유형" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">전체</SelectItem>
-                    <SelectItem value="inbound">입고</SelectItem>
-                    <SelectItem value="outbound">출고</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={filters.status} onValueChange={(value) => handleFilterChange("status", value)}>
-                  <SelectTrigger><SelectValue placeholder="상태" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">전체</SelectItem>
-                    <SelectItem value="완료">완료</SelectItem>
-                    <SelectItem value="진행 중">진행 중</SelectItem>
-                    <SelectItem value="예약">예약</SelectItem>
-                  </SelectContent>
-                </Select>
+                
                  <Button
                     variant="outline"
                     size="sm"

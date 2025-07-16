@@ -6,15 +6,25 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Search, Package, TruckIcon } from "lucide-react"
-import { InOutStatusItem, mockInOutStatusData } from "@/components/utils"
+import { InOutRecord, mockInOutData } from "@/components/utils"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+
+interface InOutData {
+  id: number
+  type: "입고" | "출고"
+  item: string
+  quantity: number
+  status: "완료" | "진행중" | "예약"
+  date: string
+}
 
 interface InOutStatusDialogProps {
   isOpen: boolean;
   onClose: () => void;
+  data: InOutData | null;
 }
 
-export default function InOutStatusDialog({ isOpen, onClose }: InOutStatusDialogProps) {
+export default function InOutStatusDialog({ isOpen, onClose, data }: InOutStatusDialogProps) {
   const [statusFilters, setStatusFilters] = useState({
     type: "",
     productName: "",
@@ -26,7 +36,7 @@ export default function InOutStatusDialog({ isOpen, onClose }: InOutStatusDialog
   const [showStatusFilters, setShowStatusFilters] = useState(false)
 
   // 입출고 현황 데이터 (예약/진행중)
-const statusData: InOutStatusItem[] = mockInOutStatusData;
+const statusData: InOutRecord[] = mockInOutData;
 
   const handleStatusFilterChange = (field: string, value: string) => {
     setStatusFilters((prev) => {
@@ -54,7 +64,7 @@ const statusData: InOutStatusItem[] = mockInOutStatusData;
 
     let dateMatch = true
     if (statusFilters.date) {
-      dateMatch = item.scheduledDate === statusFilters.date
+      dateMatch = item.date === statusFilters.date
     }
 
     return typeMatch && productNameMatch && locationMatch && statusMatch && companyMatch && dateMatch
@@ -252,8 +262,8 @@ const statusData: InOutStatusItem[] = mockInOutStatusData;
                           <td className="p-3">{item.company}</td>
                           <td className="p-3 text-center">
                             <div>
-                              <p className="text-sm">{item.scheduledDate}</p>
-                              <p className="text-xs text-gray-500">{item.scheduledTime}</p>
+                              <p className="text-sm">{item.date}</p>
+                              <p className="text-xs text-gray-500">{item.time}</p>
                             </div>
                           </td>
                         </tr>
