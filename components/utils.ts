@@ -6,19 +6,19 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Mock Data Interfaces
-export interface InOutHistoryItem {
+export interface InOutRecord {
   id: number;
   type: "inbound" | "outbound";
   productName: string;
   sku: string;
-  category: string;
+  specification: string; // '규격'
   quantity: number;
-  location: string;
+  location: string; // '구역'
   company: string;
+  status: "완료" | "진행 중" | "예약";
+  destination: string;
   date: string;
   time: string;
-  destination: string;
-  notes: string;
 }
 
 export interface InOutRequest {
@@ -34,18 +34,6 @@ export interface InOutRequest {
   status: "pending" | "approved" | "rejected";
 }
 
-export interface InOutStatusItem {
-  id: number;
-  type: "inbound" | "outbound";
-  productName: string;
-  quantity: number;
-  location: string;
-  status: string;
-  scheduledDate: string;
-  scheduledTime: string;
-  company: string;
-}
-
 export interface InventoryItem {
   id: number;
   name: string;
@@ -58,76 +46,134 @@ export interface InventoryItem {
 }
 
 // Mock Data Arrays
-export const mockInOutHistoryData: InOutHistoryItem[] = [
+export const mockInOutData: InOutRecord[] = [
+  // From mockInOutHistoryData (status: "완료")
   {
     id: 1,
     type: "inbound",
     productName: "스마트폰 (갤럭시 S24)",
     sku: "SM-G998B",
-    category: "전자제품",
+    specification: "전자제품",
     quantity: 100,
     location: "창고1",
     company: "삼성전자",
+    status: "완료",
+    destination: "",
     date: "2024-07-10",
     time: "10:30",
-    destination: "",
-    notes: "신규 입고",
   },
   {
     id: 2,
     type: "outbound",
     productName: "노트북 (LG 그램)",
     sku: "LG-17Z90P",
-    category: "전자제품",
+    specification: "전자제품",
     quantity: 50,
     location: "창고2",
     company: "LG전자",
+    status: "완료",
+    destination: "서울 강남점",
     date: "2024-07-10",
     time: "14:00",
-    destination: "서울 강남점",
-    notes: "온라인 주문 출고",
   },
   {
     id: 3,
     type: "inbound",
     productName: "무선 이어폰 (버즈 프로)",
     sku: "SM-R190",
-    category: "악세서리",
+    specification: "악세서리",
     quantity: 200,
     location: "창고1",
     company: "삼성전자",
+    status: "완료",
+    destination: "",
     date: "2024-07-11",
     time: "09:00",
-    destination: "",
-    notes: "정기 입고",
   },
   {
     id: 4,
     type: "outbound",
     productName: "태블릿 (아이패드 에어)",
     sku: "IPAD-AIR4",
-    category: "전자제품",
+    specification: "전자제품",
     quantity: 30,
     location: "창고3",
     company: "애플코리아",
+    status: "완료",
+    destination: "부산 해운대점",
     date: "2024-07-11",
     time: "11:00",
-    destination: "부산 해운대점",
-    notes: "매장 재고 보충",
   },
   {
     id: 5,
     type: "inbound",
     productName: "스마트워치 (애플워치 S8)",
     sku: "AW-S8",
-    category: "악세서리",
+    specification: "악세서리",
     quantity: 70,
     location: "창고2",
     company: "애플코리아",
+    status: "완료",
+    destination: "",
     date: "2024-07-12",
     time: "16:00",
+  },
+  // From mockInOutStatusData
+  {
+    id: 6,
+    type: "inbound",
+    productName: "스마트폰 (갤럭시 S24)",
+    sku: "SM-G998B",
+    specification: "전자제품",
+    quantity: 50,
+    location: "창고1",
+    company: "삼성전자",
+    status: "예약",
     destination: "",
-    notes: "신제품 입고",
+    date: "2024-07-16",
+    time: "11:00",
+  },
+  {
+    id: 7,
+    type: "outbound",
+    productName: "노트북 (LG 그램)",
+    sku: "LG-17Z90P",
+    specification: "전자제품",
+    quantity: 20,
+    location: "창고2",
+    company: "LG전자",
+    status: "진행 중",
+    destination: "광주 서구점",
+    date: "2024-07-15",
+    time: "15:00",
+  },
+  {
+    id: 8,
+    type: "inbound",
+    productName: "무선 이어폰 (버즈 프로)",
+    sku: "SM-R190",
+    specification: "악세서리",
+    quantity: 100,
+    location: "창고1",
+    company: "삼성전자",
+    status: "예약",
+    destination: "",
+    date: "2024-07-17",
+    time: "09:30",
+  },
+  {
+    id: 9,
+    type: "outbound",
+    productName: "태블릿 (아이패드 에어)",
+    sku: "IPAD-AIR4",
+    specification: "전자제품",
+    quantity: 15,
+    location: "창고3",
+    company: "애플코리아",
+    status: "예약",
+    destination: "대구 수성점",
+    date: "2024-07-16",
+    time: "13:00",
   },
 ];
 
@@ -182,52 +228,6 @@ export const mockInOutRequests: InOutRequest[] = [
   },
 ];
 
-export const mockInOutStatusData: InOutStatusItem[] = [
-  {
-    id: 1,
-    type: "inbound",
-    productName: "스마트폰 (갤럭시 S24)",
-    quantity: 50,
-    location: "창고1",
-    status: "예약",
-    scheduledDate: "2024-07-16",
-    scheduledTime: "11:00",
-    company: "삼성전자",
-  },
-  {
-    id: 2,
-    type: "outbound",
-    productName: "노트북 (LG 그램)",
-    quantity: 20,
-    location: "창고2",
-    status: "진행중",
-    scheduledDate: "2024-07-15",
-    scheduledTime: "15:00",
-    company: "LG전자",
-  },
-  {
-    id: 3,
-    type: "inbound",
-    productName: "무선 이어폰 (버즈 프로)",
-    quantity: 100,
-    location: "창고1",
-    status: "예약",
-    scheduledDate: "2024-07-17",
-    scheduledTime: "09:30",
-    company: "삼성전자",
-  },
-  {
-    id: 4,
-    type: "outbound",
-    productName: "태블릿 (아이패드 에어)",
-    quantity: 15,
-    location: "창고3",
-    status: "예약",
-    scheduledDate: "2024-07-16",
-    scheduledTime: "13:00",
-    company: "애플코리아",
-  },
-];
 
 export const mockInventoryData: InventoryItem[] = [
   {

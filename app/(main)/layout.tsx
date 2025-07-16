@@ -136,7 +136,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     setIsPanelCollapsed(true)
   }
 
-  const PANEL_WIDTH = 600
+  const PANEL_WIDTH = 350
 
   const renderSidePanel = () => {
     if (!sidePanel) return null

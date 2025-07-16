@@ -2,189 +2,181 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Search, Package, TruckIcon } from "lucide-react"
-import { InOutStatusItem, mockInOutStatusData } from "@/components/utils"
+import { Search, Package, TruckIcon, X } from "lucide-react"
+import { InOutRecord, mockInOutData } from "@/components/utils"
 
 interface InOutStatusPanelProps {
   onClose: () => void;
 }
 
 export default function InOutStatusPanel({ onClose }: InOutStatusPanelProps) {
-  const [statusFilters, setStatusFilters] = useState({
+  const [filters, setFilters] = useState({
     type: "",
+    status: "",
     productName: "",
     location: "",
-    status: "",
     company: "",
     date: "",
   })
-  const [showStatusFilters, setShowStatusFilters] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
 
-  // 입출고 현황 데이터 (예약/진행중)
-const statusData: InOutStatusItem[] = mockInOutStatusData;
+  const statusData: InOutRecord[] = mockInOutData.filter(
+    (item) => item.status === "진행 중" || item.status === "예약"
+  )
 
-  const handleStatusFilterChange = (field: string, value: string) => {
-    setStatusFilters((prev) => {
-      const newFilters = {
-        ...prev,
-        [field]: value,
-      }
+  const handleFilterChange = (field: string, value: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
+  }
 
-      // 전체 버튼을 눌렀을 때 다른 필터들도 초기화
-      if (field === "type" && value === "") {
-        newFilters.status = ""
-      }
-
-      return newFilters
+    const resetFilters = () => {
+    setFilters({
+        type: "",
+        status: "",
+        productName: "",
+        location: "",
+        company: "",
+        date: "",
     })
   }
 
-  // 필터링 로직
-  const filteredStatus = statusData.filter((item) => {
-    const typeMatch = statusFilters.type === "" || item.type === statusFilters.type
-    const productNameMatch = item.productName.toLowerCase().includes(statusFilters.productName.toLowerCase())
-    const locationMatch = item.location.toLowerCase().includes(statusFilters.location.toLowerCase())
-    const statusMatch = statusFilters.status === "" || item.status === statusFilters.status
-    const companyMatch = item.company.toLowerCase().includes(statusFilters.company.toLowerCase())
 
-    let dateMatch = true
-    if (statusFilters.date) {
-      dateMatch = item.scheduledDate === statusFilters.date
-    }
-
-    return typeMatch && productNameMatch && locationMatch && statusMatch && companyMatch && dateMatch
+  const filteredData = statusData.filter((item) => {
+    return (
+      (filters.type === "" || item.type === filters.type) &&
+      (filters.status === "" || item.status === filters.status) &&
+      item.productName.toLowerCase().includes(filters.productName.toLowerCase()) &&
+      item.location.toLowerCase().includes(filters.location.toLowerCase()) &&
+      item.company.toLowerCase().includes(filters.company.toLowerCase()) &&
+      (filters.date === "" || item.date === filters.date)
+    )
   })
 
+    const getStatusChipClass = (status: "완료" | "진행 중" | "예약") => {
+    switch (status) {
+      case "완료":
+        return "bg-green-100 text-green-800"
+      case "진행 중":
+        return "bg-blue-100 text-blue-800"
+      case "예약":
+        return "bg-yellow-100 text-yellow-800"
+    }
+  }
+
+
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <h2 className="text-2xl font-bold mb-6">입출고 현황</h2>
-      <div className="grid gap-6">
-        {/* 필터 탭 */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+    <div className="p-4 bg-gray-50 border-l border-gray-200 h-full flex flex-col">
+        <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold">입출고 현황</h2>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+                <X className="w-4 h-4" />
+            </Button>
+        </div>
+      <Card className="flex-1 flex flex-col">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
                 <Button
-                  variant={statusFilters.type === "" && statusFilters.status === "" ? "default" : "outline"}
+                  variant={filters.type === "" && filters.status === "" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => {
-                    handleStatusFilterChange("type", "")
-                    handleStatusFilterChange("status", "")
-                  }}
+                  onClick={() => setFilters(prev => ({...prev, type: "", status: ""}))}
                 >
                   전체
                 </Button>
-                <div className="h-4 w-px bg-gray-300"></div>
                 <Button
-                  variant={statusFilters.type === "inbound" ? "default" : "outline"}
+                  variant={filters.type === "inbound" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => handleStatusFilterChange("type", "inbound")}
+                  onClick={() => handleFilterChange("type", "inbound")}
                 >
                   입고
                 </Button>
                 <Button
-                  variant={statusFilters.type === "outbound" ? "default" : "outline"}
+                  variant={filters.type === "outbound" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => handleStatusFilterChange("type", "outbound")}
+                  onClick={() => handleFilterChange("type", "outbound")}
                 >
                   출고
                 </Button>
-                <div className="h-4 w-px bg-gray-300"></div>
                 <Button
-                  variant={statusFilters.status === "예약" ? "default" : "outline"}
+                  variant={filters.status === "진행 중" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => handleStatusFilterChange("status", "예약")}
+                  onClick={() => handleFilterChange("status", "진행 중")}
+                >
+                  진행 중
+                </Button>
+                <Button
+                  variant={filters.status === "예약" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleFilterChange("status", "예약")}
                 >
                   예약
                 </Button>
-                <Button
-                  variant={statusFilters.status === "진행중" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleStatusFilterChange("status", "진행중")}
-                >
-                  진행중
-                </Button>
-              </div>
-              <Button
+            </div>
+            <Button
                 variant="outline"
-                onClick={() => setShowStatusFilters(!showStatusFilters)}
-                className="flex items-center gap-2"
+                size="sm"
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-1"
               >
-                <Search className="w-4 h-4" />
+                <Search className="w-3 h-3" />
                 검색
               </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {/* 검색 필터 */}
-            {showStatusFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+          </div>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-y-auto">
+            {showFilters && (
+              <div className="grid grid-cols-1 gap-3 mb-4 p-3 bg-gray-100 rounded-lg border">
                 <div>
-                  <Label htmlFor="product-filter" className="text-sm font-medium">
-                    상품명
-                  </Label>
+                  <Label htmlFor="product-filter-panel" className="text-xs font-medium">상품명</Label>
                   <Input
-                    id="product-filter"
+                    id="product-filter-panel"
                     placeholder="상품명 검색..."
-                    value={statusFilters.productName}
-                    onChange={(e) => handleStatusFilterChange("productName", e.target.value)}
-                    className="mt-1 text-sm"
+                    value={filters.productName}
+                    onChange={(e) => handleFilterChange("productName", e.target.value)}
+                    className="mt-1 h-8 text-xs"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="location-filter" className="text-sm font-medium">
-                    위치
-                  </Label>
+                  <Label htmlFor="location-filter-panel" className="text-xs font-medium">위치</Label>
                   <Input
-                    id="location-filter"
+                    id="location-filter-panel"
                     placeholder="위치 검색..."
-                    value={statusFilters.location}
-                    onChange={(e) => handleStatusFilterChange("location", e.target.value)}
-                    className="mt-1 text-sm"
+                    value={filters.location}
+                    onChange={(e) => handleFilterChange("location", e.target.value)}
+                    className="mt-1 h-8 text-xs"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="company-filter" className="text-sm font-medium">
-                    거래처
-                  </Label>
+                  <Label htmlFor="company-filter-panel" className="text-xs font-medium">거래처</Label>
                   <Input
-                    id="company-filter"
+                    id="company-filter-panel"
                     placeholder="거래처 검색..."
-                    value={statusFilters.company}
-                    onChange={(e) => handleStatusFilterChange("company", e.target.value)}
-                    className="mt-1 text-sm"
+                    value={filters.company}
+                    onChange={(e) => handleFilterChange("company", e.target.value)}
+                    className="mt-1 h-8 text-xs"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="date-filter" className="text-sm font-medium">
-                    날짜
-                  </Label>
+                  <Label htmlFor="date-filter-panel" className="text-xs font-medium">날짜</Label>
                   <Input
-                    id="date-filter"
+                    id="date-filter-panel"
                     type="date"
-                    value={statusFilters.date}
-                    onChange={(e) => handleStatusFilterChange("date", e.target.value)}
-                    className="mt-1 text-sm"
+                    value={filters.date}
+                    onChange={(e) => handleFilterChange("date", e.target.value)}
+                    className="mt-1 h-8 text-xs"
                   />
                 </div>
                 <div>
                   <Button
                     variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setStatusFilters({
-                        type: "",
-                        productName: "",
-                        location: "",
-                        status: "",
-                        company: "",
-                        date: "",
-                      })
-                    }}
-                    className="mt-6 text-gray-600"
+                    size="xs"
+                    onClick={resetFilters}
+                    className="w-full mt-2 text-gray-600"
                   >
                     필터 초기화
                   </Button>
@@ -192,76 +184,61 @@ const statusData: InOutStatusItem[] = mockInOutStatusData;
               </div>
             )}
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[800px]">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-3 font-semibold">유형</th>
-                    <th className="text-left p-3 font-semibold">상품명</th>
-                    <th className="text-center p-3 font-semibold">수량</th>
-                    <th className="text-center p-3 font-semibold">위치</th>
-                    <th className="text-center p-3 font-semibold">상태</th>
-                    <th className="text-left p-3 font-semibold">거래처</th>
-                    <th className="text-center p-3 font-semibold">예정일시</th>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2 font-semibold">유형</th>
+                  <th className="text-left p-2 font-semibold">상품명</th>
+                  <th className="text-center p-2 font-semibold">상태</th>
+                  <th className="text-center p-2 font-semibold">예정일시</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData.map((item) => (
+                  <tr key={item.id} className="border-b hover:bg-gray-100">
+                    <td className="p-2">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                          item.type === "inbound" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {item.type === "inbound" ? "입고" : "출고"}
+                      </span>
+                    </td>
+                    <td className="p-2">
+                      <div>
+                        <p className="font-medium text-xs break-words">{item.productName}</p>
+                        <p className="text-xs text-gray-500 break-all">{item.sku}</p>
+                      </div>
+                    </td>
+                    <td className="p-2 text-center">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusChipClass(item.status)}`}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="p-2 text-center">
+                      <div>
+                        <p className="text-xs whitespace-nowrap">{item.date}</p>
+                        <p className="text-xs text-gray-500">{item.time}</p>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filteredStatus.map((item) => (
-                    <tr key={item.id} className="border-b hover:bg-gray-50">
-                      <td className="p-3">
-                        <div className="flex items-center gap-2">
-                          {item.type === "inbound" ? (
-                            <Package className="w-4 h-4 text-blue-500" />
-                          ) : (
-                            <TruckIcon className="w-4 h-4 text-red-500" />
-                          )}
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              item.type === "inbound" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {item.type === "inbound" ? "입고" : "출고"}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <p className="font-medium">{item.productName}</p>
-                      </td>
-                      <td className="p-3 text-center">
-                        <span className="font-semibold">{item.quantity.toLocaleString()}개</span>
-                      </td>
-                      <td className="p-3 text-center">{item.location}</td>
-                      <td className="p-3 text-center">
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            item.status === "예약" ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"
-                          }`}
-                        >
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="p-3">{item.company}</td>
-                      <td className="p-3 text-center">
-                        <div>
-                          <p className="text-sm">{item.scheduledDate}</p>
-                          <p className="text-xs text-gray-500">{item.scheduledTime}</p>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-            {filteredStatus.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>해당하는 현황이 없습니다.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          {filteredData.length === 0 && (
+            <div className="text-center py-6 text-gray-500">
+              <Package className="w-10 h-10 mx-auto mb-2 text-gray-300" />
+              <p className="text-xs">해당하는 현황이 없습니다.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

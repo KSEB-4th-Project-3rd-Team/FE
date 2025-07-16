@@ -6,71 +6,80 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Search, Filter, Package, TruckIcon, BarChart3, X } from "lucide-react"
-import { InOutHistoryItem, mockInOutHistoryData } from "@/components/utils"
+import { InOutRecord, mockInOutData } from "@/components/utils"
+
+type DisplayUnit = "개수" | "set"
 
 export default function InOutHistory() {
-  const [historyFilters, setHistoryFilters] = useState({
-    type: "",
+  const [filters, setFilters] = useState({
+    type: "all",
     productName: "",
+    specification: "",
     location: "",
-    category: "",
     company: "",
+    status: "all",
     destination: "",
     date: "",
   })
-  const [showHistoryFilters, setShowHistoryFilters] = useState(false)
-  const [historyCurrentPage, setHistoryCurrentPage] = useState(1)
+  const [showFilters, setShowFilters] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false)
   const [registrationItems, setRegistrationItems] = useState<any[]>([])
+  const [displayUnits, setDisplayUnits] = useState<Record<number, DisplayUnit>>({})
   const itemsPerPage = 10
+  const SET_QUANTITY = 14
 
-  // 더미 입출고 내역 데이터
-const historyData: InOutHistoryItem[] = mockInOutHistoryData;
+  const historyData: InOutRecord[] = mockInOutData
 
-  const handleHistoryFilterChange = (field: string, value: string) => {
-    setHistoryFilters((prev) => ({
+  const handleFilterChange = (field: string, value: string) => {
+    setFilters((prev) => ({
       ...prev,
       [field]: value,
     }))
-    setHistoryCurrentPage(1)
+    setCurrentPage(1)
   }
 
-  // 입출고 내역 필터링
   const filteredHistory = historyData.filter((item) => {
-    const typeMatch = historyFilters.type === "" || item.type === historyFilters.type
-    const productNameMatch = item.productName.toLowerCase().includes(historyFilters.productName.toLowerCase())
-    const locationMatch = item.location.toLowerCase().includes(historyFilters.location.toLowerCase())
-    const categoryMatch = item.category.toLowerCase().includes(historyFilters.category.toLowerCase())
-    const companyMatch = item.company.toLowerCase().includes(historyFilters.company.toLowerCase())
-    const destinationMatch = item.destination.toLowerCase().includes(historyFilters.destination.toLowerCase())
-
-    let dateMatch = true
-    if (historyFilters.date) {
-      dateMatch = item.date === historyFilters.date
-    }
-
     return (
-      typeMatch && productNameMatch && locationMatch && categoryMatch && companyMatch && destinationMatch && dateMatch
+      (filters.type === "all" || item.type === filters.type) &&
+      item.productName.toLowerCase().includes(filters.productName.toLowerCase()) &&
+      item.specification.toLowerCase().includes(filters.specification.toLowerCase()) &&
+      item.location.toLowerCase().includes(filters.location.toLowerCase()) &&
+      item.company.toLowerCase().includes(filters.company.toLowerCase()) &&
+      (filters.status === "all" || item.status === filters.status) &&
+      item.destination.toLowerCase().includes(filters.destination.toLowerCase()) &&
+      (filters.date === "" || item.date === filters.date)
     )
   })
 
-  // 페이지네이션
-  const historyTotalPages = Math.ceil(filteredHistory.length / itemsPerPage)
-  const historyStartIndex = (historyCurrentPage - 1) * itemsPerPage
-  const historyCurrentItems = filteredHistory.slice(historyStartIndex, historyStartIndex + itemsPerPage)
+  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const currentItems = filteredHistory.slice(startIndex, startIndex + itemsPerPage)
 
-  const handleHistoryPageChange = (page: number) => {
-    setHistoryCurrentPage(page)
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
   }
 
-  // 등록 모달 관련 함수들
+  const handleDisplayUnitChange = (id: number, unit: DisplayUnit) => {
+    setDisplayUnits((prev) => ({ ...prev, [id]: unit }))
+  }
+
+  const getDisplayQuantity = (item: InOutRecord) => {
+    const unit = displayUnits[item.id] || "개수"
+    if (unit === "set") {
+      return `${(item.quantity / SET_QUANTITY).toFixed(1)} set`
+    }
+    return `${item.quantity} 개`
+  }
+
   const addRegistrationItem = () => {
     const newItem = {
       id: registrationItems.length + 1,
       type: "inbound",
       productName: "",
-      category: "",
+      specification: "",
       quantity: "",
       location: "창고1",
       company: "",
@@ -91,10 +100,20 @@ const historyData: InOutHistoryItem[] = mockInOutHistoryData;
   }
 
   const handleRegistrationSubmit = () => {
-    // 등록 로직 처리
     console.log("등록할 항목들:", registrationItems)
     setIsRegistrationModalOpen(false)
     setRegistrationItems([])
+  }
+
+  const getStatusChipClass = (status: "완료" | "진행 중" | "예약") => {
+    switch (status) {
+      case "완료":
+        return "bg-green-100 text-green-800"
+      case "진행 중":
+        return "bg-blue-100 text-blue-800"
+      case "예약":
+        return "bg-yellow-100 text-yellow-800"
+    }
   }
 
   return (
@@ -107,7 +126,6 @@ const historyData: InOutHistoryItem[] = mockInOutHistoryData;
         </Button>
       </div>
       <div className="grid gap-6">
-        {/* 통계 카드들 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="p-4">
@@ -147,7 +165,6 @@ const historyData: InOutHistoryItem[] = mockInOutHistoryData;
           </Card>
         </div>
 
-        {/* 상세 내역 목록 */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -158,7 +175,7 @@ const historyData: InOutHistoryItem[] = mockInOutHistoryData;
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
-                  onClick={() => setShowHistoryFilters(!showHistoryFilters)}
+                  onClick={() => setShowFilters(!showFilters)}
                   className="flex items-center gap-2"
                 >
                   <Search className="w-4 h-4" />
@@ -168,124 +185,58 @@ const historyData: InOutHistoryItem[] = mockInOutHistoryData;
             </div>
           </CardHeader>
           <CardContent>
-            {/* 검색 필터 */}
-            {showHistoryFilters && (
+            {showFilters && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
-                <div>
-                  <Label htmlFor="type-filter" className="text-sm font-medium">
-                    유형
-                  </Label>
-                  <select
-                    id="type-filter"
-                    value={historyFilters.type}
-                    onChange={(e) => handleHistoryFilterChange("type", e.target.value)}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  >
-                    <option value="">전체</option>
-                    <option value="inbound">입고</option>
-                    <option value="outbound">출고</option>
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="product-filter" className="text-sm font-medium">
-                    상품명
-                  </Label>
-                  <Input
-                    id="product-filter"
-                    placeholder="상품명 검색..."
-                    value={historyFilters.productName}
-                    onChange={(e) => handleHistoryFilterChange("productName", e.target.value)}
-                    className="mt-1 text-sm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="category-filter" className="text-sm font-medium">
-                    카테고리
-                  </Label>
-                  <Input
-                    id="category-filter"
-                    placeholder="카테고리 검색..."
-                    value={historyFilters.category}
-                    onChange={(e) => handleHistoryFilterChange("category", e.target.value)}
-                    className="mt-1 text-sm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="location-filter" className="text-sm font-medium">
-                    위치
-                  </Label>
-                  <Input
-                    id="location-filter"
-                    placeholder="위치 검색..."
-                    value={historyFilters.location}
-                    onChange={(e) => handleHistoryFilterChange("location", e.target.value)}
-                    className="mt-1 text-sm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="company-filter" className="text-sm font-medium">
-                    거래처
-                  </Label>
-                  <Input
-                    id="company-filter"
-                    placeholder="거래처 검색..."
-                    value={historyFilters.company}
-                    onChange={(e) => handleHistoryFilterChange("company", e.target.value)}
-                    className="mt-1 text-sm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="destination-filter" className="text-sm font-medium">
-                    목적지
-                  </Label>
-                  <Input
-                    id="destination-filter"
-                    placeholder="목적지 검색..."
-                    value={historyFilters.destination}
-                    onChange={(e) => handleHistoryFilterChange("destination", e.target.value)}
-                    className="mt-1 text-sm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="date-filter" className="text-sm font-medium">
-                    날짜
-                  </Label>
-                  <Input
-                    id="date-filter"
-                    type="date"
-                    value={historyFilters.date}
-                    onChange={(e) => handleHistoryFilterChange("date", e.target.value)}
-                    className="mt-1 text-sm"
-                  />
-                </div>
-                <div>
-                  <Button
+                {/* Filter Inputs */}
+                <Input placeholder="상품명" value={filters.productName} onChange={(e) => handleFilterChange("productName", e.target.value)} />
+                <Input placeholder="규격" value={filters.specification} onChange={(e) => handleFilterChange("specification", e.target.value)} />
+                <Input placeholder="구역" value={filters.location} onChange={(e) => handleFilterChange("location", e.target.value)} />
+                <Input placeholder="거래처" value={filters.company} onChange={(e) => handleFilterChange("company", e.target.value)} />
+                <Input placeholder="목적지" value={filters.destination} onChange={(e) => handleFilterChange("destination", e.target.value)} />
+                <Input type="date" value={filters.date} onChange={(e) => handleFilterChange("date", e.target.value)} />
+                <Select value={filters.type} onValueChange={(value) => handleFilterChange("type", value)}>
+                  <SelectTrigger><SelectValue placeholder="유형" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">전체</SelectItem>
+                    <SelectItem value="inbound">입고</SelectItem>
+                    <SelectItem value="outbound">출고</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filters.status} onValueChange={(value) => handleFilterChange("status", value)}>
+                  <SelectTrigger><SelectValue placeholder="상태" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">전체</SelectItem>
+                    <SelectItem value="완료">완료</SelectItem>
+                    <SelectItem value="진행 중">진행 중</SelectItem>
+                    <SelectItem value="예약">예약</SelectItem>
+                  </SelectContent>
+                </Select>
+                 <Button
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setHistoryFilters({
-                        type: "",
+                      setFilters({
+                        type: "all",
                         productName: "",
+                        specification: "",
                         location: "",
-                        category: "",
                         company: "",
+                        status: "all",
                         destination: "",
                         date: "",
                       })
-                      setHistoryCurrentPage(1)
+                      setCurrentPage(1)
                     }}
                     className="mt-6 text-gray-600"
                   >
                     필터 초기화
                   </Button>
-                </div>
               </div>
             )}
 
-            {/* 필터 상태 및 초기화 버튼 */}
             <div className="flex justify-between items-center mb-4">
               <div className="text-sm text-gray-600">
-                {Object.values(historyFilters).some((filter) => filter !== "") && (
+                {Object.values(filters).some((filter) => filter !== "" && filter !== "all") && (
                   <span className="inline-flex items-center gap-1">
                     <Filter className="w-3 h-3" />
                     필터 적용됨 -
@@ -296,21 +247,23 @@ const historyData: InOutHistoryItem[] = mockInOutHistoryData;
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[900px]">
+              <table className="w-full text-sm min-w-[1200px]">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left p-2 md:p-3 font-semibold min-w-[60px]">유형</th>
-                    <th className="text-left p-2 md:p-3 font-semibold min-w-[200px]">상품명</th>
-                    <th className="text-left p-2 md:p-3 font-semibold min-w-[80px]">카테고리</th>
-                    <th className="text-center p-2 md:p-3 font-semibold min-w-[60px]">수량</th>
-                    <th className="text-center p-2 md:p-3 font-semibold min-w-[80px]">위치</th>
-                    <th className="text-left p-2 md:p-3 font-semibold min-w-[100px]">거래처</th>
-                    <th className="text-left p-2 md:p-3 font-semibold min-w-[100px]">목적지</th>
-                    <th className="text-center p-2 md:p-3 font-semibold min-w-[100px]">날짜</th>
+                    <th className="text-left p-2 md:p-3 font-semibold">유형</th>
+                    <th className="text-left p-2 md:p-3 font-semibold">상품명</th>
+                    <th className="text-left p-2 md:p-3 font-semibold">규격</th>
+                    <th className="text-center p-2 md:p-3 font-semibold">수량</th>
+                    <th className="text-center p-2 md:p-3 font-semibold">주문 수량</th>
+                    <th className="text-center p-2 md:p-3 font-semibold">구역</th>
+                    <th className="text-left p-2 md:p-3 font-semibold">거래처</th>
+                    <th className="text-center p-2 md:p-3 font-semibold">상태</th>
+                    <th className="text-left p-2 md:p-3 font-semibold">목적지</th>
+                    <th className="text-center p-2 md:p-3 font-semibold">날짜</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {historyCurrentItems.map((item) => (
+                  {currentItems.map((item) => (
                     <tr key={item.id} className="border-b hover:bg-gray-50">
                       <td className="p-2 md:p-3">
                         <span
@@ -327,12 +280,37 @@ const historyData: InOutHistoryItem[] = mockInOutHistoryData;
                           <p className="text-xs text-gray-500 break-all">SKU: {item.sku}</p>
                         </div>
                       </td>
-                      <td className="p-2 md:p-3 text-sm">{item.category}</td>
+                      <td className="p-2 md:p-3 text-sm">{item.specification}</td>
                       <td className="p-2 md:p-3 text-center">
                         <span className="font-semibold">{item.quantity}</span>
                       </td>
+                      <td className="p-2 md:p-3 text-center">
+                        <Select
+                          value={displayUnits[item.id] || "개수"}
+                          onValueChange={(value: DisplayUnit) => handleDisplayUnitChange(item.id, value)}
+                        >
+                          <SelectTrigger className="w-28">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="개수">개수</SelectItem>
+                            <SelectItem value="set">Set</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {getDisplayQuantity(item)}
+                          {displayUnits[item.id] === 'set' && ` (1 set = ${SET_QUANTITY}개)`}
+                        </div>
+                      </td>
                       <td className="p-2 md:p-3 text-center text-sm">{item.location}</td>
                       <td className="p-2 md:p-3 text-sm">{item.company}</td>
+                      <td className="p-2 md:p-3 text-center">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusChipClass(item.status)}`}
+                        >
+                          {item.status}
+                        </span>
+                      </td>
                       <td className="p-2 md:p-3 text-sm">{item.destination || "-"}</td>
                       <td className="p-2 md:p-3 text-center">
                         <div>
@@ -346,7 +324,6 @@ const historyData: InOutHistoryItem[] = mockInOutHistoryData;
               </table>
             </div>
 
-            {/* 검색 결과가 없을 때 */}
             {filteredHistory.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -355,41 +332,40 @@ const historyData: InOutHistoryItem[] = mockInOutHistoryData;
               </div>
             )}
 
-            {/* 페이지네이션 */}
             {filteredHistory.length > 0 && (
               <div className="flex items-center justify-between mt-6 pt-4 border-t">
                 <div className="text-sm text-gray-600 flex-shrink-0">
-                  총 {filteredHistory.length}개 중 {historyStartIndex + 1}-
-                  {Math.min(historyStartIndex + itemsPerPage, filteredHistory.length)}개 표시
+                  총 {filteredHistory.length}개 중 {startIndex + 1}-
+                  {Math.min(startIndex + itemsPerPage, filteredHistory.length)}개 표시
                 </div>
                 <div className="flex gap-1 ml-4">
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={historyCurrentPage === 1}
-                    onClick={() => handleHistoryPageChange(historyCurrentPage - 1)}
+                    disabled={currentPage === 1}
+                    onClick={() => handlePageChange(currentPage - 1)}
                     className="px-3"
                   >
                     이전
                   </Button>
-                  {Array.from({ length: Math.min(historyTotalPages, 5) }, (_, i) => {
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                     let page: number
-                    if (historyTotalPages <= 5) {
+                    if (totalPages <= 5) {
                       page = i + 1
-                    } else if (historyCurrentPage <= 3) {
+                    } else if (currentPage <= 3) {
                       page = i + 1
-                    } else if (historyCurrentPage >= historyTotalPages - 2) {
-                      page = historyTotalPages - 4 + i
+                    } else if (currentPage >= totalPages - 2) {
+                      page = totalPages - 4 + i
                     } else {
-                      page = historyCurrentPage - 2 + i
+                      page = currentPage - 2 + i
                     }
                     return (
                       <Button
                         key={page}
                         variant="outline"
                         size="sm"
-                        className={`px-3 ${historyCurrentPage === page ? "bg-blue-50 text-blue-600" : ""}`}
-                        onClick={() => handleHistoryPageChange(page)}
+                        className={`px-3 ${currentPage === page ? "bg-blue-50 text-blue-600" : ""}`}
+                        onClick={() => handlePageChange(page)}
                       >
                         {page}
                       </Button>
@@ -398,8 +374,8 @@ const historyData: InOutHistoryItem[] = mockInOutHistoryData;
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={historyCurrentPage === historyTotalPages}
-                    onClick={() => handleHistoryPageChange(historyCurrentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    onClick={() => handlePageChange(currentPage + 1)}
                     className="px-3"
                   >
                     다음
@@ -411,7 +387,6 @@ const historyData: InOutHistoryItem[] = mockInOutHistoryData;
         </Card>
       </div>
 
-      {/* 입출고 등록 모달 */}
       {isRegistrationModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <Card className="w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden">
@@ -467,12 +442,12 @@ const historyData: InOutHistoryItem[] = mockInOutHistoryData;
                       </div>
 
                       <div>
-                        <Label htmlFor={`category-${item.id}`}>카테고리</Label>
+                        <Label htmlFor={`specification-${item.id}`}>규격</Label>
                         <Input
-                          id={`category-${item.id}`}
-                          value={item.category}
-                          onChange={(e) => updateRegistrationItem(item.id, "category", e.target.value)}
-                          placeholder="카테고리를 입력하세요"
+                          id={`specification-${item.id}`}
+                          value={item.specification}
+                          onChange={(e) => updateRegistrationItem(item.id, "specification", e.target.value)}
+                          placeholder="규격을 입력하세요"
                         />
                       </div>
 
