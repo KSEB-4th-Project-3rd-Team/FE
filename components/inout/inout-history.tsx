@@ -236,7 +236,6 @@ export default function InOutHistory() {
                 
                  <Button
                     variant="outline"
-                    size="sm"
                     onClick={() => {
                       setFilters({
                         type: "all",
@@ -250,7 +249,7 @@ export default function InOutHistory() {
                       })
                       setCurrentPage(1)
                     }}
-                    className="mt-6 text-gray-600"
+                    className="text-gray-600"
                   >
                     필터 초기화
                   </Button>
