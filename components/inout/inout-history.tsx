@@ -27,7 +27,7 @@ export default function InOutHistory() {
   const [currentPage, setCurrentPage] = useState(1)
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false)
   const [registrationItems, setRegistrationItems] = useState<any[]>([])
-  const [displayUnits, setDisplayUnits] = useState<Record<number, DisplayUnit>>({})
+  const [displayUnit, setDisplayUnit] = useState<DisplayUnit>('set')
   const itemsPerPage = 10
   const SET_QUANTITY = 14
 
@@ -60,18 +60,6 @@ export default function InOutHistory() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
-  }
-
-  const handleDisplayUnitChange = (id: number, unit: DisplayUnit) => {
-    setDisplayUnits((prev) => ({ ...prev, [id]: unit }))
-  }
-
-  const getDisplayQuantity = (item: InOutRecord) => {
-    const unit = displayUnits[item.id] || "개수"
-    if (unit === "set") {
-      return `${(item.quantity / SET_QUANTITY).toFixed(1)} set`
-    }
-    return `${item.quantity} 개`
   }
 
   const addRegistrationItem = () => {
@@ -184,7 +172,7 @@ export default function InOutHistory() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-x-auto">
             {showFilters && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
                 {/* Filter Inputs */}
@@ -246,7 +234,7 @@ export default function InOutHistory() {
               </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div>
               <table className="w-full text-sm min-w-[1200px]">
                 <thead>
                   <tr className="border-b">
@@ -254,7 +242,27 @@ export default function InOutHistory() {
                     <th className="text-left p-2 md:p-3 font-semibold">상품명</th>
                     <th className="text-left p-2 md:p-3 font-semibold">규격</th>
                     <th className="text-center p-2 md:p-3 font-semibold">수량</th>
-                    <th className="text-center p-2 md:p-3 font-semibold">주문 수량</th>
+                    <th className="relative text-center p-2 md:p-3 pt-7 font-semibold">
+                      <div className="absolute top-1 left-1/2 -translate-x-1/2 w-full">
+                        {displayUnit === 'set' && (
+                          <p className="relative bottom-3 text-xs text-gray-500 font-normal whitespace-nowrap ">
+                            (1 set = {SET_QUANTITY}개)
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-center gap-2">
+                        <span>주문수량</span>
+                        <Select value={displayUnit} onValueChange={(value: DisplayUnit) => setDisplayUnit(value)}>
+                          <SelectTrigger className="w-24 h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="set">Set</SelectItem>
+                            <SelectItem value="개수">개수</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </th>
                     <th className="text-center p-2 md:p-3 font-semibold">구역</th>
                     <th className="text-left p-2 md:p-3 font-semibold">거래처</th>
                     <th className="text-center p-2 md:p-3 font-semibold">상태</th>
@@ -285,21 +293,10 @@ export default function InOutHistory() {
                         <span className="font-semibold">{item.quantity}</span>
                       </td>
                       <td className="p-2 md:p-3 text-center">
-                        <Select
-                          value={displayUnits[item.id] || "개수"}
-                          onValueChange={(value: DisplayUnit) => handleDisplayUnitChange(item.id, value)}
-                        >
-                          <SelectTrigger className="w-28">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="개수">개수</SelectItem>
-                            <SelectItem value="set">Set</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {getDisplayQuantity(item)}
-                          {displayUnits[item.id] === 'set' && ` (1 set = ${SET_QUANTITY}개)`}
+                        <div className="font-semibold">
+                          {displayUnit === 'set'
+                            ? `${Math.floor(item.quantity / SET_QUANTITY)} set`
+                            : `${item.quantity} 개`}
                         </div>
                       </td>
                       <td className="p-2 md:p-3 text-center text-sm">{item.location}</td>
