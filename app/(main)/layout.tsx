@@ -36,7 +36,7 @@ export type User = {
   role: string
 }
 
-type SidePanelType = "inbound" | "outbound" | "inout-status" | "amr-status" | null
+type SidePanelType = "inout-status" | "amr-status" | null
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   // Mock user data for development
@@ -147,14 +147,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     let panelTitle = "";
 
     switch(sidePanel) {
-      case "inbound":
-        panelContent = <InboundForm onSubmit={handleInboundSubmit} onClose={closeSidePanel} />;
-        panelTitle = "입고 등록";
-        break;
-      case "outbound":
-        panelContent = <OutboundForm onSubmit={handleOutboundSubmit} onClose={closeSidePanel} />;
-        panelTitle = "출고 등록";
-        break;
       case "inout-status":
         panelContent = <InOutStatusPanel showSearch={false} />;
         panelTitle = "실시간 작업 현황";
@@ -328,23 +320,21 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               </Button>
               {expandedMenus.inoutManagement && (
                 <div className="ml-6 mt-1 space-y-1">
-                  <Link href="/simulation" passHref>
+                  <Link href="/inbound-registration" passHref>
                     <Button
-                      variant={isActive("/simulation") && sidePanel === "inbound" ? "default" : "ghost"}
+                      variant={isActive("/inbound-registration") ? "default" : "ghost"}
                       size="sm"
                       className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
-                      onClick={() => handleSidePanelToggle("inbound")}
                     >
                       <span className="mr-2">•</span>
                       입고 등록
                     </Button>
                   </Link>
-                  <Link href="/simulation" passHref>
+                  <Link href="/outbound-registration" passHref>
                     <Button
-                      variant={isActive("/simulation") && sidePanel === "outbound" ? "default" : "ghost"}
+                      variant={isActive("/outbound-registration") ? "default" : "ghost"}
                       size="sm"
                       className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
-                      onClick={() => handleSidePanelToggle("outbound")}
                     >
                       <span className="mr-2">•</span>
                       출고 등록
