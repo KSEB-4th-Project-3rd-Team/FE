@@ -16,10 +16,12 @@ export interface InOutRecord {
   quantity: number;
   location: string; // '구역'
   company: string;
+  companyCode: string;
   status: "완료" | "진행 중" | "예약";
   destination: string;
   date: string;
   time: string;
+  notes: string;
 }
 
 export interface InOutRequest {
@@ -43,10 +45,8 @@ export interface InventoryItem {
   specification: string;
   quantity: number;
   inboundScheduled: number;
-  outboundScheduled: number;
-  location: string;
-  status: string;
-  lastUpdate: string;
+  outboundPrice: number
+  notes: string
 }
 
 // Mock Data Arrays
@@ -62,6 +62,7 @@ export const mockInOutData: InOutRecord[] = [
     quantity: 100,
     location: "창고1",
     company: "삼성전자",
+    companyCode: "COMP-003",
     status: "완료",
     destination: "",
     date: "2024-07-10",
@@ -77,6 +78,7 @@ export const mockInOutData: InOutRecord[] = [
     quantity: 50,
     location: "창고2",
     company: "LG전자",
+    companyCode: "COMP-004",
     status: "완료",
     destination: "서울 강남점",
     date: "2024-07-10",
@@ -92,6 +94,7 @@ export const mockInOutData: InOutRecord[] = [
     quantity: 200,
     location: "창고1",
     company: "삼성전자",
+    companyCode: "COMP-003",
     status: "완료",
     destination: "",
     date: "2024-07-11",
@@ -107,6 +110,7 @@ export const mockInOutData: InOutRecord[] = [
     quantity: 30,
     location: "창고3",
     company: "애플코리아",
+    companyCode: "COMP-005",
     status: "완료",
     destination: "부산 해운대점",
     date: "2024-07-11",
@@ -122,6 +126,7 @@ export const mockInOutData: InOutRecord[] = [
     quantity: 70,
     location: "창고2",
     company: "애플코리아",
+    companyCode: "COMP-005",
     status: "완료",
     destination: "",
     date: "2024-07-12",
@@ -138,6 +143,7 @@ export const mockInOutData: InOutRecord[] = [
     quantity: 50,
     location: "창고1",
     company: "삼성전자",
+    companyCode: "COMP-003",
     status: "예약",
     destination: "",
     date: "2024-07-16",
@@ -153,6 +159,7 @@ export const mockInOutData: InOutRecord[] = [
     quantity: 20,
     location: "창고2",
     company: "LG전자",
+    companyCode: "COMP-004",
     status: "진행 중",
     destination: "광주 서구점",
     date: "2024-07-15",
@@ -168,6 +175,7 @@ export const mockInOutData: InOutRecord[] = [
     quantity: 100,
     location: "창고1",
     company: "삼성전자",
+    companyCode: "COMP-003",
     status: "예약",
     destination: "",
     date: "2024-07-17",
@@ -183,10 +191,12 @@ export const mockInOutData: InOutRecord[] = [
     quantity: 15,
     location: "창고3",
     company: "애플코리아",
+    companyCode: "COMP-005",
     status: "예약",
     destination: "대구 수성점",
     date: "2024-07-16",
     time: "13:00",
+    notes: "긴급 출고 요청"
   },
 ];
 

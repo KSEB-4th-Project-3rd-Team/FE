@@ -3,10 +3,9 @@
 import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Check, X, Package, TruckIcon, Search } from "lucide-react"
+import { Check, X, Package, TruckIcon } from "lucide-react"
 import { InOutRequest, mockInOutRequests } from "@/components/utils"
 
 type DisplayUnit = "개수" | "set"
@@ -15,6 +14,8 @@ export default function InOutRequestPage() {
   const [requests, setRequests] = useState<InOutRequest[]>([])
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null)
   const [displayUnit, setDisplayUnit] = useState<DisplayUnit>('set')
+  const [selectedRequest, setSelectedRequest] = useState<InOutRequest | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const SET_QUANTITY = 14
 
   useEffect(() => {
@@ -26,14 +27,21 @@ export default function InOutRequestPage() {
     setTimeout(() => setNotification(null), 3000)
   }
 
-  const handleApprove = (id: string) => {
+  const handleApprove = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
     setRequests(requests.map((r) => (r.id === id ? { ...r, status: "approved" } : r)))
     showNotification("요청이 승인되었습니다.", "success")
   }
 
-  const handleReject = (id: string) => {
+  const handleReject = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
     setRequests(requests.map((r) => (r.id === id ? { ...r, status: "rejected" } : r)))
     showNotification("요청이 거절되었습니다.", "error")
+  }
+  
+  const handleRowClick = (request: InOutRequest) => {
+    setSelectedRequest(request);
+    setIsModalOpen(true);
   }
 
   const pendingRequests = requests.filter((req) => req.status === "pending")
@@ -73,13 +81,8 @@ export default function InOutRequestPage() {
                   <th className="p-3 font-semibold text-left">상품명</th>
                   <th className="p-3 font-semibold text-left">규격</th>
                   <th className="p-3 font-semibold">수량</th>
-                  <th className="p-3 font-semibold relative">
-                    {displayUnit === 'set' && (
-                      <p className="absolute top-0 left-1/2 -translate-x-1/2 text-xs text-gray-500 font-normal">
-                        (1 set = {SET_QUANTITY}개)
-                      </p>
-                    )}
-                    <div className="relative bottom-2 flex items-center justify-center gap-2 pt-4">
+                  <th className="p-3 font-semibold">
+                    <div className="flex items-center justify-center gap-2">
                       <span>주문수량</span>
                       <Select value={displayUnit} onValueChange={(value: DisplayUnit) => setDisplayUnit(value)}>
                         <SelectTrigger className="w-20 h-7 text-xs">
@@ -91,6 +94,11 @@ export default function InOutRequestPage() {
                         </SelectContent>
                       </Select>
                     </div>
+                    {displayUnit === 'set' && (
+                      <p className="text-xs text-gray-500 font-normal mt-1">
+                        (1 set = {SET_QUANTITY}개)
+                      </p>
+                    )}
                   </th>
                   <th className="p-3 font-semibold text-left">거래처</th>
                   <th className="p-3 font-semibold">예정일시</th>
@@ -99,41 +107,36 @@ export default function InOutRequestPage() {
               </thead>
               <tbody>
                 {requestList.map((request) => (
-                  <tr key={request.id} className="border-b hover:bg-gray-50">
+                  <tr key={request.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(request)}>
                     <td className="p-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          request.type === "inbound" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"
-                        }`}
-                      >
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${ request.type === "inbound" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800" }`}>
                         {request.type === "inbound" ? "입고" : "출고"}
                       </span>
                     </td>
                     <td className="p-3 text-left">
                       <p className="font-medium">{request.itemName}</p>
-                      <p className="text-xs text-gray-500">코드: {request.itemCode}</p>
+                      <p className="text-xs text-gray-500">SKU: {request.itemCode}</p>
                     </td>
                     <td className="p-3 text-left">{request.specification}</td>
                     <td className="p-3">{request.quantity}</td>
                     <td className="p-3">{getDisplayQuantity(request.quantity)}</td>
-                    <td className="p-3 text-left">{request.companyName}</td>
+                    <td className="p-3 text-left">
+                      <p className="font-medium">{request.companyName}</p>
+                      <p className="text-xs text-gray-500">코드: {request.companyCode}</p>
+                    </td>
                     <td className="p-3">{formatDateTime(request.scheduledDateTime)}</td>
                     <td className="p-3">
                       {request.status === 'pending' ? (
                         <div className="flex gap-2 justify-center">
-                          <Button onClick={() => handleApprove(request.id)} size="sm" className="bg-green-600 hover:bg-green-700">
+                          <Button onClick={(e) => handleApprove(e, request.id)} size="sm" className="bg-green-600 hover:bg-green-700">
                             <Check className="w-4 h-4" />
                           </Button>
-                          <Button onClick={() => handleReject(request.id)} variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+                          <Button onClick={(e) => handleReject(e, request.id)} variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
                             <X className="w-4 h-4" />
                           </Button>
                         </div>
                       ) : (
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            request.status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                          }`}
-                        >
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${ request.status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800" }`}>
                           {request.status === "approved" ? "승인됨" : "거절됨"}
                         </span>
                       )}
@@ -160,12 +163,33 @@ export default function InOutRequestPage() {
         <RequestTable title="처리 완료된 요청" requestList={completedRequests} />
       </div>
 
+      {isModalOpen && selectedRequest && (
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>요청 상세 정보</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              <p className="text-gray-500">요청 ID</p><p>{selectedRequest.id}</p>
+              <p className="text-gray-500">유형</p><p>{selectedRequest.type === 'inbound' ? '입고' : '출고'}</p>
+              <p className="text-gray-500">상품명</p><p>{selectedRequest.itemName}</p>
+              <p className="text-gray-500">SKU</p><p>{selectedRequest.itemCode}</p>
+              <p className="text-gray-500">규격</p><p>{selectedRequest.specification}</p>
+              <p className="text-gray-500">수량</p><p>{selectedRequest.quantity}</p>
+              <p className="text-gray-500">거래처</p><p>{selectedRequest.companyName} ({selectedRequest.companyCode})</p>
+              <p className="text-gray-500">예정일시</p><p>{formatDateTime(selectedRequest.scheduledDateTime)}</p>
+              <p className="text-gray-500">상태</p><p>{selectedRequest.status}</p>
+              <p className="text-gray-500 col-span-2">비고</p>
+              <p className="col-span-2 whitespace-pre-wrap">{selectedRequest.notes || "-"}</p>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
       {notification && (
         <div className="fixed top-4 right-4 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4 transition-all duration-300">
           <div className="flex items-center gap-2">
-            <div
-              className={`w-2 h-2 rounded-full ${notification.type === "success" ? "bg-green-500" : "bg-red-500"}`}
-            ></div>
+            <div className={`w-2 h-2 rounded-full ${notification.type === "success" ? "bg-green-500" : "bg-red-500"}`}></div>
             <span className="text-gray-800 font-medium">{notification.message}</span>
           </div>
         </div>

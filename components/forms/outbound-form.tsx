@@ -1,12 +1,14 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { ItemAutocomplete } from "./item-autocomplete"
+import { CompanyAutocomplete } from "./company-autocomplete"
+import { mockInventoryData } from "@/components/utils"
 
 interface OutboundFormProps {
   onSubmit: (data: any) => void
@@ -17,7 +19,7 @@ export default function OutboundForm({ onSubmit, onClose }: OutboundFormProps) {
   const [formData, setFormData] = useState({
     productName: "",
     quantity: "",
-    location: "창고1",
+    customer: "",
     destination: "",
     notes: "",
   })
@@ -25,12 +27,10 @@ export default function OutboundForm({ onSubmit, onClose }: OutboundFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSubmit(formData)
-
-    // 폼 초기화
     setFormData({
       productName: "",
       quantity: "",
-      location: "창고1",
+      customer: "",
       destination: "",
       notes: "",
     })
@@ -43,17 +43,21 @@ export default function OutboundForm({ onSubmit, onClose }: OutboundFormProps) {
     })
   }
 
+  const handleValueChange = (field: string, value: string) => {
+    setFormData({
+      ...formData,
+      [field]: value,
+    })
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <Label htmlFor="productName">상품명 *</Label>
-        <Input
-          id="productName"
-          name="productName"
+        <ItemAutocomplete
+          items={mockInventoryData}
           value={formData.productName}
-          onChange={handleInputChange}
-          placeholder="출고할 상품명을 입력하세요"
-          required
+          onValueChange={(value) => handleValueChange("productName", value)}
         />
       </div>
 
@@ -63,6 +67,7 @@ export default function OutboundForm({ onSubmit, onClose }: OutboundFormProps) {
           id="quantity"
           name="quantity"
           type="number"
+          min="1"
           value={formData.quantity}
           onChange={handleInputChange}
           placeholder="출고 수량을 입력하세요"
@@ -71,24 +76,11 @@ export default function OutboundForm({ onSubmit, onClose }: OutboundFormProps) {
       </div>
 
       <div>
-        <Label htmlFor="location">출고 위치 *</Label>
-        <select
-          id="location"
-          name="location"
-          value={formData.location}
-          onChange={handleInputChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-        >
-          <option value="창고1">창고1</option>
-          <option value="창고2">창고2</option>
-          <option value="창고3">창고3</option>
-          <option value="창고4">창고4</option>
-          <option value="창고5">창고5</option>
-          <option value="창고6">창고6</option>
-          <option value="창고7">창고7</option>
-          <option value="창고8">창고8</option>
-        </select>
+        <Label htmlFor="customer">거래처 *</Label>
+        <CompanyAutocomplete
+          value={formData.customer}
+          onValueChange={(value) => handleValueChange("customer", value)}
+        />
       </div>
 
       <div>
