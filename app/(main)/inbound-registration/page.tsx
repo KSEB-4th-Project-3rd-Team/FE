@@ -19,8 +19,8 @@ export default function InboundRegistrationPage() {
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">입고 등록</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold">입고 관리</h2>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
             <Button className="flex items-center gap-2">

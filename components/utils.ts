@@ -27,10 +27,11 @@ export interface InOutRequest {
   type: "inbound" | "outbound";
   itemCode: string;
   itemName: string;
+  specification: string;
   quantity: number;
   companyCode: string;
   companyName: string;
-  requestDate: string;
+  scheduledDateTime: string;
   notes: string;
   status: "pending" | "approved" | "rejected";
 }
@@ -195,10 +196,11 @@ export const mockInOutRequests: InOutRequest[] = [
     type: "inbound",
     itemCode: "ITEM-001",
     itemName: "게이밍 마우스",
+    specification: "G-Pro-Wireless",
     quantity: 50,
     companyCode: "COMP-001",
     companyName: "로지텍",
-    requestDate: "2024-07-15",
+    scheduledDateTime: "2024-07-20T10:00:00",
     notes: "신규 모델 입고 요청",
     status: "pending",
   },
@@ -207,10 +209,11 @@ export const mockInOutRequests: InOutRequest[] = [
     type: "outbound",
     itemCode: "ITEM-002",
     itemName: "기계식 키보드",
+    specification: "K70-RGB-MK.2",
     quantity: 20,
     companyCode: "COMP-002",
-    companyName: "앱코",
-    requestDate: "2024-07-14",
+    companyName: "커세어",
+    scheduledDateTime: "2024-07-21T14:30:00",
     notes: "온라인 판매 출고 요청",
     status: "pending",
   },
@@ -219,10 +222,11 @@ export const mockInOutRequests: InOutRequest[] = [
     type: "inbound",
     itemCode: "ITEM-003",
     itemName: "웹캠",
+    specification: "C922-Pro-Stream",
     quantity: 30,
     companyCode: "COMP-001",
     companyName: "로지텍",
-    requestDate: "2024-07-13",
+    scheduledDateTime: "2024-07-22T09:00:00",
     notes: "재고 보충",
     status: "approved",
   },
@@ -231,10 +235,11 @@ export const mockInOutRequests: InOutRequest[] = [
     type: "outbound",
     itemCode: "ITEM-004",
     itemName: "모니터",
+    specification: "Odyssey-G7",
     quantity: 10,
     companyCode: "COMP-003",
     companyName: "삼성디스플레이",
-    requestDate: "2024-07-12",
+    scheduledDateTime: "2024-07-23T11:00:00",
     notes: "전시용품 출고",
     status: "rejected",
   },

@@ -72,8 +72,8 @@ const inventoryData: InventoryItem[] = mockInventoryData;
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
-      <h2 className="text-2xl font-bold mb-6">재고 현황</h2>
-      <div className="grid gap-6">
+      <h2 className="text-2xl font-bold mb-4">재고 현황</h2>
+      <div className="grid gap-4">
         {/* 통계 카드들 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>

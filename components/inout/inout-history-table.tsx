@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,21 +10,26 @@ import { InOutRecord, mockInOutData } from "@/components/utils"
 import { Separator } from "@/components/ui/separator"
 
 type DisplayUnit = "개수" | "set"
-type InOutHistoryProps = {
-  historyType: "inbound" | "outbound" | "all"
+type InOutStatus = "완료" | "진행 중" | "예약";
+
+type InOutHistoryTableProps = {
+  historyType: "inbound" | "outbound" | "all";
 }
 
-export default function InOutHistory({ historyType }: InOutHistoryProps) {
-  const [filters, setFilters] = useState({
+export default function InOutHistoryTable({ historyType }: InOutHistoryTableProps) {
+  
+  const initialFilters = useMemo(() => ({
     type: historyType === 'all' ? 'all' : historyType,
     productName: "",
     specification: "",
     location: "",
     company: "",
-    status: "all",
+    status: [] as InOutStatus[],
     destination: "",
     date: "",
-  })
+  }), [historyType]);
+
+  const [filters, setFilters] = useState(initialFilters);
   const [showFilters, setShowFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [displayUnit, setDisplayUnit] = useState<DisplayUnit>('set')
@@ -32,10 +37,11 @@ export default function InOutHistory({ historyType }: InOutHistoryProps) {
   const itemsPerPage = 10
   const SET_QUANTITY = 14
 
-  const historyData: InOutRecord[] = mockInOutData.filter(item => {
-    if (historyType === 'all') return true
-    return item.type === historyType
-  })
+  const historyData: InOutRecord[] = useMemo(() => 
+    mockInOutData.filter(item => {
+      if (historyType === 'all') return true
+      return item.type === historyType;
+    }), [historyType]);
 
   const handleFilterChange = (field: string, value: string) => {
     setFilters((prev) => ({
@@ -45,26 +51,39 @@ export default function InOutHistory({ historyType }: InOutHistoryProps) {
     setCurrentPage(1)
   }
 
-  const handleToggleFilter = (field: 'type' | 'status', value: string) => {
-    setFilters(prev => ({
-        ...prev,
-        [field]: prev[field] === value ? 'all' : value
-    }));
+  const handleStatusToggle = (statusToToggle: InOutStatus) => {
+    setFilters(prev => {
+      const newStatus = prev.status.includes(statusToToggle)
+        ? prev.status.filter(s => s !== statusToToggle)
+        : [...prev.status, statusToToggle];
+      return { ...prev, status: newStatus };
+    });
     setCurrentPage(1);
   };
 
-  const filteredHistory = historyData.filter((item) => {
+  const handleTypeToggle = (typeToToggle: 'inbound' | 'outbound' | 'all') => {
+    setFilters(prev => ({ ...prev, type: typeToToggle }));
+    setCurrentPage(1);
+  }
+
+  const filteredHistory = useMemo(() => historyData.filter((item) => {
+    const statusMatch = filters.status.length === 0 || filters.status.includes(item.status);
+
     return (
       (filters.type === "all" || item.type === filters.type) &&
       item.productName.toLowerCase().includes(filters.productName.toLowerCase()) &&
       item.specification.toLowerCase().includes(filters.specification.toLowerCase()) &&
       item.location.toLowerCase().includes(filters.location.toLowerCase()) &&
       item.company.toLowerCase().includes(filters.company.toLowerCase()) &&
-      (filters.status === "all" || item.status === filters.status) &&
+      statusMatch &&
       item.destination.toLowerCase().includes(filters.destination.toLowerCase()) &&
       (filters.date === "" || item.date === filters.date)
     )
-  })
+  }), [filters, historyData]);
+
+  const isFiltered = useMemo(() => {
+    return JSON.stringify(filters) !== JSON.stringify(initialFilters);
+  }, [filters, initialFilters]);
 
   const totalPages = Math.ceil(filteredHistory.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
@@ -91,10 +110,10 @@ export default function InOutHistory({ historyType }: InOutHistoryProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button
-              variant={filters.type === "all" && filters.status === "all" ? "default" : "outline"}
+              variant={filters.status.length === 0 && (historyType === 'all' ? filters.type === 'all' : true) ? "default" : "outline"}
               size="sm"
               onClick={() => {
-                setFilters(prev => ({...prev, type: 'all', status: 'all'}));
+                setFilters(initialFilters);
                 setCurrentPage(1);
               }}
             >
@@ -106,14 +125,14 @@ export default function InOutHistory({ historyType }: InOutHistoryProps) {
                 <Button
                   variant={filters.type === "inbound" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => handleToggleFilter("type", "inbound")}
+                  onClick={() => handleTypeToggle("inbound")}
                 >
                   입고
                 </Button>
                 <Button
                   variant={filters.type === "outbound" ? "default" : "outline"}
                   size="sm"
-                  onClick={() => handleToggleFilter("type", "outbound")}
+                  onClick={() => handleTypeToggle("outbound")}
                 >
                   출고
                 </Button>
@@ -121,23 +140,23 @@ export default function InOutHistory({ historyType }: InOutHistoryProps) {
               </>
             )}
             <Button
-              variant={filters.status === "진행 중" ? "default" : "outline"}
+              variant={filters.status.includes("진행 중") ? "default" : "outline"}
               size="sm"
-              onClick={() => handleToggleFilter("status", "진행 중")}
+              onClick={() => handleStatusToggle("진행 중")}
             >
               진행 중
             </Button>
             <Button
-              variant={filters.status === "예약" ? "default" : "outline"}
+              variant={filters.status.includes("예약") ? "default" : "outline"}
               size="sm"
-              onClick={() => handleToggleFilter("status", "예약")}
+              onClick={() => handleStatusToggle("예약")}
             >
               예약
             </Button>
             <Button
-              variant={filters.status === "완료" ? "default" : "outline"}
+              variant={filters.status.includes("완료") ? "default" : "outline"}
               size="sm"
-              onClick={() => handleToggleFilter("status", "완료")}
+              onClick={() => handleStatusToggle("완료")}
             >
               완료
             </Button>
@@ -159,24 +178,12 @@ export default function InOutHistory({ historyType }: InOutHistoryProps) {
             <Input placeholder="규격" value={filters.specification} onChange={(e) => handleFilterChange("specification", e.target.value)} />
             <Input placeholder="구역" value={filters.location} onChange={(e) => handleFilterChange("location", e.target.value)} />
             <Input placeholder="거래처" value={filters.company} onChange={(e) => handleFilterChange("company", e.target.value)} />
-            <Input placeholder="목적지" value={filters.destination} onChange={(e) => handleFilterChange("destination", e.target.value)} />
+            {historyType !== 'inbound' && <Input placeholder="목적지" value={filters.destination} onChange={(e) => handleFilterChange("destination", e.target.value)} />}
             <Input type="date" value={filters.date} onChange={(e) => handleFilterChange("date", e.target.value)} />
             
               <Button
                 variant="outline"
-                onClick={() => {
-                  setFilters({
-                    type: historyType === 'all' ? 'all' : historyType,
-                    productName: "",
-                    specification: "",
-                    location: "",
-                    company: "",
-                    status: "all",
-                    destination: "",
-                    date: "",
-                  })
-                  setCurrentPage(1)
-                }}
+                onClick={() => setFilters(initialFilters)}
                 className="text-gray-600"
               >
                 필터 초기화
@@ -184,9 +191,9 @@ export default function InOutHistory({ historyType }: InOutHistoryProps) {
           </div>
         )}
 
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-2">
           <div className="text-sm text-gray-600">
-            {Object.values(filters).some((filter) => filter !== "" && filter !== "all") && (
+            {isFiltered && (
               <span className="inline-flex items-center gap-1">
                 <Filter className="w-3 h-3" />
                 필터 적용됨 -
@@ -200,37 +207,35 @@ export default function InOutHistory({ historyType }: InOutHistoryProps) {
           <table className="w-full text-sm min-w-[1200px]">
             <thead>
               <tr className="border-b">
-                <th className="text-left p-2 md:p-3 font-semibold">유형</th>
-                <th className="text-left p-2 md:p-3 font-semibold">상품명</th>
-                <th className="text-left p-2 md:p-3 font-semibold">개별코드</th>
-                <th className="text-left p-2 md:p-3 font-semibold">규격</th>
-                <th className="text-center p-2 md:p-3 font-semibold">수량</th>
-                <th className="relative text-center p-2 md:p-3 pt-7 font-semibold">
-                  <div className="absolute top-1 left-1/2 -translate-x-1/2 w-full">
-                    {displayUnit === 'set' && (
-                      <p className="relative bottom-3 text-xs text-gray-500 font-normal whitespace-nowrap ">
-                        (1 set = {SET_QUANTITY}개)
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center justify-center gap-2">
-                    <span>주문수량</span>
-                    <Select value={displayUnit} onValueChange={(value: DisplayUnit) => setDisplayUnit(value)}>
-                      <SelectTrigger className="w-24 h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="set">Set</SelectItem>
-                        <SelectItem value="개수">개수</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3">유형</th>
+                <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3">상품명</th>
+                <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3">개별코드</th>
+                <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3">규격</th>
+                <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3">수량</th>
+                <th className="text-center p-2 md:p-3 font-semibold align-bottom">
+                  <div className="flex flex-col items-center justify-end" style={{ height: '3.5rem' }}>
+                    <p className={`text-xs text-gray-500 font-normal whitespace-nowrap ${displayUnit === 'set' ? 'visible' : 'invisible'}`}>
+                      (1 set = {SET_QUANTITY}개)
+                    </p>
+                    <div className="flex items-center justify-center gap-2">
+                      <span>주문수량</span>
+                      <Select value={displayUnit} onValueChange={(value: DisplayUnit) => setDisplayUnit(value)}>
+                        <SelectTrigger className="w-20 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="set">Set</SelectItem>
+                          <SelectItem value="개수">개수</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </th>
-                <th className="text-center p-2 md:p-3 font-semibold">구역</th>
-                <th className="text-left p-2 md:p-3 font-semibold">거래처</th>
-                <th className="text-center p-2 md:p-3 font-semibold">상태</th>
-                <th className="text-left p-2 md:p-3 font-semibold">목적지</th>
-                <th className="text-center p-2 md:p-3 font-semibold">날짜</th>
+                <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3">구역</th>
+                <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3">거래처</th>
+                <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3">상태</th>
+                {historyType !== 'inbound' && <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3">목적지</th>}
+                <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3">날짜</th>
               </tr>
             </thead>
             <tbody>
@@ -262,7 +267,7 @@ export default function InOutHistory({ historyType }: InOutHistoryProps) {
                     </div>
                   </td>
                   <td className="p-2 md:p-3 text-center text-sm">{item.location}</td>
-                  <td className="p-2 md:p-3 text-sm">{item.company}</td>
+                  <td className="p-2 md:p-3 text-center text-sm">{item.company}</td>
                   <td className="p-2 md:p-3 text-center">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusChipClass(item.status)}`}
@@ -270,7 +275,7 @@ export default function InOutHistory({ historyType }: InOutHistoryProps) {
                       {item.status}
                     </span>
                   </td>
-                  <td className="p-2 md:p-3 text-sm">{item.destination || "-"}</td>
+                  {historyType !== 'inbound' && <td className="p-2 md:p-3 text-sm">{item.destination || "-"}</td>}
                   <td className="p-2 md:p-3 text-center">
                     <div>
                       <p className="text-sm whitespace-nowrap">{item.date}</p>

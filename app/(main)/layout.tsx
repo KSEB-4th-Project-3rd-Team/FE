@@ -327,7 +327,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                       className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
                     >
                       <span className="mr-2">•</span>
-                      입고 등록
+                      입고 관리
                     </Button>
                   </Link>
                   <Link href="/outbound-registration" passHref>
@@ -337,7 +337,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                       className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
                     >
                       <span className="mr-2">•</span>
-                      출고 등록
+                      출고 관리
                     </Button>
                   </Link>
                   <Link href="/inout-history" passHref>
