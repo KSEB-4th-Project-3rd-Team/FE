@@ -277,6 +277,7 @@ export default function InOutHistory() {
                   <tr className="border-b">
                     <th className="text-left p-2 md:p-3 font-semibold">유형</th>
                     <th className="text-left p-2 md:p-3 font-semibold">상품명</th>
+                    <th className="text-left p-2 md:p-3 font-semibold">개별코드</th>
                     <th className="text-left p-2 md:p-3 font-semibold">규격</th>
                     <th className="text-center p-2 md:p-3 font-semibold">수량</th>
                     <th className="relative text-center p-2 md:p-3 pt-7 font-semibold">
@@ -320,11 +321,10 @@ export default function InOutHistory() {
                         </span>
                       </td>
                       <td className="p-2 md:p-3">
-                        <div>
-                          <p className="font-medium text-sm break-words">{item.productName}</p>
-                          <p className="text-xs text-gray-500 break-all">SKU: {item.sku}</p>
-                        </div>
+                        <p className="font-medium text-sm break-words">{item.productName}</p>
+                        <p className="text-xs text-gray-500 break-all">SKU: {item.sku}</p>
                       </td>
+                      <td className="p-2 md:p-3 text-sm">{item.individualCode}</td>
                       <td className="p-2 md:p-3 text-sm">{item.specification}</td>
                       <td className="p-2 md:p-3 text-center">
                         <span className="font-semibold">{item.quantity}</span>

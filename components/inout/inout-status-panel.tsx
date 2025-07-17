@@ -84,7 +84,7 @@ export default function InOutStatusPanel({ showSearch }: InOutStatusPanelProps) 
       )}
 
       {/* 필터 버튼 */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-1">
         <Button
           variant={filters.type === "all" && filters.status === "all" ? "default" : "outline"}
           size="sm"
@@ -134,11 +134,14 @@ export default function InOutStatusPanel({ showSearch }: InOutStatusPanelProps) 
                   <div className="mt-1">{getTypeIcon(item.type)}</div>
                   <div>
                     <p className="font-semibold text-sm text-gray-800 break-words">{item.productName}</p>
-                    <span
-                      className={`px-2 py-0.5 mt-1 inline-block rounded-full text-xs font-medium ${getStatusChipClass(item.status)}`}
-                    >
-                      {item.status}
-                    </span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusChipClass(item.status)}`}
+                      >
+                        {item.status}
+                      </span>
+                      <span className="text-xs text-gray-600 font-medium">{item.quantity}개</span>
+                    </div>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0 ml-2">

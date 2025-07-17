@@ -26,6 +26,7 @@ import InboundForm from "@/components/forms/inbound-form"
 import OutboundForm from "@/components/forms/outbound-form"
 import GlobalSearch from "@/components/search/global-search"
 import InOutStatusPanel from "@/components/inout/inout-status-panel"
+import AmrStatusPanel from "@/components/simulation/amr-status-panel"
 
 // Temporary User type until API is connected
 export type User = {
@@ -35,7 +36,7 @@ export type User = {
   role: string
 }
 
-type SidePanelType = "inbound" | "outbound" | "inout-status" | null
+type SidePanelType = "inbound" | "outbound" | "inout-status" | "amr-status" | null
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   // Mock user data for development
@@ -59,6 +60,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     basicInfo: false,
     inoutManagement: false,
     systemManagement: false,
+    amrManagement: false,
   });
 
   
@@ -73,12 +75,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
     if (pathname === "/simulation") {
       const panel = searchParams.get("panel")
-      if (panel === "inout-status") {
-        setSidePanel("inout-status")
+      if (panel === "inout-status" || panel === "amr-status") {
+        setSidePanel(panel)
         setIsPanelCollapsed(false)
         setExpandedMenus(prev => ({
           ...prev,
-          inoutManagement: true,
+          amrManagement: true,
         }));
       } else {
         setSidePanel(null)
@@ -141,14 +143,27 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const renderSidePanel = () => {
     if (!sidePanel) return null
 
-    const panelContent =
-      sidePanel === "inbound" ? (
-        <InboundForm onSubmit={handleInboundSubmit} onClose={closeSidePanel} />
-      ) : sidePanel === "outbound" ? (
-        <OutboundForm onSubmit={handleOutboundSubmit} onClose={closeSidePanel} />
-      ) : sidePanel === "inout-status" ? (
-        <InOutStatusPanel onClose={closeSidePanel} />
-      ) : null
+    let panelContent = null;
+    let panelTitle = "";
+
+    switch(sidePanel) {
+      case "inbound":
+        panelContent = <InboundForm onSubmit={handleInboundSubmit} onClose={closeSidePanel} />;
+        panelTitle = "입고 등록";
+        break;
+      case "outbound":
+        panelContent = <OutboundForm onSubmit={handleOutboundSubmit} onClose={closeSidePanel} />;
+        panelTitle = "출고 등록";
+        break;
+      case "inout-status":
+        panelContent = <InOutStatusPanel showSearch={false} />;
+        panelTitle = "실시간 작업 현황";
+        break;
+      case "amr-status":
+        panelContent = <AmrStatusPanel />;
+        panelTitle = "실시간 AMR 현황";
+        break;
+    }
 
     return (
       <>
@@ -165,7 +180,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           >
             <div className="p-4 border-b bg-gray-50">
               <h3 className="text-lg font-semibold">
-                {sidePanel === "inbound" ? "입고 등록" : sidePanel === "outbound" ? "출고 등록" : "실시간 현황"}
+                {panelTitle}
               </h3>
             </div>
             <div className="p-4 flex-1 overflow-y-auto">{panelContent}</div>
@@ -261,15 +276,43 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               </Button>
             </Link>
 
-            <Link href="/simulation" passHref>
+            <div>
               <Button
-                variant={isActive("/simulation") ? "default" : "ghost"}
-                className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"
+                variant="ghost"
+                className="w-full justify-between text-sm hover:bg-blue-50 hover:text-blue-700"
+                onClick={() => toggleMenu("amrManagement")}
               >
-                <Warehouse className="w-4 h-4 mr-2" />
-                <span>AMR 작동 현황</span>
+                <div className="flex items-center">
+                  <Warehouse className="w-4 h-4 mr-4" />
+                  <span>AMR 작동 현황</span>
+                </div>
+                {expandedMenus.amrManagement ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </Button>
-            </Link>
+              {expandedMenus.amrManagement && (
+                <div className="ml-6 mt-1 space-y-1">
+                  <Link href="/simulation?panel=inout-status" passHref>
+                    <Button
+                      variant={isActive("/simulation") && sidePanel === 'inout-status' ? "default" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      <span className="mr-2">•</span>
+                      실시간 작업 현황
+                    </Button>
+                  </Link>
+                  <Link href="/simulation?panel=amr-status" passHref>
+                    <Button
+                      variant={isActive("/simulation") && sidePanel === 'amr-status' ? "default" : "ghost"}
+                      size="sm"
+                      className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      <span className="mr-2">•</span>
+                      실시간 AMR 현황
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
 
             <div>
               <Button
@@ -305,16 +348,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     >
                       <span className="mr-2">•</span>
                       출고 등록
-                    </Button>
-                  </Link>
-                  <Link href="/simulation?panel=inout-status" passHref>
-                    <Button
-                      variant={isActive("/simulation") && sidePanel === "inout-status" ? "default" : "ghost"}
-                      size="sm"
-                      className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
-                    >
-                      <span className="mr-2">•</span>
-                      실시간 현황
                     </Button>
                   </Link>
                   <Link href="/inout-history" passHref>

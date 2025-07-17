@@ -1,23 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Package, Search, Filter, BarChart3, TrendingUp, TrendingDown } from "lucide-react"
 import { InventoryItem, mockInventoryData } from "@/components/utils"
+
+type DisplayUnit = "개수" | "set"
 
 export default function InventoryManagement() {
   const [searchFilters, setSearchFilters] = useState({
     name: "",
-    category: "",
+    specification: "",
     location: "",
     status: "",
   })
   const [showSearchFilters, setShowSearchFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
+  const [displayUnit, setDisplayUnit] = useState<DisplayUnit>("개수")
   const itemsPerPage = 10
+  const SET_QUANTITY = 14
 
   // 더미 재고 데이터
 const inventoryData: InventoryItem[] = mockInventoryData;
@@ -33,11 +38,11 @@ const inventoryData: InventoryItem[] = mockInventoryData;
   // 검색 필터링 로직
   const filteredInventory = inventoryData.filter((item) => {
     const nameMatch = item.name.toLowerCase().includes(searchFilters.name.toLowerCase())
-    const categoryMatch = item.category.toLowerCase().includes(searchFilters.category.toLowerCase())
+    const specificationMatch = item.specification.toLowerCase().includes(searchFilters.specification.toLowerCase())
     const locationMatch = item.location.toLowerCase().includes(searchFilters.location.toLowerCase())
     const statusMatch = item.status.toLowerCase().includes(searchFilters.status.toLowerCase())
 
-    return nameMatch && categoryMatch && locationMatch && statusMatch
+    return nameMatch && specificationMatch && locationMatch && statusMatch
   })
 
   // 페이지네이션
@@ -48,6 +53,22 @@ const inventoryData: InventoryItem[] = mockInventoryData;
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
   }
+
+  const getDisplayQuantity = (quantity: number) => {
+    if (displayUnit === 'set') {
+      return Math.floor(quantity / SET_QUANTITY);
+    }
+    return quantity;
+  }
+
+  // 통계 데이터 계산 (Memoization)
+  const { totalInventory, totalInboundScheduled, totalOutboundScheduled, lowStockItems } = useMemo(() => {
+    const totalInventory = filteredInventory.reduce((sum, item) => sum + item.quantity, 0);
+    const totalInboundScheduled = filteredInventory.reduce((sum, item) => sum + item.inboundScheduled, 0);
+    const totalOutboundScheduled = filteredInventory.reduce((sum, item) => sum + item.outboundScheduled, 0);
+    const lowStockItems = filteredInventory.filter(item => item.status === '부족' || item.status === '위험').length;
+    return { totalInventory, totalInboundScheduled, totalOutboundScheduled, lowStockItems };
+  }, [filteredInventory]);
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -60,7 +81,7 @@ const inventoryData: InventoryItem[] = mockInventoryData;
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">총 재고</p>
-                  <p className="text-2xl font-bold">0</p>
+                  <p className="text-2xl font-bold">{totalInventory.toLocaleString()}</p>
                 </div>
                 <Package className="w-8 h-8 text-blue-500" />
               </div>
@@ -71,7 +92,7 @@ const inventoryData: InventoryItem[] = mockInventoryData;
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">입고 대기</p>
-                  <p className="text-2xl font-bold text-green-600">0</p>
+                  <p className="text-2xl font-bold text-green-600">{totalInboundScheduled.toLocaleString()}</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-green-500" />
               </div>
@@ -82,7 +103,7 @@ const inventoryData: InventoryItem[] = mockInventoryData;
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">출고 예정</p>
-                  <p className="text-2xl font-bold text-red-600">0</p>
+                  <p className="text-2xl font-bold text-red-600">{totalOutboundScheduled.toLocaleString()}</p>
                 </div>
                 <TrendingDown className="w-8 h-8 text-red-500" />
               </div>
@@ -93,7 +114,7 @@ const inventoryData: InventoryItem[] = mockInventoryData;
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">부족 재고</p>
-                  <p className="text-2xl font-bold text-yellow-600">0</p>
+                  <p className="text-2xl font-bold text-yellow-600">{lowStockItems}</p>
                 </div>
                 <BarChart3 className="w-8 h-8 text-yellow-500" />
               </div>
@@ -138,14 +159,14 @@ const inventoryData: InventoryItem[] = mockInventoryData;
                   />
                 </div>
                 <div>
-                  <Label htmlFor="category-filter" className="text-sm font-medium">
-                    카테고리
+                  <Label htmlFor="specification-filter" className="text-sm font-medium">
+                    규격
                   </Label>
                   <Input
-                    id="category-filter"
-                    placeholder="카테고리 검색..."
-                    value={searchFilters.category}
-                    onChange={(e) => handleFilterChange("category", e.target.value)}
+                    id="specification-filter"
+                    placeholder="규격 검색..."
+                    value={searchFilters.specification}
+                    onChange={(e) => handleFilterChange("specification", e.target.value)}
                     className="mt-1"
                   />
                 </div>
@@ -181,7 +202,7 @@ const inventoryData: InventoryItem[] = mockInventoryData;
             )}
 
             {/* 필터 상태 및 초기화 버튼 */}
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center">
               <div className="text-sm text-gray-600">
                 {Object.values(searchFilters).some((filter) => filter !== "") && (
                   <span className="inline-flex items-center gap-1">
@@ -198,7 +219,7 @@ const inventoryData: InventoryItem[] = mockInventoryData;
                   onClick={() => {
                     setSearchFilters({
                       name: "",
-                      category: "",
+                      specification: "",
                       location: "",
                       status: "",
                     })
@@ -215,26 +236,57 @@ const inventoryData: InventoryItem[] = mockInventoryData;
               <table className="w-full text-sm min-w-[700px]">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left p-2 md:p-3 font-semibold min-w-[200px]">상품명</th>
-                    <th className="text-left p-2 md:p-3 font-semibold min-w-[100px]">카테고리</th>
-                    <th className="text-center p-2 md:p-3 font-semibold min-w-[60px]">수량</th>
-                    <th className="text-center p-2 md:p-3 font-semibold min-w-[80px]">위치</th>
-                    <th className="text-center p-2 md:p-3 font-semibold min-w-[60px]">상태</th>
-                    <th className="text-left p-2 md:p-3 font-semibold min-w-[120px]">마지막 업데이트</th>
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2">No</th>
+                    <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[200px]">상품명</th>
+                    <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[100px]">규격</th>
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom">
+                      <div className="flex flex-col items-center justify-end" style={{ height: '3.5rem' }}>
+                        <p className={`text-xs text-gray-500 font-normal whitespace-nowrap ${displayUnit === 'set' ? 'visible' : 'invisible'}`}>
+                          (1 set = {SET_QUANTITY}개)
+                        </p>
+                        <Select value={displayUnit} onValueChange={(value: DisplayUnit) => setDisplayUnit(value)}>
+                          <SelectTrigger className="w-20 h-7 text-xs mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="set">Set</SelectItem>
+                            <SelectItem value="개수">개수</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </th>
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[80px]">현재수량</th>
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[80px]">입고예정</th>
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[80px]">출고예정</th>
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[80px]">구역</th>
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[60px]">상태</th>
+                    <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[120px]">마지막 업데이트</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {currentItems.map((item) => (
+                  {currentItems.map((item, index) => (
                     <tr key={item.id} className="border-b hover:bg-gray-50">
+                      <td className="p-2 md:p-3 text-center text-sm text-gray-600">{startIndex + index + 1}</td>
                       <td className="p-2 md:p-3">
                         <div>
                           <p className="font-medium text-sm break-words">{item.name}</p>
                           <p className="text-xs text-gray-500 break-all">SKU: {item.sku}</p>
                         </div>
                       </td>
-                      <td className="p-2 md:p-3 text-sm">{item.category}</td>
+                      <td className="p-2 md:p-3 text-sm">{item.specification}</td>
                       <td className="p-2 md:p-3 text-center">
-                        <span className="font-semibold">{item.quantity}</span>
+                        {/* Empty cell for the dropdown header */}
+                      </td>
+                      <td className="p-2 md:p-3 text-center">
+                        <span className="font-semibold">
+                          {getDisplayQuantity(item.quantity)}
+                        </span>
+                      </td>
+                      <td className="p-2 md:p-3 text-center text-sm text-blue-600">
+                        {item.inboundScheduled > 0 ? getDisplayQuantity(item.inboundScheduled) : "-"}
+                      </td>
+                      <td className="p-2 md:p-3 text-center text-sm text-red-600">
+                        {item.outboundScheduled > 0 ? getDisplayQuantity(item.outboundScheduled) : "-"}
                       </td>
                       <td className="p-2 md:p-3 text-center text-sm">{item.location}</td>
                       <td className="p-2 md:p-3 text-center">
