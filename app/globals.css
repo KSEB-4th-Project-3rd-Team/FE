@@ -4,11 +4,7 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
-  transform: scale(0.9);
-  transform-origin: top left;
-  height: 111.11vh; /* 100vh / 0.9 */
-  width: 111.11vw; /* 100vw / 0.9 */
-  overflow-x: hidden;
+  zoom: 0.9;
 }
 
 @layer utilities {
