@@ -152,33 +152,33 @@ export default function ItemList() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md mx-4">
+          <Card className="w-full max-w-2xl mx-4">
             <CardHeader>
               <CardTitle>{editingItem ? "품목 수정" : "품목 등록"}</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-1">
-                  <Label htmlFor="code">품목코드 *</Label>
-                  <Input id="code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="name">품목명 *</Label>
-                  <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="group">품목그룹</Label>
-                  <Input id="group" value={formData.group} onChange={(e) => setFormData({ ...formData, group: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="specification">규격</Label>
-                  <Input id="specification" value={formData.specification} onChange={(e) => setFormData({ ...formData, specification: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="barcode">바코드</Label>
-                  <Input id="barcode" value={formData.barcode} onChange={(e) => setFormData({ ...formData, barcode: e.target.value })} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="code">품목코드 *</Label>
+                    <Input id="code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="name">품목명 *</Label>
+                    <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="group">품목그룹</Label>
+                    <Input id="group" value={formData.group} onChange={(e) => setFormData({ ...formData, group: e.target.value })} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="specification">규격</Label>
+                    <Input id="specification" value={formData.specification} onChange={(e) => setFormData({ ...formData, specification: e.target.value })} />
+                  </div>
+                  <div className="col-span-2 space-y-1">
+                    <Label htmlFor="barcode">바코드</Label>
+                    <Input id="barcode" value={formData.barcode} onChange={(e) => setFormData({ ...formData, barcode: e.target.value })} />
+                  </div>
                   <div className="space-y-1">
                     <Label htmlFor="inboundPrice">입고단가</Label>
                     <Input id="inboundPrice" type="number" value={formData.inboundPrice} onChange={(e) => setFormData({ ...formData, inboundPrice: Number(e.target.value) })} />
@@ -187,10 +187,10 @@ export default function ItemList() {
                     <Label htmlFor="outboundPrice">출고단가</Label>
                     <Input id="outboundPrice" type="number" value={formData.outboundPrice} onChange={(e) => setFormData({ ...formData, outboundPrice: Number(e.target.value) })} />
                   </div>
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="notes">비고</Label>
-                  <Textarea id="notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
+                  <div className="col-span-2 space-y-1">
+                    <Label htmlFor="notes">비고</Label>
+                    <Textarea id="notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
+                  </div>
                 </div>
                 <div className="flex gap-2 pt-4">
                   <Button type="submit" className="flex-1">{editingItem ? "수정" : "등록"}</Button>
