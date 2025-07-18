@@ -1,7 +1,7 @@
 "use client"
 
-import RealTimeDashboard from "@/components/dashboard/real-time-dashboard"
+import UnifiedDashboard from "@/components/dashboard/unified-dashboard";
 
 export default function DashboardPage() {
-  return <RealTimeDashboard />
+  return <UnifiedDashboard />
 }

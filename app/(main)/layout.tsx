@@ -511,9 +511,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
       </div>
 
-      <div className={`flex-1 ml-64 transition-all duration-300 ${sidePanel && !isPanelCollapsed ? "mr-80" : ""}`}>
+      <div className={`flex-1 ml-64 transition-all duration-300 ${sidePanel && !isPanelCollapsed ? "mr-[350px]" : ""}`}>
         {children}
-        {pathname === "/simulation" && renderSidePanel()}
+        {renderSidePanel()}
       </div>
 
       {toast && (

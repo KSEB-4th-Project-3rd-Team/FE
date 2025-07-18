@@ -67,8 +67,9 @@ export const mockInOutData: InOutRecord[] = [
     companyCode: "COMP-003",
     status: "완료",
     destination: "",
-    date: "2024-07-10",
+    date: "2025-07-10",
     time: "10:30",
+    notes: ""
   },
   {
     id: 2,
@@ -83,8 +84,9 @@ export const mockInOutData: InOutRecord[] = [
     companyCode: "COMP-004",
     status: "완료",
     destination: "서울 강남점",
-    date: "2024-07-10",
+    date: "2025-07-10",
     time: "14:00",
+    notes: ""
   },
   {
     id: 3,
@@ -99,8 +101,9 @@ export const mockInOutData: InOutRecord[] = [
     companyCode: "COMP-003",
     status: "완료",
     destination: "",
-    date: "2024-07-11",
+    date: "2025-07-11",
     time: "09:00",
+    notes: ""
   },
   {
     id: 4,
@@ -115,8 +118,9 @@ export const mockInOutData: InOutRecord[] = [
     companyCode: "COMP-005",
     status: "완료",
     destination: "부산 해운대점",
-    date: "2024-07-11",
+    date: "2025-07-11",
     time: "11:00",
+    notes: ""
   },
   {
     id: 5,
@@ -131,8 +135,9 @@ export const mockInOutData: InOutRecord[] = [
     companyCode: "COMP-005",
     status: "완료",
     destination: "",
-    date: "2024-07-12",
+    date: "2025-07-12",
     time: "16:00",
+    notes: ""
   },
   // From mockInOutStatusData
   {
@@ -148,8 +153,9 @@ export const mockInOutData: InOutRecord[] = [
     companyCode: "COMP-003",
     status: "예약",
     destination: "",
-    date: "2024-07-16",
+    date: "2025-07-16",
     time: "11:00",
+    notes: ""
   },
   {
     id: 7,
@@ -164,8 +170,9 @@ export const mockInOutData: InOutRecord[] = [
     companyCode: "COMP-004",
     status: "진행 중",
     destination: "광주 서구점",
-    date: "2024-07-15",
+    date: "2025-07-15",
     time: "15:00",
+    notes: ""
   },
   {
     id: 8,
@@ -180,8 +187,9 @@ export const mockInOutData: InOutRecord[] = [
     companyCode: "COMP-003",
     status: "예약",
     destination: "",
-    date: "2024-07-17",
+    date: "2025-07-17",
     time: "09:30",
+    notes: ""
   },
   {
     id: 9,
@@ -196,9 +204,60 @@ export const mockInOutData: InOutRecord[] = [
     companyCode: "COMP-005",
     status: "예약",
     destination: "대구 수성점",
-    date: "2024-07-16",
+    date: "2025-07-16",
     time: "13:00",
     notes: "긴급 출고 요청"
+  },
+  {
+    id: 10,
+    type: "outbound",
+    productName: "스마트폰 (갤럭시 S24)",
+    sku: "SM-G998B",
+    individualCode: "P001-003",
+    specification: "전자제품",
+    quantity: 25,
+    location: "창고1",
+    company: "하이마트",
+    companyCode: "COMP-006",
+    status: "완료",
+    destination: "인천 부평점",
+    date: "2025-07-13",
+    time: "11:30",
+    notes: ""
+  },
+  {
+    id: 11,
+    type: "outbound",
+    productName: "무선 이어폰 (버즈 프로)",
+    sku: "SM-R190",
+    individualCode: "P003-003",
+    specification: "악세서리",
+    quantity: 40,
+    location: "창고1",
+    company: "전자랜드",
+    companyCode: "COMP-007",
+    status: "완료",
+    destination: "수원 영통점",
+    date: "2025-07-14",
+    time: "15:00",
+    notes: ""
+  },
+  {
+    id: 12,
+    type: "outbound",
+    productName: "노트북 (LG 그램)",
+    sku: "LG-17Z90P",
+    individualCode: "P002-003",
+    specification: "전자제품",
+    quantity: 10,
+    location: "창고2",
+    company: "이마트",
+    companyCode: "COMP-008",
+    status: "완료",
+    destination: "온라인 배송",
+    date: "2025-07-15",
+    time: "18:00",
+    notes: "익일 배송 요청"
   },
 ];
 
@@ -212,7 +271,7 @@ export const mockInOutRequests: InOutRequest[] = [
     quantity: 50,
     companyCode: "COMP-001",
     companyName: "로지텍",
-    scheduledDateTime: "2024-07-20T10:00:00",
+    scheduledDateTime: "2025-07-20T10:00:00",
     notes: "신규 모델 입고 요청",
     status: "pending",
   },
@@ -225,7 +284,7 @@ export const mockInOutRequests: InOutRequest[] = [
     quantity: 20,
     companyCode: "COMP-002",
     companyName: "커세어",
-    scheduledDateTime: "2024-07-21T14:30:00",
+    scheduledDateTime: "2025-07-21T14:30:00",
     notes: "온라인 판매 출고 요청",
     status: "pending",
   },
@@ -238,7 +297,7 @@ export const mockInOutRequests: InOutRequest[] = [
     quantity: 30,
     companyCode: "COMP-001",
     companyName: "로지텍",
-    scheduledDateTime: "2024-07-22T09:00:00",
+    scheduledDateTime: "2025-07-22T09:00:00",
     notes: "재고 보충",
     status: "approved",
   },
@@ -251,7 +310,7 @@ export const mockInOutRequests: InOutRequest[] = [
     quantity: 10,
     companyCode: "COMP-003",
     companyName: "삼성디스플레이",
-    scheduledDateTime: "2024-07-23T11:00:00",
+    scheduledDateTime: "2025-07-23T11:00:00",
     notes: "전시용품 출고",
     status: "rejected",
   },
@@ -269,7 +328,7 @@ export const mockInventoryData: InventoryItem[] = [
     outboundScheduled: 20,
     location: "창고1",
     status: "정상",
-    lastUpdate: "2024-07-15 10:30",
+    lastUpdate: "2025-07-15 10:30",
   },
   {
     id: 2,
@@ -281,7 +340,7 @@ export const mockInventoryData: InventoryItem[] = [
     outboundScheduled: 10,
     location: "창고2",
     status: "정상",
-    lastUpdate: "2024-07-15 14:00",
+    lastUpdate: "2025-07-15 14:00",
   },
   {
     id: 3,
@@ -293,7 +352,7 @@ export const mockInventoryData: InventoryItem[] = [
     outboundScheduled: 30,
     location: "창고1",
     status: "부족",
-    lastUpdate: "2024-07-15 09:00",
+    lastUpdate: "2025-07-15 09:00",
   },
   {
     id: 4,
@@ -305,7 +364,7 @@ export const mockInventoryData: InventoryItem[] = [
     outboundScheduled: 5,
     location: "창고3",
     status: "위험",
-    lastUpdate: "2024-07-15 11:00",
+    lastUpdate: "2025-07-15 11:00",
   },
   {
     id: 5,
@@ -317,7 +376,7 @@ export const mockInventoryData: InventoryItem[] = [
     outboundScheduled: 0,
     location: "창고2",
     status: "정상",
-    lastUpdate: "2024-07-15 16:00",
+    lastUpdate: "2025-07-15 16:00",
   },
   {
     id: 6,
@@ -329,7 +388,7 @@ export const mockInventoryData: InventoryItem[] = [
     outboundScheduled: 100,
     location: "창고4",
     status: "정상",
-    lastUpdate: "2024-07-14 10:00",
+    lastUpdate: "2025-07-14 10:00",
   },
   {
     id: 7,
@@ -341,7 +400,7 @@ export const mockInventoryData: InventoryItem[] = [
     outboundScheduled: 60,
     location: "창고4",
     status: "정상",
-    lastUpdate: "2024-07-14 11:00",
+    lastUpdate: "2025-07-14 11:00",
   },
   {
     id: 8,
@@ -353,7 +412,7 @@ export const mockInventoryData: InventoryItem[] = [
     outboundScheduled: 10,
     location: "창고1",
     status: "부족",
-    lastUpdate: "2024-07-15 08:00",
+    lastUpdate: "2025-07-15 08:00",
   },
   {
     id: 9,
@@ -365,7 +424,7 @@ export const mockInventoryData: InventoryItem[] = [
     outboundScheduled: 20,
     location: "창고2",
     status: "정상",
-    lastUpdate: "2024-07-15 13:00",
+    lastUpdate: "2025-07-15 13:00",
   },
   {
     id: 10,
@@ -377,6 +436,6 @@ export const mockInventoryData: InventoryItem[] = [
     outboundScheduled: 5,
     location: "창고3",
     status: "정상",
-    lastUpdate: "2024-07-14 15:00",
+    lastUpdate: "2025-07-14 15:00",
   },
 ];
