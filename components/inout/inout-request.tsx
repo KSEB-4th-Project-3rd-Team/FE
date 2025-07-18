@@ -82,23 +82,26 @@ export default function InOutRequestPage() {
                   <th className="p-3 font-semibold text-left">규격</th>
                   <th className="p-3 font-semibold">수량</th>
                   <th className="p-3 font-semibold">
-                    <div className="flex items-center justify-center gap-2">
-                      <span>주문수량</span>
-                      <Select value={displayUnit} onValueChange={(value: DisplayUnit) => setDisplayUnit(value)}>
-                        <SelectTrigger className="w-20 h-7 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="set">Set</SelectItem>
-                          <SelectItem value="개수">개수</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {displayUnit === 'set' && (
-                      <p className="text-xs text-gray-500 font-normal mt-1">
+                    <div style={{ transform: 'translateY(-10px)' }}>
+                      <p 
+                        className="text-xs text-gray-500 font-normal mb-1"
+                        style={{ visibility: displayUnit === 'set' ? 'visible' : 'hidden' }}
+                      >
                         (1 set = {SET_QUANTITY}개)
                       </p>
-                    )}
+                      <div className="flex items-center justify-center gap-2">
+                        <span>주문수량</span>
+                        <Select value={displayUnit} onValueChange={(value: DisplayUnit) => setDisplayUnit(value)}>
+                          <SelectTrigger className="w-20 h-7 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="set">Set</SelectItem>
+                            <SelectItem value="개수">개수</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </th>
                   <th className="p-3 font-semibold text-left">거래처</th>
                   <th className="p-3 font-semibold">예정일시</th>
