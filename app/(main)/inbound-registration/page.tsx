@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import InboundForm from "@/components/forms/inbound-form"
 import InOutHistoryTable from "@/components/inout/inout-history-table"
@@ -11,7 +10,7 @@ import { Plus } from "lucide-react"
 export default function InboundRegistrationPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const handleFormSubmit = (formData: any) => {
+  const handleFormSubmit = (formData: unknown) => {
     console.log("Inbound data submitted:", formData)
     // 여기에 실제 데이터 전송 로직 추가
     setIsModalOpen(false)

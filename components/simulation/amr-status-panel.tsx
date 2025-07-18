@@ -1,11 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { BatteryFull, BatteryLow, Bot, Cog, MapPin, Package } from "lucide-react"
+import { BatteryFull, BatteryLow, Bot, MapPin, Package } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
-import { Progress } from "@/components/ui/progress"
 
 type AmrStatus = "moving" | "charging" | "idle" | "error"
 
@@ -27,7 +24,7 @@ const mockAmrData: Amr[] = [
 ]
 
 export default function AmrStatusPanel() {
-  const [amrList, setAmrList] = useState<Amr[]>(mockAmrData)
+  const [amrList] = useState<Amr[]>(mockAmrData)
   const [filter, setFilter] = useState<"all" | AmrStatus>("all")
 
   const handleFilterToggle = (newFilter: AmrStatus) => {

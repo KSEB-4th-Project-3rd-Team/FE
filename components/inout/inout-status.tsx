@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -36,7 +35,7 @@ const initialData: InOutData[] = [
 ]
 
 export function InOutStatus() {
-  const [data, setData] = useState<InOutData[]>(initialData)
+  const [data] = useState<InOutData[]>(initialData)
   const [selectedItem, setSelectedItem] = useState<InOutData | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 

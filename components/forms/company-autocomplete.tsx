@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { Company, mockCompanies } from "@/components/company/company-list"
+import { mockCompanies } from "@/components/company/company-list"
 
 interface CompanyAutocompleteProps {
   value: string;

@@ -21,56 +21,56 @@ interface GlobalSearchProps {
   onClose: () => void
 }
 
+// 더미 검색 데이터 (컴포넌트 밖으로 이동)
+const searchData: SearchResult[] = [
+  {
+    id: "1",
+    title: "노트북 - ThinkPad X1",
+    description: "재고: 245개, 위치: A구역-01",
+    category: "inventory",
+    url: "/inventory",
+  },
+  {
+    id: "2",
+    title: "삼성전자",
+    description: "거래처 코드: COMP001, 대표자: 김삼성",
+    category: "company",
+    url: "/company-list",
+  },
+  {
+    id: "3",
+    title: "김창고 (manager1)",
+    description: "매니저, 마지막 접속: 2024-01-15 13:45",
+    category: "user",
+    url: "/user-management",
+  },
+  {
+    id: "4",
+    title: "창고 정리 작업",
+    description: "2024-01-16 10:00, A구역",
+    category: "schedule",
+    url: "/schedule",
+  },
+  {
+    id: "5",
+    title: "무선 마우스 입고",
+    description: "수량: 100개, 완료일: 2024-01-15",
+    category: "inout",
+    url: "/inout-history",
+  },
+  {
+    id: "6",
+    title: "AGV-001",
+    description: "상태: 활성, 배터리: 85%, 현재 작업: 대기중",
+    category: "agv",
+    url: "/simulation",
+  },
+]
+
 export default function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [results, setResults] = useState<SearchResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
-
-  // 더미 검색 데이터
-  const searchData: SearchResult[] = [
-    {
-      id: "1",
-      title: "노트북 - ThinkPad X1",
-      description: "재고: 245개, 위치: A구역-01",
-      category: "inventory",
-      url: "/inventory",
-    },
-    {
-      id: "2",
-      title: "삼성전자",
-      description: "거래처 코드: COMP001, 대표자: 김삼성",
-      category: "company",
-      url: "/company-list",
-    },
-    {
-      id: "3",
-      title: "김창고 (manager1)",
-      description: "매니저, 마지막 접속: 2024-01-15 13:45",
-      category: "user",
-      url: "/user-management",
-    },
-    {
-      id: "4",
-      title: "창고 정리 작업",
-      description: "2024-01-16 10:00, A구역",
-      category: "schedule",
-      url: "/schedule",
-    },
-    {
-      id: "5",
-      title: "무선 마우스 입고",
-      description: "수량: 100개, 완료일: 2024-01-15",
-      category: "inout",
-      url: "/inout-history",
-    },
-    {
-      id: "6",
-      title: "AGV-001",
-      description: "상태: 활성, 배터리: 85%, 현재 작업: 대기중",
-      category: "agv",
-      url: "/simulation",
-    },
-  ]
 
   useEffect(() => {
     if (searchTerm.length > 0) {

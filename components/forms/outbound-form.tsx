@@ -10,9 +10,17 @@ import { ItemAutocomplete } from "./item-autocomplete"
 import { CompanyAutocomplete } from "./company-autocomplete"
 import { mockInventoryData } from "@/components/utils"
 
+interface OutboundFormData {
+  productName: string;
+  quantity: string;
+  customer: string;
+  destination: string;
+  notes: string;
+}
+
 interface OutboundFormProps {
-  onSubmit: (data: any) => void
-  onClose: () => void
+  onSubmit: (data: OutboundFormData) => void;
+  onClose: () => void;
 }
 
 export default function OutboundForm({ onSubmit, onClose }: OutboundFormProps) {

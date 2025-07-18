@@ -1,9 +1,9 @@
 "use client"
 
 import React, { useMemo, useState } from 'react';
-import { addDays, format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, subMonths } from 'date-fns';
+import { format, startOfWeek, subDays, subMonths } from 'date-fns';
 import { DateRange } from 'react-day-picker';
-import { mockInventoryData, mockInOutData, InventoryItem, InOutRecord } from '@/components/utils';
+import { mockInventoryData, mockInOutData, InOutRecord } from '@/components/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -29,6 +29,12 @@ const mockAmrData: Amr[] = [
 ];
 const mockPriceData: Record<string, number> = {
     "SM-G998B": 1200000, "LG-17Z90P": 1800000, "SM-R190": 200000, "IPAD-AIR4": 900000, "AW-S8": 600000,
+};
+
+type MetricItem = {
+    id: string;
+    items: (typeof mockInventoryData[0] | InOutRecord)[];
+    title: string;
 };
 
 const UnifiedDashboard = () => {
@@ -194,12 +200,12 @@ const UnifiedDashboard = () => {
     else if (type === 'work') { setActiveWorkDetail(prev => (prev === metricId ? null : metricId)); setActiveInventoryDetail(null); }
   };
 
-  const renderDetailTable = (activeDetail: string | null, metrics: any[], headers: { key: string; label: string; className?: string }[], titlePrefix: string) => {
+  const renderDetailTable = (activeDetail: string | null, metrics: MetricItem[], headers: { key: string; label: string; className?: string }[], titlePrefix: string) => {
     if (!activeDetail) return null;
     const metric = metrics.find(m => m.id === activeDetail);
     if (!metric || !metric.items || metric.items.length === 0) return null;
     return (
-      <Card className="mt-4"><CardHeader><CardTitle>{titlePrefix}: {metric.title} 상세 목록</CardTitle></CardHeader><CardContent><Table><TableHeader><TableRow>{headers.map(h => <TableHead key={h.key} className={h.className}>{h.label}</TableHead>)}</TableRow></TableHeader><TableBody>{metric.items.map((item: any) => (<TableRow key={item.id}>{headers.map(h => <TableCell key={h.key} className={h.className}>{item[h.key]}</TableCell>)}</TableRow>))}</TableBody></Table></CardContent></Card>
+      <Card className="mt-4"><CardHeader><CardTitle>{titlePrefix}: {metric.title} 상세 목록</CardTitle></CardHeader><CardContent><Table><TableHeader><TableRow>{headers.map(h => <TableHead key={h.key} className={h.className}>{h.label}</TableHead>)}</TableRow></TableHeader><TableBody>{metric.items.map((item) => (<TableRow key={(item as { id: number | string }).id}>{headers.map(h => <TableCell key={h.key} className={h.className}>{(item as never)[h.key]}</TableCell>)}</TableRow>))}</TableBody></Table></CardContent></Card>
     );
   };
 

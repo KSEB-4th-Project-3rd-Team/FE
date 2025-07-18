@@ -21,10 +21,9 @@ interface InOutData {
 interface InOutStatusDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  data: InOutData | null;
 }
 
-export default function InOutStatusDialog({ isOpen, onClose, data }: InOutStatusDialogProps) {
+export default function InOutStatusDialog({ isOpen, onClose }: InOutStatusDialogProps) {
   const [statusFilters, setStatusFilters] = useState({
     type: "",
     productName: "",

@@ -63,7 +63,7 @@ export default function CalendarHeader({ currentDate, onDateChange }: CalendarHe
       // 다음 프레임에서 스크롤 조정 (DOM 렌더링 완료 후)
       requestAnimationFrame(adjustScroll)
     }
-  }, [showYearDropdown, currentYear])
+  }, [showYearDropdown, currentYear, years])
 
   return (
     <div className="flex items-center justify-between mb-4">

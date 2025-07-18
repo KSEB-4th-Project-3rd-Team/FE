@@ -13,6 +13,18 @@ import { Separator } from "@/components/ui/separator"
 
 type DisplayUnit = "개수" | "set"
 
+interface RegistrationItem {
+  id: number;
+  productName: string;
+  specification: string;
+  quantity: string;
+  location: string;
+  company: string;
+  destination: string;
+  notes: string;
+  type?: "inbound" | "outbound";
+}
+
 export default function InOutHistory() {
   const [filters, setFilters] = useState({
     type: "all",
@@ -27,7 +39,7 @@ export default function InOutHistory() {
   const [showFilters, setShowFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false)
-  const [registrationItems, setRegistrationItems] = useState<any[]>([])
+  const [registrationItems, setRegistrationItems] = useState<RegistrationItem[]>([])
   const [displayUnit, setDisplayUnit] = useState<DisplayUnit>('set')
 
   const itemsPerPage = 10

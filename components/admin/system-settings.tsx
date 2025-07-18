@@ -124,7 +124,7 @@ export default function SystemSettings() {
           const importedSettings = JSON.parse(e.target?.result as string)
           setSettings({ ...settings, ...importedSettings })
           alert("설정을 가져왔습니다.")
-        } catch (error) {
+        } catch {
           alert("설정 파일 형식이 올바르지 않습니다.")
         }
       }

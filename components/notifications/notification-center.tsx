@@ -199,7 +199,7 @@ export default function NotificationCenter() {
                 <Filter className="w-4 h-4 text-gray-500" />
                 <select
                   value={filter}
-                  onChange={(e) => setFilter(e.target.value as any)}
+                  onChange={(e) => setFilter(e.target.value as typeof filter)}
                   className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 >
                   <option value="all">모든 타입</option>
@@ -214,7 +214,7 @@ export default function NotificationCenter() {
               {/* 카테고리 필터 */}
               <select
                 value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value as any)}
+                onChange={(e) => setCategoryFilter(e.target.value as typeof categoryFilter)}
                 className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
                 <option value="all">모든 카테고리</option>
