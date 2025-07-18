@@ -45,8 +45,10 @@ export interface InventoryItem {
   specification: string;
   quantity: number;
   inboundScheduled: number;
-  outboundPrice: number
-  notes: string
+  outboundScheduled: number;
+  location: string;
+  status: string;
+  lastUpdate: string;
 }
 
 // Mock Data Arrays
