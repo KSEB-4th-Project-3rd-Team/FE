@@ -9,15 +9,6 @@ import { Search, Package, TruckIcon } from "lucide-react"
 import { InOutRecord, mockInOutData } from "@/components/utils"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
-interface InOutData {
-  id: number
-  type: "입고" | "출고"
-  item: string
-  quantity: number
-  status: "완료" | "진행중" | "예약"
-  date: string
-}
-
 interface InOutStatusDialogProps {
   isOpen: boolean;
   onClose: () => void;

@@ -18,7 +18,6 @@ import {
   Box,
   BarChart3,
   Settings,
-  FileText,
   Search,
 } from "lucide-react"
 import AuthForm from "@/components/auth/auth-form"

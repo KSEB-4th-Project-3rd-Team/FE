@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { format, startOfWeek, subDays, subMonths } from 'date-fns';
+import { ko } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
 import { mockInventoryData, mockInOutData, InOutRecord } from '@/components/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,8 +34,10 @@ const mockPriceData: Record<string, number> = {
 
 type MetricItem = {
     id: string;
-    items: (typeof mockInventoryData[0] | InOutRecord)[];
     title: string;
+    value: number | string;
+    icon: React.ElementType;
+    items: (typeof mockInventoryData[0] | InOutRecord)[];
 };
 
 const UnifiedDashboard = () => {
@@ -99,12 +102,23 @@ const UnifiedDashboard = () => {
 
   // 4. AMR 성능 분석
   const amrAnalysis = useMemo(() => {
-      const totalAmrs = mockAmrData.length;
-      const activeAmrs = mockAmrData.filter(amr => amr.status === 'moving').length;
-      const errorAmrs = mockAmrData.filter(amr => amr.status === 'error').length;
-      const statusDistribution = mockAmrData.reduce((acc, amr) => { acc[amr.status] = (acc[amr.status] || 0) + 1; return acc; }, {} as Record<AmrStatus, number>);
-      const chartData = Object.entries(statusDistribution).map(([name, value]) => ({ name, value, fill: `var(--color-${name})` }));
-      return { totalAmrs, activeAmrs, errorAmrs, chartData };
+    const amrStatusKorean: { [key in AmrStatus]: string } = {
+      moving: '이동 중',
+      charging: '충전 중',
+      idle: '대기 중',
+      error: '오류',
+    };
+    const totalAmrs = mockAmrData.length;
+    const activeAmrs = mockAmrData.filter(amr => amr.status === 'moving').length;
+    const errorAmrs = mockAmrData.filter(amr => amr.status === 'error').length;
+    const statusDistribution = mockAmrData.reduce((acc, amr) => { acc[amr.status] = (acc[amr.status] || 0) + 1; return acc; }, {} as Record<AmrStatus, number>);
+    const chartData = Object.entries(statusDistribution).map(([name, value]) => ({
+        name: name,
+        displayName: amrStatusKorean[name as AmrStatus] || name,
+        value,
+        fill: `var(--color-${name})`
+    }));
+    return { totalAmrs, activeAmrs, errorAmrs, chartData };
   }, []);
 
   // 5. 매출 및 거래처 분석
@@ -126,7 +140,15 @@ const UnifiedDashboard = () => {
         return acc;
     }, {} as Record<string, { name: string; count: number; amount: number; items: InOutRecord[] }>);
 
-    const top5Companies = Object.values(byCompany).sort((a, b) => b.count - a.count).slice(0, 5);
+    const allCompaniesSorted = Object.values(byCompany).sort((a, b) => b.count - a.count);
+    const top5Companies = allCompaniesSorted.slice(0, 5);
+    const otherCompanies = allCompaniesSorted.slice(5);
+
+    const companyPieChartData = [...top5Companies];
+    if (otherCompanies.length > 0) {
+        const othersCount = otherCompanies.reduce((sum, company) => sum + company.count, 0);
+        companyPieChartData.push({ name: '기타', count: othersCount, amount: 0, items: [] });
+    }
     
     const getGroupKey = (date: Date) => {
         if (salesFilterType === 'monthly') return format(date, 'yyyy-MM');
@@ -148,7 +170,7 @@ const UnifiedDashboard = () => {
     return {
         totalSalesAmount,
         totalSalesCount,
-        top5Companies,
+        companyPieChartData,
         allCompanies: Object.values(byCompany).sort((a, b) => b.amount - a.amount),
         salesTrend: Object.values(salesTrend).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
         companyDetails: selectedCompany ? byCompany[selectedCompany]?.items || [] : []
@@ -167,14 +189,14 @@ const UnifiedDashboard = () => {
     }
   };
 
-  const inventoryMetrics = [
+  const inventoryMetrics: MetricItem[] = [
     { id: 'totalItems', title: '총 품목 수', value: inventorySummary.totalItems, icon: Package, items: mockInventoryData },
     { id: 'normalStock', title: '정상 재고', value: inventorySummary.normalStock.count, icon: CheckCircle, items: inventorySummary.normalStock.items },
     { id: 'lowStock', title: '부족 재고', value: inventorySummary.lowStock.count, icon: AlertTriangle, items: inventorySummary.lowStock.items },
     { id: 'outOfStock', title: '품절', value: inventorySummary.outOfStock.count, icon: XCircle, items: inventorySummary.outOfStock.items },
     { id: 'totalQuantity', title: '총 재고 수량', value: inventorySummary.totalQuantity, icon: Archive, items: [] },
   ];
-  const workStatusMetrics = [
+  const workStatusMetrics: MetricItem[] = [
     { id: 'completed', title: '완료', value: workStatusSummary.completed.count, icon: CalendarCheck, items: workStatusSummary.completed.items },
     { id: 'inProgress', title: '진행 중', value: workStatusSummary.inProgress.count, icon: Truck, items: workStatusSummary.inProgress.items },
     { id: 'pending', title: '대기 중', value: workStatusSummary.pending.count, icon: Clock, items: workStatusSummary.pending.items },
@@ -200,12 +222,32 @@ const UnifiedDashboard = () => {
     else if (type === 'work') { setActiveWorkDetail(prev => (prev === metricId ? null : metricId)); setActiveInventoryDetail(null); }
   };
 
-  const renderDetailTable = (activeDetail: string | null, metrics: MetricItem[], headers: { key: string; label: string; className?: string }[], titlePrefix: string) => {
+  const renderDetailTable = (activeDetail: string | null, metrics: MetricItem[], headers: { key: string; label: string; className?: string; render?: (value: any) => React.ReactNode }[], titlePrefix: string) => {
     if (!activeDetail) return null;
     const metric = metrics.find(m => m.id === activeDetail);
     if (!metric || !metric.items || metric.items.length === 0) return null;
     return (
-      <Card className="mt-4"><CardHeader><CardTitle>{titlePrefix}: {metric.title} 상세 목록</CardTitle></CardHeader><CardContent><Table><TableHeader><TableRow>{headers.map(h => <TableHead key={h.key} className={h.className}>{h.label}</TableHead>)}</TableRow></TableHeader><TableBody>{metric.items.map((item) => (<TableRow key={(item as { id: number | string }).id}>{headers.map(h => <TableCell key={h.key} className={h.className}>{(item as never)[h.key]}</TableCell>)}</TableRow>))}</TableBody></Table></CardContent></Card>
+      <Card className="mt-4">
+        <CardHeader><CardTitle>{titlePrefix}: {metric.title} 상세 목록</CardTitle></CardHeader>
+        <CardContent>
+          <Table className="table-fixed w-full">
+            <TableHeader>
+              <TableRow>{headers.map(h => <TableHead key={h.key} className={h.className}>{h.label}</TableHead>)}</TableRow>
+            </TableHeader>
+            <TableBody>
+              {metric.items.map((item) => (
+                <TableRow key={(item as { id: number | string }).id}>
+                  {headers.map(h => (
+                    <TableCell key={h.key} className={`py-4 px-4 ${h.className}`}>
+                      {h.render ? h.render((item as never)[h.key]) : (item as never)[h.key]}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     );
   };
 
@@ -225,7 +267,13 @@ const UnifiedDashboard = () => {
                 </Card>
               ))}
             </div>
-            <div className="mt-4">{renderDetailTable(activeInventoryDetail, inventoryMetrics, [ { key: 'name', label: '상품명' }, { key: 'specification', label: '규격' }, { key: 'quantity', label: '현재 수량', className: 'text-right' }, { key: 'location', label: '위치' }, { key: 'status', label: '상태' }, ], '재고 현황')}</div>
+            <div className="mt-4">{renderDetailTable(activeInventoryDetail, inventoryMetrics as MetricItem[], [
+                { key: 'name', label: '상품명', className: 'w-[30%] text-left' },
+                { key: 'specification', label: '규격', className: 'w-[20%] text-left' },
+                { key: 'quantity', label: '현재 수량', className: 'w-[15%] text-center' },
+                { key: 'location', label: '위치', className: 'w-[20%] text-center' },
+                { key: 'status', label: '상태', className: 'w-[15%] text-center' },
+            ], '재고 현황')}</div>
           </AccordionContent>
         </AccordionItem>
 
@@ -240,7 +288,14 @@ const UnifiedDashboard = () => {
                 </Card>
               ))}
             </div>
-            <div className="mt-4">{renderDetailTable(activeWorkDetail, workStatusMetrics, [ { key: 'type', label: '유형' }, { key: 'productName', label: '상품명' }, { key: 'quantity', label: '수량', className: 'text-right' }, { key: 'company', label: '거래처' }, { key: 'date', label: '날짜' }, { key: 'status', label: '상태' }, ], '작업 현황')}</div>
+            <div className="mt-4">{renderDetailTable(activeWorkDetail, workStatusMetrics as MetricItem[], [
+                { key: 'type', label: '유형', className: 'w-[10%] text-center', render: (type) => type === 'inbound' ? '입고' : '출고' },
+                { key: 'productName', label: '상품명', className: 'w-[15%] text-left' },
+                { key: 'quantity', label: '수량', className: 'w-[30%] text-center' },
+                { key: 'company', label: '거래처', className: 'w-[15%] text-left' },
+                { key: 'date', label: '날짜', className: 'w-[15%] text-center' },
+                { key: 'status', label: '상태', className: 'w-[15%] text-center' },
+            ], '작업 현황')}</div>
           </AccordionContent>
         </AccordionItem>
 
@@ -257,11 +312,11 @@ const UnifiedDashboard = () => {
                         <Button variant={filterType === 'daily' ? 'default' : 'outline'} onClick={() => handleFilterClick('daily', setDateRange, setFilterType)}>14일</Button>
                         <Button variant={filterType === 'weekly' ? 'default' : 'outline'} onClick={() => handleFilterClick('weekly', setDateRange, setFilterType)}>3개월</Button>
                         <Button variant={filterType === 'monthly' ? 'default' : 'outline'} onClick={() => handleFilterClick('monthly', setDateRange, setFilterType)}>12개월</Button>
-                        <Popover><PopoverTrigger asChild><Button variant={"outline"} className={`w-[280px] justify-start text-left font-normal ${!dateRange && "text-muted-foreground"}`}><CalendarIcon className="mr-2 h-4 w-4" />{dateRange?.from ? (dateRange.to ? (<>{format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}</>) : (format(dateRange.from, "LLL dd, y"))) : (<span>기간 선택</span>)}</Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="end"><Calendar initialFocus mode="range" defaultMonth={dateRange?.from} selected={dateRange} onSelect={(range) => { setDateRange(range); setFilterType('custom'); }} numberOfMonths={2} /></PopoverContent></Popover>
+                        <Popover><PopoverTrigger asChild><Button variant={"outline"} className={`w-[280px] justify-start text-left font-normal ${!dateRange && "text-muted-foreground"}`}><CalendarIcon className="mr-2 h-4 w-4" />{dateRange?.from ? (dateRange.to ? (<>{format(dateRange.from, "yyyy-MM-dd")} - {format(dateRange.to, "yyyy-MM-dd")}</>) : (format(dateRange.from, "yyyy-MM-dd"))) : (<span>기간 선택</span>)}</Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="end"><Calendar initialFocus mode="range" defaultMonth={dateRange?.from} selected={dateRange} onSelect={(range) => { setDateRange(range); setFilterType('custom'); }} numberOfMonths={2} /></PopoverContent></Popover>
                     </div>
                 </div>
                 <ChartContainer config={{ inbound: { label: "입고", color: "hsl(var(--chart-2))" }, outbound: { label: "출고", color: "hsl(var(--chart-1))" }, }} className="h-[300px] w-full">
-                    <LineChart data={inOutAnalysis.chartData}><CartesianGrid vertical={false} /><XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} /><YAxis /><ChartTooltip content={<ChartTooltipContent />} /><ChartLegend content={<ChartLegendContent />} /><Line type="monotone" dataKey="inbound" stroke="var(--color-inbound)" strokeWidth={2} dot={false} /><Line type="monotone" dataKey="outbound" stroke="var(--color-outbound)" strokeWidth={2} dot={false} /></LineChart>
+                    <LineChart data={inOutAnalysis.chartData}><CartesianGrid vertical={false} /><XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} /><YAxis /><ChartTooltip content={ChartTooltipContent} /><ChartLegend content={ChartLegendContent} /><Line type="monotone" dataKey="inbound" stroke="var(--color-inbound)" strokeWidth={2} dot={false} name="입고" /><Line type="monotone" dataKey="outbound" stroke="var(--color-outbound)" strokeWidth={2} dot={false} name="출고" /></LineChart>
                 </ChartContainer>
             </AccordionContent>
         </AccordionItem>
@@ -276,8 +331,13 @@ const UnifiedDashboard = () => {
                         ))}
                     </div>
                     <div className="h-[200px]">
-                        <ChartContainer config={{ moving: { label: '이동 중', color: 'hsl(var(--chart-1))' }, charging: { label: '충전 중', color: 'hsl(var(--chart-2))' }, idle: { label: '대기 중', color: 'hsl(var(--chart-3))' }, error: { label: '오류', color: 'hsl(var(--chart-4))' } }} className="h-full w-full">
-                            <PieChart><ChartTooltip content={<ChartTooltipContent hideLabel />} /><Pie data={amrAnalysis.chartData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={80} paddingAngle={5}>{amrAnalysis.chartData.map((entry) => (<Cell key={`cell-${entry.name}`} fill={entry.fill} />))}</Pie><ChartLegend content={<ChartLegendContent nameKey="name" />} /></PieChart>
+                        <ChartContainer config={{
+                            moving: { label: '이동 중', color: 'hsl(var(--chart-1))' },
+                            charging: { label: '충전 중', color: 'hsl(var(--chart-2))' },
+                            idle: { label: '대기 중', color: 'hsl(var(--chart-3))' },
+                            error: { label: '오류', color: 'hsl(var(--chart-4))' }
+                        }} className="h-full w-full">
+                            <PieChart><ChartTooltip content={ChartTooltipContent} /><Pie data={amrAnalysis.chartData} dataKey="value" nameKey="displayName" innerRadius={60} outerRadius={80} paddingAngle={5}>{amrAnalysis.chartData.map((entry) => (<Cell key={`cell-${entry.name}`} fill={entry.fill} />))}</Pie><ChartLegend content={ChartLegendContent} /></PieChart>
                         </ChartContainer>
                     </div>
                 </div>
@@ -297,20 +357,28 @@ const UnifiedDashboard = () => {
                         <Button variant={salesFilterType === 'daily' ? 'default' : 'outline'} onClick={() => handleFilterClick('daily', setSalesDateRange, setSalesFilterType)}>14일</Button>
                         <Button variant={salesFilterType === 'weekly' ? 'default' : 'outline'} onClick={() => handleFilterClick('weekly', setSalesDateRange, setSalesFilterType)}>3개월</Button>
                         <Button variant={salesFilterType === 'monthly' ? 'default' : 'outline'} onClick={() => handleFilterClick('monthly', setSalesDateRange, setSalesFilterType)}>12개월</Button>
-                        <Popover><PopoverTrigger asChild><Button variant={"outline"} className={`w-[280px] justify-start text-left font-normal ${!salesDateRange && "text-muted-foreground"}`}><CalendarIcon className="mr-2 h-4 w-4" />{salesDateRange?.from ? (salesDateRange.to ? (<>{format(salesDateRange.from, "LLL dd, y")} - {format(salesDateRange.to, "LLL dd, y")}</>) : (format(salesDateRange.from, "LLL dd, y"))) : (<span>기간 선택</span>)}</Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="end"><Calendar initialFocus mode="range" defaultMonth={salesDateRange?.from} selected={salesDateRange} onSelect={(range) => { setSalesDateRange(range); setSalesFilterType('custom'); }} numberOfMonths={2} /></PopoverContent></Popover>
+                        <Popover><PopoverTrigger asChild><Button variant={"outline"} className={`w-[280px] justify-start text-left font-normal ${!salesDateRange && "text-muted-foreground"}`}><CalendarIcon className="mr-2 h-4 w-4" />{salesDateRange?.from ? (salesDateRange.to ? (<>{format(salesDateRange.from, "yyyy-MM-dd")} - {format(salesDateRange.to, "yyyy-MM-dd")}</>) : (format(salesDateRange.from, "yyyy-MM-dd"))) : (<span>기간 선택</span>)}</Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="end"><Calendar initialFocus mode="range" defaultMonth={salesDateRange?.from} selected={salesDateRange} onSelect={(range) => { setSalesDateRange(range); setSalesFilterType('custom'); }} numberOfMonths={2} /></PopoverContent></Popover>
                     </div>
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div>
                         <h3 className="font-semibold mb-2">매출 추이 (금액 및 건수)</h3>
                         <ChartContainer config={{ amount: { label: "판매 금액", color: "hsl(var(--chart-1))" }, count: { label: "판매 건수", color: "hsl(var(--chart-2))" } }} className="h-[300px] w-full">
-                            <LineChart data={salesAnalysis.salesTrend}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis yAxisId="left" label={{ value: '금액(원)', angle: -90, position: 'insideLeft' }} /><YAxis yAxisId="right" orientation="right" label={{ value: '건수', angle: -90, position: 'insideRight' }} /><ChartTooltip content={<ChartTooltipContent />} /><ChartLegend /><Line yAxisId="left" type="monotone" dataKey="amount" stroke="var(--color-amount)" name="판매 금액" /><Line yAxisId="right" type="monotone" dataKey="count" stroke="var(--color-count)" name="판매 건수" /></LineChart>
+                            <LineChart data={salesAnalysis.salesTrend}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis yAxisId="left" label={{ value: '금액(원)', angle: -90, position: 'insideLeft' }} /><YAxis yAxisId="right" orientation="right" label={{ value: '건수', angle: -90, position: 'insideRight' }} /><ChartTooltip content={ChartTooltipContent} /><ChartLegend content={ChartLegendContent} /><Line yAxisId="left" type="monotone" dataKey="amount" stroke="var(--color-amount)" name="판매 금액" /><Line yAxisId="right" type="monotone" dataKey="count" stroke="var(--color-count)" name="판매 건수" /></LineChart>
                         </ChartContainer>
                     </div>
                     <div>
-                        <h3 className="font-semibold mb-2">상위 5개 거래처 (납품 건수)</h3>
-                        <ChartContainer config={{ count: { label: "납품 건수", color: "hsl(var(--chart-2))" } }} className="h-[300px] w-full">
-                            <BarChart data={salesAnalysis.top5Companies} layout="vertical"><CartesianGrid strokeDasharray="3 3" /><XAxis type="number" /><YAxis dataKey="name" type="category" width={80} /><ChartTooltip content={<ChartTooltipContent />} /><ChartLegend /><Bar dataKey="count" name="납품 건수" fill="var(--color-count)" /></BarChart>
+                        <h3 className="font-semibold mb-2">거래처별 납품 비율 (건수)</h3>
+                        <ChartContainer config={{ count: { label: "납품 건수" } }} className="h-[300px] w-full">
+                            <PieChart>
+                                <ChartTooltip content={ChartTooltipContent} />
+                                <Pie data={salesAnalysis.companyPieChartData} dataKey="count" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100}>
+                                    {salesAnalysis.companyPieChartData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={`hsl(var(--chart-${index + 1}))`} />
+                                    ))}
+                                </Pie>
+                                <ChartLegend content={ChartLegendContent} />
+                            </PieChart>
                         </ChartContainer>
                     </div>
                 </div>

@@ -102,7 +102,7 @@ export default function CompanyList() {
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">거래처 관리</h2>
-        <Button onClick={() => { setEditingCompany(null); setFormData({ code: "", name: "", representative: "", phone: "", email: "", address: "", notes: "" }); setIsModalOpen(true); }} className="flex items-center gap-2">
+        <Button onClick={() => { setEditingCompany(null); setFormData({ code: "", name: "", representative: "", phone: "", email: "", address: "", notes: "", type: "납품처" }); setIsModalOpen(true); }} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           거래처 등록
         </Button>
