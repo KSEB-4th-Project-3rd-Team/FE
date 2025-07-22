@@ -66,11 +66,11 @@ export default function NotificationPopover() {
         variant="outline"
         size="icon"
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg bg-white hover:bg-gray-100 z-50"
+        className="fixed bottom-6 right-6 w-9 h-9 rounded-full shadow-lg bg-white hover:bg-gray-100 z-50"
       >
-        <Bell className="h-6 w-6 text-gray-700" />
+        <Bell className="h-3.5 w-3.5 text-gray-700" />
         {unreadCount > 0 && (
-          <Badge className="absolute -top-1 -right-1 bg-red-500 text-white px-2 py-0.5 text-xs rounded-full">
+          <Badge className="absolute -top-1 -right-1 bg-red-500 text-white px-1.5 py-0 text-[10px] rounded-full">
             {unreadCount}
           </Badge>
         )}
