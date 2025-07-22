@@ -24,6 +24,7 @@ import AuthForm from "@/components/auth/auth-form"
 import GlobalSearch from "@/components/search/global-search"
 import InOutStatusPanel from "@/components/inout/inout-status-panel"
 import AmrStatusPanel from "@/components/simulation/amr-status-panel"
+import NotificationPopover from "@/components/notifications/notification-popover"
 
 // Temporary User type until API is connected
 export type User = {
@@ -48,7 +49,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [notificationCount] = useState(0)
 
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -426,11 +426,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                     <Link href="/notifications">
                       <span className="mr-2">•</span>
                       알림 센터
-                      {notificationCount > 0 && (
-                        <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
-                          {notificationCount}
-                        </span>
-                      )}
                     </Link>
                   </Button>
                 </div>
@@ -481,6 +476,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       )}
 
       <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <NotificationPopover />
     </div>
   )
 }
