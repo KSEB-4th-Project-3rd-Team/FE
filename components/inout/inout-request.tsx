@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Check, X } from "lucide-react"
 import { InOutRequest, mockInOutRequests } from "@/components/utils"
+import { CustomPagination } from "@/components/ui/custom-pagination"
 
 type DisplayUnit = "개수" | "set"
 
@@ -16,6 +17,10 @@ export default function InOutRequestPage() {
   const [displayUnit, setDisplayUnit] = useState<DisplayUnit>('set')
   const [selectedRequest, setSelectedRequest] = useState<InOutRequest | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
+  const [completedCurrentPage, setCompletedCurrentPage] = useState(1);
+
+  const itemsPerPage = 5; // 페이지당 5개 항목
   const SET_QUANTITY = 14
 
   useEffect(() => {
@@ -64,95 +69,127 @@ export default function InOutRequestPage() {
     return `${quantity} 개`;
   }
 
-  const RequestTable = ({ title, requestList }: { title: string, requestList: InOutRequest[] }) => (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title} ({requestList.length}건)</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {requestList.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">해당하는 요청이 없습니다.</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-center">
-              <thead>
-                <tr className="border-b">
-                  <th className="p-3 font-semibold">유형</th>
-                  <th className="p-3 font-semibold text-left">상품명</th>
-                  <th className="p-3 font-semibold text-left">규격</th>
-                  <th className="p-3 font-semibold">수량</th>
-                  <th className="p-3 font-semibold">
-                    <div style={{ transform: 'translateY(-11.5px)' }}>
-                      <p 
-                        className="text-xs text-gray-500 font-normal mb-1"
-                        style={{ visibility: displayUnit === 'set' ? 'visible' : 'hidden' }}
-                      >
-                        (1 set = {SET_QUANTITY}개)
-                      </p>
-                      <div className="flex items-center justify-center gap-2">
-                        <span>주문수량</span>
-                        <Select value={displayUnit} onValueChange={(value: DisplayUnit) => setDisplayUnit(value)}>
-                          <SelectTrigger className="w-20 h-7 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="set">Set</SelectItem>
-                            <SelectItem value="개수">개수</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </th>
-                  <th className="p-3 font-semibold text-left">거래처</th>
-                  <th className="p-3 font-semibold">예정일시</th>
-                  <th className="p-3 font-semibold">관리</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requestList.map((request) => (
-                  <tr key={request.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(request)}>
-                    <td className="p-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${ request.type === "inbound" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800" }`}>
-                        {request.type === "inbound" ? "입고" : "출고"}
-                      </span>
-                    </td>
-                    <td className="p-3 text-left">
-                      <p className="font-medium">{request.itemName}</p>
-                      <p className="text-xs text-gray-500">SKU: {request.itemCode}</p>
-                    </td>
-                    <td className="p-3 text-left">{request.specification}</td>
-                    <td className="p-3">{request.quantity}</td>
-                    <td className="p-3">{getDisplayQuantity(request.quantity)}</td>
-                    <td className="p-3 text-left">
-                      <p className="font-medium">{request.companyName}</p>
-                      <p className="text-xs text-gray-500">코드: {request.companyCode}</p>
-                    </td>
-                    <td className="p-3">{formatDateTime(request.scheduledDateTime)}</td>
-                    <td className="p-3">
-                      {request.status === 'pending' ? (
-                        <div className="flex gap-2 justify-center">
-                          <Button onClick={(e) => handleApprove(e, request.id)} size="sm" className="bg-green-600 hover:bg-green-700">
-                            <Check className="w-4 h-4" />
-                          </Button>
-                          <Button onClick={(e) => handleReject(e, request.id)} variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
-                            <X className="w-4 h-4" />
-                          </Button>
+  const RequestTable = ({ 
+    title, 
+    requestList,
+    currentPage,
+    onPageChange
+  }: { 
+    title: string, 
+    requestList: InOutRequest[],
+    currentPage: number,
+    onPageChange: (page: number) => void
+  }) => {
+    const totalPages = Math.ceil(requestList.length / itemsPerPage);
+    const paginatedList = requestList.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>{title} ({requestList.length}건)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {requestList.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">해당하는 요청이 없습니다.</div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-center table-fixed">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="p-3 font-semibold w-[8%]">유형</th>
+                      <th className="p-3 font-semibold text-left w-[20%]">상품명</th>
+                      <th className="p-3 font-semibold text-left w-[15%]">규격</th>
+                      <th className="p-3 font-semibold w-[7%]">수량</th>
+                      <th className="p-3 font-semibold w-[12%]">
+                        <div style={{ transform: 'translateY(-11.5px)' }}>
+                          <p 
+                            className="text-xs text-gray-500 font-normal mb-1"
+                            style={{ visibility: displayUnit === 'set' ? 'visible' : 'hidden' }}
+                          >
+                            (1 set = {SET_QUANTITY}개)
+                          </p>
+                          <div className="flex items-center justify-center gap-2 whitespace-nowrap">
+                            <span>주문수량</span>
+                            <Select value={displayUnit} onValueChange={(value: DisplayUnit) => setDisplayUnit(value)}>
+                              <SelectTrigger className="w-20 h-7 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="set">Set</SelectItem>
+                                <SelectItem value="개수">개수</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
-                      ) : (
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${ request.status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800" }`}>
-                          {request.status === "approved" ? "승인됨" : "거절됨"}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
+                      </th>
+                      <th className="p-3 font-semibold text-left w-[15%]">거래처</th>
+                      <th className="p-3 font-semibold w-[15%]">예정일시</th>
+                      <th className="p-3 font-semibold w-[8%]">관리</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedList.map((request) => (
+                      <tr key={request.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(request)}>
+                        <td className="p-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${ request.type === "inbound" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800" }`}>
+                            {request.type === "inbound" ? "입고" : "출고"}
+                          </span>
+                        </td>
+                        <td className="p-3 text-left truncate">
+                          <p className="font-medium">{request.itemName}</p>
+                          <p className="text-xs text-gray-500">SKU: {request.itemCode}</p>
+                        </td>
+                        <td className="p-3 text-left truncate">{request.specification}</td>
+                        <td className="p-3">{request.quantity}</td>
+                        <td className="p-3">{getDisplayQuantity(request.quantity)}</td>
+                        <td className="p-3 text-left truncate">
+                          <p className="font-medium">{request.companyName}</p>
+                          <p className="text-xs text-gray-500">코드: {request.companyCode}</p>
+                        </td>
+                        <td className="p-3">{formatDateTime(request.scheduledDateTime)}</td>
+                        <td className="p-3">
+                          {request.status === 'pending' ? (
+                            <div className="flex gap-2 justify-center">
+                              <Button onClick={(e) => handleApprove(e, request.id)} size="sm" className="bg-green-600 hover:bg-green-700">
+                                <Check className="w-4 h-4" />
+                              </Button>
+                              <Button onClick={(e) => handleReject(e, request.id)} variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${ request.status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800" }`}>
+                              {request.status === "approved" ? "승인됨" : "거절됨"}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4">
+                  <div className="text-sm text-gray-600">
+                    총 {requestList.length}개 중 {paginatedList.length}개 표시
+                  </div>
+                  <CustomPagination
+                    totalPages={totalPages}
+                    currentPage={currentPage}
+                    onPageChange={onPageChange}
+                  />
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -162,8 +199,18 @@ export default function InOutRequestPage() {
       </div>
 
       <div className="grid gap-6">
-        <RequestTable title="승인 대기 중인 요청" requestList={pendingRequests} />
-        <RequestTable title="처리 완료된 요청" requestList={completedRequests} />
+        <RequestTable 
+          title="승인 대기 중인 요청" 
+          requestList={pendingRequests} 
+          currentPage={pendingCurrentPage}
+          onPageChange={setPendingCurrentPage}
+        />
+        <RequestTable 
+          title="처리 완료된 요청" 
+          requestList={completedRequests} 
+          currentPage={completedCurrentPage}
+          onPageChange={setCompletedCurrentPage}
+        />
       </div>
 
       {isModalOpen && selectedRequest && (

@@ -234,13 +234,13 @@ const inventoryData: InventoryItem[] = mockInventoryData;
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[700px]">
+              <table className="w-full text-sm min-w-[1000px] table-fixed">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2">No</th>
-                    <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[200px]">상품명</th>
-                    <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[100px]">규격</th>
-                    <th className="text-center p-2 md:p-3 font-semibold align-bottom">
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[5%]">No</th>
+                    <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 w-[25%]">상품명</th>
+                    <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 w-[12%]">규격</th>
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom w-[12%]">
                       <div className="flex flex-col items-center justify-end" style={{ height: '3.5rem' }}>
                         <p className={`text-xs text-gray-500 font-normal whitespace-nowrap ${displayUnit === 'set' ? 'visible' : 'invisible'}`}>
                           (1 set = {SET_QUANTITY}개)
@@ -256,25 +256,25 @@ const inventoryData: InventoryItem[] = mockInventoryData;
                         </Select>
                       </div>
                     </th>
-                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[80px]">현재수량</th>
-                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[80px]">입고예정</th>
-                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[80px]">출고예정</th>
-                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[80px]">구역</th>
-                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[60px]">상태</th>
-                    <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 min-w-[120px]">마지막 업데이트</th>
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[8%]">현재수량</th>
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[8%]">입고예정</th>
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[8%]">출고예정</th>
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[8%]">구역</th>
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[8%]">상태</th>
+                    <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 w-[12%]">마지막 업데이트</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentItems.map((item, index) => (
                     <tr key={item.id} className="border-b hover:bg-gray-50">
                       <td className="p-2 md:p-3 text-center text-sm text-gray-600">{startIndex + index + 1}</td>
-                      <td className="p-2 md:p-3">
+                      <td className="p-2 md:p-3 truncate">
                         <div>
                           <p className="font-medium text-sm break-words">{item.name}</p>
                           <p className="text-xs text-gray-500 break-all">SKU: {item.sku}</p>
                         </div>
                       </td>
-                      <td className="p-2 md:p-3 text-sm">{item.specification}</td>
+                      <td className="p-2 md:p-3 text-sm truncate">{item.specification}</td>
                       <td className="p-2 md:p-3 text-center">
                         {/* Empty cell for the dropdown header */}
                       </td>
@@ -303,7 +303,7 @@ const inventoryData: InventoryItem[] = mockInventoryData;
                           {item.status}
                         </span>
                       </td>
-                      <td className="p-2 md:p-3 text-gray-600 text-xs break-words">{item.lastUpdate}</td>
+                      <td className="p-2 md:p-3 text-gray-600 text-xs break-words truncate">{item.lastUpdate}</td>
                     </tr>
                   ))}
                 </tbody>
