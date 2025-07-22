@@ -11,27 +11,28 @@ import {
   CheckCircle,
   XCircle,
   Trash2,
-  BookMarkedIcon as MarkAsRead,
+  BookCheck,
   Filter,
 } from "lucide-react"
+import { useNotifications } from "@/hooks/use-notifications"
 
-interface Notification {
-  id: string
-  type: "info" | "warning" | "error" | "success"
-  title: string
-  message: string
-  timestamp: string
-  read: boolean
-  category: "system" | "inventory" | "agv" | "user"
-}
+type NotificationType = "info" | "warning" | "error" | "success"
+type CategoryType = "system" | "inventory" | "agv" | "user"
 
 export default function NotificationCenter() {
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    deleteNotification,
+    markAllAsRead,
+    clearAllNotifications,
+  } = useNotifications()
 
-  const [filter, setFilter] = useState<"all" | "unread" | "info" | "warning" | "error" | "success">("all")
-  const [categoryFilter, setCategoryFilter] = useState<"all" | "system" | "inventory" | "agv" | "user">("all")
+  const [typeFilter, setTypeFilter] = useState<"all" | "unread" | NotificationType>("all")
+  const [categoryFilter, setCategoryFilter] = useState<"all" | CategoryType>("all")
 
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
       case "info":
         return <Info className="w-5 h-5 text-blue-500" />
@@ -46,61 +47,42 @@ export default function NotificationCenter() {
     }
   }
 
-  const getNotificationBadgeColor = (type: string) => {
+  const getNotificationBadgeColor = (type: NotificationType) => {
     switch (type) {
       case "info":
-        return "bg-blue-100 text-blue-800"
+        return "border-blue-500/50 bg-blue-50 text-blue-700"
       case "warning":
-        return "bg-yellow-100 text-yellow-800"
+        return "border-yellow-500/50 bg-yellow-50 text-yellow-700"
       case "error":
-        return "bg-red-100 text-red-800"
+        return "border-red-500/50 bg-red-50 text-red-700"
       case "success":
-        return "bg-green-100 text-green-800"
+        return "border-green-500/50 bg-green-50 text-green-700"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "border-gray-500/50 bg-gray-50 text-gray-700"
     }
   }
 
-  const getCategoryBadgeColor = (category: string) => {
+  const getCategoryBadgeColor = (category: CategoryType) => {
     switch (category) {
       case "system":
-        return "bg-purple-100 text-purple-800"
+        return "border-purple-500/50 bg-purple-50 text-purple-700"
       case "inventory":
-        return "bg-blue-100 text-blue-800"
+        return "border-cyan-500/50 bg-cyan-50 text-cyan-700"
       case "agv":
-        return "bg-orange-100 text-orange-800"
+        return "border-orange-500/50 bg-orange-50 text-orange-700"
       case "user":
-        return "bg-green-100 text-green-800"
+        return "border-pink-500/50 bg-pink-50 text-pink-700"
       default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const markAsRead = (id: string) => {
-    setNotifications(notifications.map((notif) => (notif.id === id ? { ...notif, read: true } : notif)))
-  }
-
-  const markAllAsRead = () => {
-    setNotifications(notifications.map((notif) => ({ ...notif, read: true })))
-  }
-
-  const deleteNotification = (id: string) => {
-    setNotifications(notifications.filter((notif) => notif.id !== id))
-  }
-
-  const clearAllNotifications = () => {
-    if (confirm("모든 알림을 삭제하시겠습니까?")) {
-      setNotifications([])
+        return "border-gray-500/50 bg-gray-50 text-gray-700"
     }
   }
 
   const filteredNotifications = notifications.filter((notif) => {
-    const typeMatch = filter === "all" || notif.type === filter || (filter === "unread" && !notif.read)
+    const typeMatch = typeFilter === "all" || (typeFilter === "unread" ? !notif.read : notif.type === typeFilter)
     const categoryMatch = categoryFilter === "all" || notif.category === categoryFilter
     return typeMatch && categoryMatch
   })
 
-  const unreadCount = notifications.filter((notif) => !notif.read).length
   const typeStats = {
     info: notifications.filter((n) => n.type === "info").length,
     warning: notifications.filter((n) => n.type === "warning").length,
@@ -108,80 +90,77 @@ export default function NotificationCenter() {
     success: notifications.filter((n) => n.type === "success").length,
   }
 
+  const typeToKorean = (type: NotificationType | 'unread' | 'all') => {
+    const map = {
+      info: "정보",
+      warning: "경고",
+      error: "오류",
+      success: "성공",
+      unread: "읽지 않음",
+      all: "모든 타입"
+    };
+    return map[type];
+  }
+
+  const categoryToKorean = (category: CategoryType | 'all') => {
+    const map = {
+      system: "시스템",
+      inventory: "재고",
+      agv: "AGV",
+      user: "사용자",
+      all: "모든 카테고리"
+    };
+    return map[category];
+  }
+
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold">알림 센터</h2>
+          <h2 className="text-3xl font-bold">알림 센터</h2>
           {unreadCount > 0 && <Badge className="bg-red-500 text-white">{unreadCount}개 읽지 않음</Badge>}
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={markAllAsRead} disabled={unreadCount === 0}>
-            <MarkAsRead className="w-4 h-4 mr-2" />
-            모두 읽음
+            <BookCheck className="w-4 h-4 mr-2" />
+            모두 읽음으로 표시
           </Button>
-          <Button variant="outline" onClick={clearAllNotifications} disabled={notifications.length === 0}>
+          <Button variant="destructive" onClick={clearAllNotifications} disabled={notifications.length === 0}>
             <Trash2 className="w-4 h-4 mr-2" />
             모두 삭제
           </Button>
         </div>
       </div>
 
-      {/* 통계 카드 */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">전체</p>
-                <p className="text-2xl font-bold">{notifications.length}</p>
-              </div>
-              <Bell className="w-8 h-8 text-gray-500" />
-            </div>
+          <CardContent className="p-4 flex items-center justify-between">
+            <div><p className="text-sm text-gray-600">전체</p><p className="text-2xl font-bold">{notifications.length}</p></div>
+            <Bell className="w-8 h-8 text-gray-400" />
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">정보</p>
-                <p className="text-2xl font-bold text-blue-600">{typeStats.info}</p>
-              </div>
-              <Info className="w-8 h-8 text-blue-500" />
-            </div>
+          <CardContent className="p-4 flex items-center justify-between">
+            <div><p className="text-sm text-blue-600">정보</p><p className="text-2xl font-bold text-blue-600">{typeStats.info}</p></div>
+            <Info className="w-8 h-8 text-blue-400" />
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">경고</p>
-                <p className="text-2xl font-bold text-yellow-600">{typeStats.warning}</p>
-              </div>
-              <AlertTriangle className="w-8 h-8 text-yellow-500" />
-            </div>
+          <CardContent className="p-4 flex items-center justify-between">
+            <div><p className="text-sm text-yellow-600">경고</p><p className="text-2xl font-bold text-yellow-600">{typeStats.warning}</p></div>
+            <AlertTriangle className="w-8 h-8 text-yellow-400" />
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">오류</p>
-                <p className="text-2xl font-bold text-red-600">{typeStats.error}</p>
-              </div>
-              <XCircle className="w-8 h-8 text-red-500" />
-            </div>
+          <CardContent className="p-4 flex items-center justify-between">
+            <div><p className="text-sm text-red-600">오류</p><p className="text-2xl font-bold text-red-600">{typeStats.error}</p></div>
+            <XCircle className="w-8 h-8 text-red-400" />
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">성공</p>
-                <p className="text-2xl font-bold text-green-600">{typeStats.success}</p>
-              </div>
-              <CheckCircle className="w-8 h-8 text-green-500" />
-            </div>
+          <CardContent className="p-4 flex items-center justify-between">
+            <div><p className="text-sm text-green-600">성공</p><p className="text-2xl font-bold text-green-600">{typeStats.success}</p></div>
+            <CheckCircle className="w-8 h-8 text-green-400" />
           </CardContent>
         </Card>
       </div>
@@ -189,39 +168,36 @@ export default function NotificationCenter() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-xl">
               <Bell className="w-5 h-5" />
               알림 목록
             </CardTitle>
             <div className="flex items-center gap-4">
-              {/* 타입 필터 */}
               <div className="flex items-center gap-2">
                 <Filter className="w-4 h-4 text-gray-500" />
                 <select
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value as typeof filter)}
-                  className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}
+                  className="px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 >
-                  <option value="all">모든 타입</option>
-                  <option value="unread">읽지 않음</option>
-                  <option value="info">정보</option>
-                  <option value="warning">경고</option>
-                  <option value="error">오류</option>
-                  <option value="success">성공</option>
+                  <option value="all">{typeToKorean('all')}</option>
+                  <option value="unread">{typeToKorean('unread')}</option>
+                  <option value="info">{typeToKorean('info')}</option>
+                  <option value="warning">{typeToKorean('warning')}</option>
+                  <option value="error">{typeToKorean('error')}</option>
+                  <option value="success">{typeToKorean('success')}</option>
                 </select>
               </div>
-
-              {/* 카테고리 필터 */}
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value as typeof categoryFilter)}
-                className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               >
-                <option value="all">모든 카테고리</option>
-                <option value="system">시스템</option>
-                <option value="inventory">재고</option>
-                <option value="agv">AGV</option>
-                <option value="user">사용자</option>
+                <option value="all">{categoryToKorean('all')}</option>
+                <option value="system">{categoryToKorean('system')}</option>
+                <option value="inventory">{categoryToKorean('inventory')}</option>
+                <option value="agv">{categoryToKorean('agv')}</option>
+                <option value="user">{categoryToKorean('user')}</option>
               </select>
             </div>
           </div>
@@ -229,9 +205,10 @@ export default function NotificationCenter() {
         <CardContent>
           <div className="space-y-3">
             {filteredNotifications.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-12 text-gray-500">
                 <Bell className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>표시할 알림이 없습니다.</p>
+                <p className="font-medium">표시할 알림이 없습니다.</p>
+                <p className="text-sm">필터를 조정해 보세요.</p>
               </div>
             ) : (
               filteredNotifications.map((notification) => (
@@ -242,24 +219,18 @@ export default function NotificationCenter() {
                   }`}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3 flex-1">
+                    <div className="flex items-start gap-4 flex-1">
                       {getNotificationIcon(notification.type)}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className={`font-medium ${!notification.read ? "text-blue-900" : "text-gray-900"}`}>
+                        <div className="flex items-center gap-3 mb-1">
+                          <h4 className={`font-semibold ${!notification.read ? "text-gray-900" : "text-gray-800"}`}>
                             {notification.title}
                           </h4>
-                          <Badge className={getNotificationBadgeColor(notification.type)}>
-                            {notification.type === "info" && "정보"}
-                            {notification.type === "warning" && "경고"}
-                            {notification.type === "error" && "오류"}
-                            {notification.type === "success" && "성공"}
+                          <Badge variant="outline" className={getNotificationBadgeColor(notification.type)}>
+                            {typeToKorean(notification.type)}
                           </Badge>
-                          <Badge className={getCategoryBadgeColor(notification.category)}>
-                            {notification.category === "system" && "시스템"}
-                            {notification.category === "inventory" && "재고"}
-                            {notification.category === "agv" && "AGV"}
-                            {notification.category === "user" && "사용자"}
+                          <Badge variant="outline" className={getCategoryBadgeColor(notification.category)}>
+                            {categoryToKorean(notification.category)}
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-600 mb-2">{notification.message}</p>
@@ -274,7 +245,7 @@ export default function NotificationCenter() {
                           onClick={() => markAsRead(notification.id)}
                           className="text-blue-600 hover:text-blue-700"
                         >
-                          <MarkAsRead className="w-4 h-4" />
+                          <BookCheck className="w-4 h-4 mr-1" /> 읽음으로 표시
                         </Button>
                       )}
                       <Button
