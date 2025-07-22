@@ -419,17 +419,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   </Button>
                   <Button
                     asChild
-                    variant={isActive("/system-settings") ? "default" : "ghost"}
-                    size="sm"
-                    className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
-                  >
-                    <Link href="/system-settings">
-                      <span className="mr-2">•</span>
-                      시스템 설정
-                    </Link>
-                  </Button>
-                  <Button
-                    asChild
                     variant={isActive("/notifications") ? "default" : "ghost"}
                     size="sm"
                     className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"
