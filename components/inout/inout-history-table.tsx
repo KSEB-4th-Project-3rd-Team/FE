@@ -188,7 +188,7 @@ export default function InOutHistoryTable({ historyType }: InOutHistoryTableProp
                   <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">규격</th>
                   <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[7%]">수량</th>
                   <th className="text-center p-2 md:p-3 font-semibold align-bottom w-[12%]">
-                    <div className="flex flex-col items-center justify-center" style={{ height: '3.5rem' }}>
+                    <div className="flex flex-col items-center pt-4" style={{ height: '3.5rem' }}>
                       <p className={`text-xs text-gray-500 font-normal whitespace-nowrap ${displayUnit === 'set' ? 'visible' : 'invisible'}`}>(1 set = {SET_QUANTITY}개)</p>
                       <div className="flex items-center justify-center gap-2">
                         <span className="whitespace-nowrap">주문수량</span>
