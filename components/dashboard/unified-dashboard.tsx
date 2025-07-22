@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { format, startOfWeek, subDays, subMonths, addMonths, startOfMonth, isSameMonth } from 'date-fns';
+import { format, startOfWeek, subDays, subMonths, addMonths, startOfMonth, isSameMonth, subYears } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
 import { mockInventoryData, mockInOutData, InOutRecord } from '@/components/utils';
@@ -47,15 +47,15 @@ const UnifiedDashboard = () => {
   const [activeWorkDetail, setActiveWorkDetail] = useState<string | null>(null);
   
   // Date states for InOut Analysis
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({ from: subMonths(new Date(), 1), to: new Date() });
-  const [filterType, setFilterType] = useState<'monthly' | 'weekly' | 'daily' | 'custom'>('custom');
-  const [fromMonth, setFromMonth] = useState(startOfMonth(dateRange?.from || subMonths(new Date(), 1)));
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({ from: subDays(new Date(), 6), to: new Date() });
+  const [filterType, setFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
+  const [fromMonth, setFromMonth] = useState(startOfMonth(dateRange?.from || subDays(new Date(), 6)));
   const [toMonth, setToMonth] = useState(startOfMonth(dateRange?.to || new Date()));
 
   // Date states for Sales Analysis
-  const [salesDateRange, setSalesDateRange] = useState<DateRange | undefined>({ from: subMonths(new Date(), 1), to: new Date() });
-  const [salesFilterType, setSalesFilterType] = useState<'monthly' | 'weekly' | 'daily' | 'custom'>('custom');
-  const [salesFromMonth, setSalesFromMonth] = useState(startOfMonth(salesDateRange?.from || subMonths(new Date(), 1)));
+  const [salesDateRange, setSalesDateRange] = useState<DateRange | undefined>({ from: subDays(new Date(), 6), to: new Date() });
+  const [salesFilterType, setSalesFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
+  const [salesFromMonth, setSalesFromMonth] = useState(startOfMonth(salesDateRange?.from || subDays(new Date(), 6)));
   const [salesToMonth, setSalesToMonth] = useState(startOfMonth(salesDateRange?.to || new Date()));
 
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
@@ -167,9 +167,10 @@ const UnifiedDashboard = () => {
     const getGroupKey = (date: Date) => {
         if (filterType === 'monthly') return format(date, 'yyyy-MM');
         if (filterType === 'weekly') {
-            const start = startOfWeek(date, { weekStartsOn: 1 });
-            return `${format(start, 'yy/MM/dd')}`;
+            const start = startOfWeek(date, { weekStartsOn: 0 }); // Sunday
+            return format(start, 'yy/MM/dd');
         }
+        // daily or custom
         return format(date, 'yyyy-MM-dd');
     };
     
@@ -182,7 +183,6 @@ const UnifiedDashboard = () => {
     }, {} as Record<string, { date: string; inbound: number; outbound: number }>);
 
     const getSortableDate = (dateString: string) => {
-      // Handles "yyyy-MM", "yy/MM/dd", and "yyyy-MM-dd"
       if (dateString.includes('/')) {
         return new Date(`20${dateString}`);
       }
@@ -245,9 +245,10 @@ const UnifiedDashboard = () => {
     const getGroupKey = (date: Date) => {
         if (salesFilterType === 'monthly') return format(date, 'yyyy-MM');
         if (salesFilterType === 'weekly') {
-            const start = startOfWeek(date, { weekStartsOn: 1 });
-            return `${format(start, 'yy/MM/dd')}`;
+            const start = startOfWeek(date, { weekStartsOn: 0 }); // Sunday
+            return format(start, 'yy/MM/dd');
         }
+        // daily or custom
         return format(date, 'yyyy-MM-dd');
     };
 
@@ -260,7 +261,6 @@ const UnifiedDashboard = () => {
     }, {} as Record<string, { date: string; amount: number; count: number }>);
 
     const getSortableDate = (dateString: string) => {
-      // Handles "yyyy-MM", "yy/MM/dd", and "yyyy-MM-dd"
       if (dateString.includes('/')) {
         return new Date(`20${dateString}`);
       }
@@ -277,17 +277,31 @@ const UnifiedDashboard = () => {
     };
   }, [salesDateRange, salesFilterType, selectedCompany]);
 
-  const handleFilterClick = (type: 'monthly' | 'weekly' | 'daily', setDate: (range: DateRange | undefined) => void, setType: (type: 'monthly' | 'weekly' | 'daily' | 'custom') => void) => {
+  const handleFilterClick = (type: 'daily' | 'weekly' | 'monthly', setDate: (range: DateRange | undefined) => void, setType: (type: 'daily' | 'weekly' | 'monthly' | 'custom') => void) => {
     setType(type);
     const today = new Date();
-    if (type === 'monthly') {
-      setDate({ from: subMonths(today, 11), to: today });
-    } else if (type === 'weekly') {
+    if (type === 'daily') { // 1주
+      setDate({ from: subDays(today, 6), to: today });
+    } else if (type === 'weekly') { // 3개월
       setDate({ from: subMonths(today, 3), to: today });
-    } else if (type === 'daily') {
-      setDate({ from: subDays(today, 13), to: today });
+    } else if (type === 'monthly') { // 1년
+      setDate({ from: subYears(today, 1), to: today });
     }
   };
+
+  const xAxisTickFormatter = (tick: string) => {
+    if (filterType === 'daily' && /\d{4}-\d{2}-\d{2}/.test(tick)) {
+        return format(new Date(tick), 'MM-dd');
+    }
+    return tick;
+  }
+  
+  const salesXAxisTickFormatter = (tick: string) => {
+    if (salesFilterType === 'daily' && /\d{4}-\d{2}-\d{2}/.test(tick)) {
+        return format(new Date(tick), 'MM-dd');
+    }
+    return tick;
+  }
 
   const inventoryMetrics: MetricItem[] = [
     { id: 'totalItems', title: '총 품목 수', value: inventorySummary.totalItems, icon: Package, items: mockInventoryData },
@@ -448,9 +462,9 @@ const UnifiedDashboard = () => {
                         ))}
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant={filterType === 'daily' ? 'default' : 'outline'} onClick={() => handleFilterClick('daily', setDateRange, setFilterType)}>14일</Button>
+                        <Button variant={filterType === 'daily' ? 'default' : 'outline'} onClick={() => handleFilterClick('daily', setDateRange, setFilterType)}>1주</Button>
                         <Button variant={filterType === 'weekly' ? 'default' : 'outline'} onClick={() => handleFilterClick('weekly', setDateRange, setFilterType)}>3개월</Button>
-                        <Button variant={filterType === 'monthly' ? 'default' : 'outline'} onClick={() => handleFilterClick('monthly', setDateRange, setFilterType)}>12개월</Button>
+                        <Button variant={filterType === 'monthly' ? 'default' : 'outline'} onClick={() => handleFilterClick('monthly', setDateRange, setFilterType)}>1년</Button>
                         <Popover>
                             <PopoverTrigger asChild><Button variant={"outline"} className={`w-[280px] justify-start text-left font-normal ${!dateRange && "text-muted-foreground"}`}><CalendarIcon className="mr-2 h-4 w-4" />{dateRange?.from ? (dateRange.to ? (<>{format(dateRange.from, "yyyy-MM-dd")} - {format(dateRange.to, "yyyy-MM-dd")}</>) : (format(dateRange.from, "yyyy-MM-dd"))) : (<span>기간 선택</span>)}</Button></PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="end">
@@ -463,7 +477,7 @@ const UnifiedDashboard = () => {
                     </div>
                 </div>
                 <ChartContainer config={{ inbound: { label: "입고", color: "hsl(var(--chart-2))" }, outbound: { label: "출고", color: "hsl(var(--chart-1))" }, }} className="h-[300px] w-full">
-                    <LineChart data={inOutAnalysis.chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}><CartesianGrid vertical={false} /><XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} /><YAxis /><ChartTooltip content={ChartTooltipContent} /><ChartLegend content={ChartLegendContent} /><Line type="monotone" dataKey="inbound" stroke="var(--color-inbound)" strokeWidth={2} dot={false} name="입고" /><Line type="monotone" dataKey="outbound" stroke="var(--color-outbound)" strokeWidth={2} dot={false} name="출고" /></LineChart>
+                    <LineChart data={inOutAnalysis.chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}><CartesianGrid vertical={false} /><XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={xAxisTickFormatter} /><YAxis /><ChartTooltip content={ChartTooltipContent} /><ChartLegend content={ChartLegendContent} /><Line type="monotone" dataKey="inbound" stroke="var(--color-inbound)" strokeWidth={2} dot={false} name="입고" /><Line type="monotone" dataKey="outbound" stroke="var(--color-outbound)" strokeWidth={2} dot={false} name="출고" /></LineChart>
                 </ChartContainer>
             </AccordionContent>
         </AccordionItem>
@@ -501,9 +515,9 @@ const UnifiedDashboard = () => {
                         ))}
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant={salesFilterType === 'daily' ? 'default' : 'outline'} onClick={() => handleFilterClick('daily', setSalesDateRange, setSalesFilterType)}>14일</Button>
+                        <Button variant={salesFilterType === 'daily' ? 'default' : 'outline'} onClick={() => handleFilterClick('daily', setSalesDateRange, setSalesFilterType)}>1주</Button>
                         <Button variant={salesFilterType === 'weekly' ? 'default' : 'outline'} onClick={() => handleFilterClick('weekly', setSalesDateRange, setSalesFilterType)}>3개월</Button>
-                        <Button variant={salesFilterType === 'monthly' ? 'default' : 'outline'} onClick={() => handleFilterClick('monthly', setSalesDateRange, setSalesFilterType)}>12개월</Button>
+                        <Button variant={salesFilterType === 'monthly' ? 'default' : 'outline'} onClick={() => handleFilterClick('monthly', setSalesDateRange, setSalesFilterType)}>1년</Button>
                         <Popover>
                             <PopoverTrigger asChild><Button variant={"outline"} className={`w-[280px] justify-start text-left font-normal ${!salesDateRange && "text-muted-foreground"}`}><CalendarIcon className="mr-2 h-4 w-4" />{salesDateRange?.from ? (salesDateRange.to ? (<>{format(salesDateRange.from, "yyyy-MM-dd")} - {format(salesDateRange.to, "yyyy-MM-dd")}</>) : (format(salesDateRange.from, "yyyy-MM-dd"))) : (<span>기간 선택</span>)}</Button></PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="end">
@@ -527,7 +541,7 @@ const UnifiedDashboard = () => {
                       </CardHeader>
                       <CardContent>
                         <ChartContainer config={{ amount: { label: "판매 금액", color: "hsl(var(--chart-1))" }, count: { label: "판매 건수", color: "hsl(var(--chart-2))" } }} className="h-[300px] w-full">
-                            <LineChart data={salesAnalysis.salesTrend} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis yAxisId="left" label={{ value: '금액(만 원)', angle: -90, position: 'insideLeft' }} /><YAxis yAxisId="right" orientation="right" label={{ value: '건수', angle: -90, position: 'insideRight' }} allowDecimals={false} /><ChartTooltip content={ChartTooltipContent} /><ChartLegend content={ChartLegendContent} /><Line yAxisId="left" type="monotone" dataKey="amount" stroke="var(--color-amount)" name="판매 금액" /><Line yAxisId="right" type="monotone" dataKey="count" stroke="var(--color-count)" name="판매 건수" /></LineChart>
+                            <LineChart data={salesAnalysis.salesTrend} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" tickFormatter={salesXAxisTickFormatter} /><YAxis yAxisId="left" label={{ value: '금액(만 원)', angle: -90, position: 'insideLeft' }} /><YAxis yAxisId="right" orientation="right" label={{ value: '건수', angle: -90, position: 'insideRight' }} allowDecimals={false} /><ChartTooltip content={ChartTooltipContent} /><ChartLegend content={ChartLegendContent} /><Line yAxisId="left" type="monotone" dataKey="amount" stroke="var(--color-amount)" name="판매 금액" /><Line yAxisId="right" type="monotone" dataKey="count" stroke="var(--color-count)" name="판매 건수" /></LineChart>
                         </ChartContainer>
                       </CardContent>
                     </Card>
