@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useMemo, useState } from 'react';
-import { format, startOfWeek, subDays, subMonths } from 'date-fns';
+import React, { useEffect, useMemo, useState } from 'react';
+import { format, startOfWeek, subDays, subMonths, addMonths, startOfMonth, isSameMonth } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
 import { mockInventoryData, mockInOutData, InOutRecord } from '@/components/utils';
@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
-import { Bar, Line, XAxis, YAxis, CartesianGrid, BarChart, LineChart, Pie, PieChart, Cell } from 'recharts';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Line, XAxis, YAxis, CartesianGrid, LineChart, Pie, PieChart, Cell, Sector } from 'recharts';
 import { Package, CheckCircle, AlertTriangle, XCircle, Archive, Truck, Clock, CalendarCheck, TrendingUp, TrendingDown, Percent, CalendarIcon, Bot, Activity, AlertCircle, Building, DollarSign, ShoppingCart } from 'lucide-react';
 
 // Helper function to format numbers with commas
@@ -43,11 +44,93 @@ type MetricItem = {
 const UnifiedDashboard = () => {
   const [activeInventoryDetail, setActiveInventoryDetail] = useState<string | null>(null);
   const [activeWorkDetail, setActiveWorkDetail] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({ from: subMonths(new Date(), 11), to: new Date() });
-  const [filterType, setFilterType] = useState<'monthly' | 'weekly' | 'daily' | 'custom'>('monthly');
-  const [salesDateRange, setSalesDateRange] = useState<DateRange | undefined>({ from: subMonths(new Date(), 11), to: new Date() });
-  const [salesFilterType, setSalesFilterType] = useState<'monthly' | 'weekly' | 'daily' | 'custom'>('monthly');
+  
+  // Date states for InOut Analysis
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({ from: subMonths(new Date(), 1), to: new Date() });
+  const [filterType, setFilterType] = useState<'monthly' | 'weekly' | 'daily' | 'custom'>('custom');
+  const [fromMonth, setFromMonth] = useState(startOfMonth(dateRange?.from || subMonths(new Date(), 1)));
+  const [toMonth, setToMonth] = useState(startOfMonth(dateRange?.to || new Date()));
+
+  // Date states for Sales Analysis
+  const [salesDateRange, setSalesDateRange] = useState<DateRange | undefined>({ from: subMonths(new Date(), 1), to: new Date() });
+  const [salesFilterType, setSalesFilterType] = useState<'monthly' | 'weekly' | 'daily' | 'custom'>('custom');
+  const [salesFromMonth, setSalesFromMonth] = useState(startOfMonth(salesDateRange?.from || subMonths(new Date(), 1)));
+  const [salesToMonth, setSalesToMonth] = useState(startOfMonth(salesDateRange?.to || new Date()));
+
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+  const [activePieIndex, setActivePieIndex] = useState(0);
+  const [workCurrentPage, setWorkCurrentPage] = useState(1);
+
+  const onPieEnter = (_: any, index: number) => {
+    setActivePieIndex(index);
+  };
+
+  const renderActiveShape = (props: any) => {
+    const RADIAN = Math.PI / 180;
+    const { cx, cy, midAngle, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+    const sin = Math.sin(-RADIAN * midAngle);
+    const cos = Math.cos(-RADIAN * midAngle);
+    const sx = cx + (outerRadius + 10) * cos;
+    const sy = cy + (outerRadius + 10) * sin;
+    const mx = cx + (outerRadius + 30) * cos;
+    const my = cy + (outerRadius + 30) * sin;
+    const ex = mx + (cos >= 0 ? 1 : -1) * 22;
+    const ey = my;
+    const textAnchor = cos >= 0 ? 'start' : 'end';
+
+    return (
+      <g>
+        <text x={cx} y={cy} dy={-12} textAnchor="middle" fill={fill} className="text-lg font-semibold">
+          {payload.name}
+        </text>
+        <Sector
+          cx={cx}
+          cy={cy}
+          innerRadius={innerRadius}
+          outerRadius={outerRadius}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          fill={fill}
+        />
+        <Sector
+          cx={cx}
+          cy={cy}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          innerRadius={outerRadius + 6}
+          outerRadius={outerRadius + 10}
+          fill={fill}
+        />
+        <text x={cx} y={cy} dy={12} textAnchor="middle" fill="#333" className="text-md">
+          {`납품 건수: ${value}`}
+        </text>
+        <text x={cx} y={cy} dy={30} textAnchor="middle" fill="#999" className="text-sm">
+          {`(점유율: ${(percent * 100).toFixed(2)}%)`}
+        </text>
+      </g>
+    );
+  };
+
+  useEffect(() => {
+    const from = dateRange?.from ? startOfMonth(dateRange.from) : startOfMonth(subMonths(new Date(), 1));
+    let to = dateRange?.to ? startOfMonth(dateRange.to) : startOfMonth(new Date());
+    if (isSameMonth(from, to)) {
+      to = addMonths(from, 1);
+    }
+    setFromMonth(from);
+    setToMonth(to);
+  }, [dateRange]);
+
+  useEffect(() => {
+    const from = salesDateRange?.from ? startOfMonth(salesDateRange.from) : startOfMonth(subMonths(new Date(), 1));
+    let to = salesDateRange?.to ? startOfMonth(salesDateRange.to) : startOfMonth(new Date());
+    if (isSameMonth(from, to)) {
+      to = addMonths(from, 1);
+    }
+    setSalesFromMonth(from);
+    setSalesToMonth(to);
+  }, [salesDateRange]);
+
 
   // 1. 재고 현황 분석
   const inventorySummary = useMemo(() => {
@@ -97,7 +180,15 @@ const UnifiedDashboard = () => {
         return acc;
     }, {} as Record<string, { date: string; inbound: number; outbound: number }>);
 
-    return { totalInbound, totalOutbound, completionRate, chartData: Object.values(chartData).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) };
+    const getSortableDate = (dateString: string) => {
+      // Handles "yyyy-MM", "yy/MM/dd", and "yyyy-MM-dd"
+      if (dateString.includes('/')) {
+        return new Date(`20${dateString}`);
+      }
+      return new Date(dateString);
+    };
+
+    return { totalInbound, totalOutbound, completionRate, chartData: Object.values(chartData).sort((a, b) => getSortableDate(a.date).getTime() - getSortableDate(b.date).getTime()) };
   }, [dateRange, filterType]);
 
   // 4. AMR 성능 분석
@@ -162,17 +253,25 @@ const UnifiedDashboard = () => {
     const salesTrend = salesData.reduce((acc, item) => {
         const key = getGroupKey(new Date(item.date));
         if (!acc[key]) { acc[key] = { date: key, amount: 0, count: 0 }; }
-        acc[key].amount += item.quantity * (mockPriceData[item.sku] || 0);
+        acc[key].amount += (item.quantity * (mockPriceData[item.sku] || 0)) / 10000; // Convert to 만원
         acc[key].count += 1;
         return acc;
     }, {} as Record<string, { date: string; amount: number; count: number }>);
+
+    const getSortableDate = (dateString: string) => {
+      // Handles "yyyy-MM", "yy/MM/dd", and "yyyy-MM-dd"
+      if (dateString.includes('/')) {
+        return new Date(`20${dateString}`);
+      }
+      return new Date(dateString);
+    };
 
     return {
         totalSalesAmount,
         totalSalesCount,
         companyPieChartData,
         allCompanies: Object.values(byCompany).sort((a, b) => b.amount - a.amount),
-        salesTrend: Object.values(salesTrend).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+        salesTrend: Object.values(salesTrend).sort((a, b) => getSortableDate(a.date).getTime() - getSortableDate(b.date).getTime()),
         companyDetails: selectedCompany ? byCompany[selectedCompany]?.items || [] : []
     };
   }, [salesDateRange, salesFilterType, selectedCompany]);
@@ -218,14 +317,39 @@ const UnifiedDashboard = () => {
   ];
 
   const handleCardClick = (metricId: string, type: 'inventory' | 'work') => {
-    if (type === 'inventory') { setActiveInventoryDetail(prev => (prev === metricId ? null : metricId)); setActiveWorkDetail(null); }
-    else if (type === 'work') { setActiveWorkDetail(prev => (prev === metricId ? null : metricId)); setActiveInventoryDetail(null); }
+    if (type === 'inventory') {
+      setActiveInventoryDetail(prev => (prev === metricId ? null : metricId));
+      setActiveWorkDetail(null);
+    } else if (type === 'work') {
+      if (activeWorkDetail === metricId) {
+        setActiveWorkDetail(null);
+      } else {
+        setActiveWorkDetail(metricId);
+        setWorkCurrentPage(1);
+      }
+      setActiveInventoryDetail(null);
+    }
   };
 
-  const renderDetailTable = (activeDetail: string | null, metrics: MetricItem[], headers: { key: string; label: string; className?: string; render?: (value: any) => React.ReactNode }[], titlePrefix: string) => {
+  const renderDetailTable = (
+    activeDetail: string | null, 
+    metrics: MetricItem[], 
+    headers: { key: string; label: string; className?: string; render?: (item: any) => React.ReactNode }[], 
+    titlePrefix: string,
+    currentPage?: number,
+    setCurrentPage?: (page: number) => void
+  ) => {
     if (!activeDetail) return null;
     const metric = metrics.find(m => m.id === activeDetail);
     if (!metric || !metric.items || metric.items.length === 0) return null;
+
+    const itemsPerPage = 10;
+    const paginatedItems = currentPage && setCurrentPage 
+        ? metric.items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+        : metric.items;
+    
+    const totalPages = currentPage && setCurrentPage ? Math.ceil(metric.items.length / itemsPerPage) : 1;
+
     return (
       <Card className="mt-4">
         <CardHeader><CardTitle>{titlePrefix}: {metric.title} 상세 목록</CardTitle></CardHeader>
@@ -235,17 +359,40 @@ const UnifiedDashboard = () => {
               <TableRow>{headers.map(h => <TableHead key={h.key} className={h.className}>{h.label}</TableHead>)}</TableRow>
             </TableHeader>
             <TableBody>
-              {metric.items.map((item) => (
+              {paginatedItems.map((item) => (
                 <TableRow key={(item as { id: number | string }).id}>
                   {headers.map(h => (
                     <TableCell key={h.key} className={`py-4 px-4 ${h.className}`}>
-                      {h.render ? h.render((item as never)[h.key]) : (item as never)[h.key]}
+                      {h.render ? h.render(item) : (item as never)[h.key]}
                     </TableCell>
                   ))}
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+          {currentPage && setCurrentPage && totalPages > 1 && (
+            <div className="flex items-center justify-end space-x-2 py-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                이전
+              </Button>
+              <span className="text-sm">
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                다음
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
@@ -271,7 +418,7 @@ const UnifiedDashboard = () => {
                 { key: 'name', label: '상품명', className: 'w-[30%] text-left' },
                 { key: 'specification', label: '규격', className: 'w-[20%] text-left' },
                 { key: 'quantity', label: '현재 수량', className: 'w-[15%] text-center' },
-                { key: 'location', label: '위치', className: 'w-[20%] text-center' },
+                { key: 'location', label: '구역', className: 'w-[20%] text-center' },
                 { key: 'status', label: '상태', className: 'w-[15%] text-center' },
             ], '재고 현황')}</div>
           </AccordionContent>
@@ -289,13 +436,18 @@ const UnifiedDashboard = () => {
               ))}
             </div>
             <div className="mt-4">{renderDetailTable(activeWorkDetail, workStatusMetrics as MetricItem[], [
-                { key: 'type', label: '유형', className: 'w-[10%] text-center', render: (type) => type === 'inbound' ? '입고' : '출고' },
-                { key: 'productName', label: '상품명', className: 'w-[15%] text-left' },
-                { key: 'quantity', label: '수량', className: 'w-[30%] text-center' },
+                { key: 'type', label: '유형', className: 'w-[10%] text-center', render: (item) => item.type === 'inbound' ? '입고' : '출고' },
+                { key: 'productName', label: '상품명', className: 'w-[25%] text-left truncate' },
+                { key: 'quantity', label: '수량', className: 'w-[15%] text-center' },
                 { key: 'company', label: '거래처', className: 'w-[15%] text-left' },
-                { key: 'date', label: '날짜', className: 'w-[15%] text-center' },
                 { key: 'status', label: '상태', className: 'w-[15%] text-center' },
-            ], '작업 현황')}</div>
+                { key: 'date', label: '일자', className: 'w-[20%] text-center', render: (item) => (
+                    <>
+                        <div>{item.date}</div>
+                        <div className="text-xs text-gray-500">{item.time}</div>
+                    </>
+                )},
+            ], '작업 현황', workCurrentPage, setWorkCurrentPage)}</div>
           </AccordionContent>
         </AccordionItem>
 
@@ -312,11 +464,19 @@ const UnifiedDashboard = () => {
                         <Button variant={filterType === 'daily' ? 'default' : 'outline'} onClick={() => handleFilterClick('daily', setDateRange, setFilterType)}>14일</Button>
                         <Button variant={filterType === 'weekly' ? 'default' : 'outline'} onClick={() => handleFilterClick('weekly', setDateRange, setFilterType)}>3개월</Button>
                         <Button variant={filterType === 'monthly' ? 'default' : 'outline'} onClick={() => handleFilterClick('monthly', setDateRange, setFilterType)}>12개월</Button>
-                        <Popover><PopoverTrigger asChild><Button variant={"outline"} className={`w-[280px] justify-start text-left font-normal ${!dateRange && "text-muted-foreground"}`}><CalendarIcon className="mr-2 h-4 w-4" />{dateRange?.from ? (dateRange.to ? (<>{format(dateRange.from, "yyyy-MM-dd")} - {format(dateRange.to, "yyyy-MM-dd")}</>) : (format(dateRange.from, "yyyy-MM-dd"))) : (<span>기간 선택</span>)}</Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="end"><Calendar initialFocus mode="range" defaultMonth={dateRange?.from} selected={dateRange} onSelect={(range) => { setDateRange(range); setFilterType('custom'); }} numberOfMonths={2} /></PopoverContent></Popover>
+                        <Popover>
+                            <PopoverTrigger asChild><Button variant={"outline"} className={`w-[280px] justify-start text-left font-normal ${!dateRange && "text-muted-foreground"}`}><CalendarIcon className="mr-2 h-4 w-4" />{dateRange?.from ? (dateRange.to ? (<>{format(dateRange.from, "yyyy-MM-dd")} - {format(dateRange.to, "yyyy-MM-dd")}</>) : (format(dateRange.from, "yyyy-MM-dd"))) : (<span>기간 선택</span>)}</Button></PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="end">
+                                <div className="flex">
+                                    <Calendar initialFocus mode="range" selected={dateRange} onSelect={(range) => { setDateRange(range); setFilterType('custom'); }} month={fromMonth} onMonthChange={setFromMonth} toMonth={toMonth} />
+                                    <Calendar mode="range" selected={dateRange} onSelect={(range) => { setDateRange(range); setFilterType('custom'); }} month={toMonth} onMonthChange={setToMonth} fromMonth={fromMonth} />
+                                </div>
+                            </PopoverContent>
+                        </Popover>
                     </div>
                 </div>
                 <ChartContainer config={{ inbound: { label: "입고", color: "hsl(var(--chart-2))" }, outbound: { label: "출고", color: "hsl(var(--chart-1))" }, }} className="h-[300px] w-full">
-                    <LineChart data={inOutAnalysis.chartData}><CartesianGrid vertical={false} /><XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} /><YAxis /><ChartTooltip content={ChartTooltipContent} /><ChartLegend content={ChartLegendContent} /><Line type="monotone" dataKey="inbound" stroke="var(--color-inbound)" strokeWidth={2} dot={false} name="입고" /><Line type="monotone" dataKey="outbound" stroke="var(--color-outbound)" strokeWidth={2} dot={false} name="출고" /></LineChart>
+                    <LineChart data={inOutAnalysis.chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}><CartesianGrid vertical={false} /><XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} /><YAxis /><ChartTooltip content={ChartTooltipContent} /><ChartLegend content={ChartLegendContent} /><Line type="monotone" dataKey="inbound" stroke="var(--color-inbound)" strokeWidth={2} dot={false} name="입고" /><Line type="monotone" dataKey="outbound" stroke="var(--color-outbound)" strokeWidth={2} dot={false} name="출고" /></LineChart>
                 </ChartContainer>
             </AccordionContent>
         </AccordionItem>
@@ -357,42 +517,81 @@ const UnifiedDashboard = () => {
                         <Button variant={salesFilterType === 'daily' ? 'default' : 'outline'} onClick={() => handleFilterClick('daily', setSalesDateRange, setSalesFilterType)}>14일</Button>
                         <Button variant={salesFilterType === 'weekly' ? 'default' : 'outline'} onClick={() => handleFilterClick('weekly', setSalesDateRange, setSalesFilterType)}>3개월</Button>
                         <Button variant={salesFilterType === 'monthly' ? 'default' : 'outline'} onClick={() => handleFilterClick('monthly', setSalesDateRange, setSalesFilterType)}>12개월</Button>
-                        <Popover><PopoverTrigger asChild><Button variant={"outline"} className={`w-[280px] justify-start text-left font-normal ${!salesDateRange && "text-muted-foreground"}`}><CalendarIcon className="mr-2 h-4 w-4" />{salesDateRange?.from ? (salesDateRange.to ? (<>{format(salesDateRange.from, "yyyy-MM-dd")} - {format(salesDateRange.to, "yyyy-MM-dd")}</>) : (format(salesDateRange.from, "yyyy-MM-dd"))) : (<span>기간 선택</span>)}</Button></PopoverTrigger><PopoverContent className="w-auto p-0" align="end"><Calendar initialFocus mode="range" defaultMonth={salesDateRange?.from} selected={salesDateRange} onSelect={(range) => { setSalesDateRange(range); setSalesFilterType('custom'); }} numberOfMonths={2} /></PopoverContent></Popover>
+                        <Popover>
+                            <PopoverTrigger asChild><Button variant={"outline"} className={`w-[280px] justify-start text-left font-normal ${!salesDateRange && "text-muted-foreground"}`}><CalendarIcon className="mr-2 h-4 w-4" />{salesDateRange?.from ? (salesDateRange.to ? (<>{format(salesDateRange.from, "yyyy-MM-dd")} - {format(salesDateRange.to, "yyyy-MM-dd")}</>) : (format(salesDateRange.from, "yyyy-MM-dd"))) : (<span>기간 선택</span>)}</Button></PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="end">
+                                <div className="flex">
+                                    <Calendar initialFocus mode="range" selected={salesDateRange} onSelect={(range) => { setSalesDateRange(range); setSalesFilterType('custom'); }} month={salesFromMonth} onMonthChange={setSalesFromMonth} toMonth={salesToMonth} />
+                                    <Calendar mode="range" selected={salesDateRange} onSelect={(range) => { setSalesDateRange(range); setSalesFilterType('custom'); }} month={salesToMonth} onMonthChange={setSalesToMonth} fromMonth={salesFromMonth} />
+                                </div>
+                            </PopoverContent>
+                        </Popover>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div>
-                        <h3 className="font-semibold mb-2">매출 추이 (금액 및 건수)</h3>
+                <Tabs defaultValue="salesTrend" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="salesTrend">매출 추이</TabsTrigger>
+                    <TabsTrigger value="companyRatio">거래처별 납품 비율</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="salesTrend">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>매출 추이 (금액 및 건수)</CardTitle>
+                      </CardHeader>
+                      <CardContent>
                         <ChartContainer config={{ amount: { label: "판매 금액", color: "hsl(var(--chart-1))" }, count: { label: "판매 건수", color: "hsl(var(--chart-2))" } }} className="h-[300px] w-full">
-                            <LineChart data={salesAnalysis.salesTrend}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis yAxisId="left" label={{ value: '금액(원)', angle: -90, position: 'insideLeft' }} /><YAxis yAxisId="right" orientation="right" label={{ value: '건수', angle: -90, position: 'insideRight' }} /><ChartTooltip content={ChartTooltipContent} /><ChartLegend content={ChartLegendContent} /><Line yAxisId="left" type="monotone" dataKey="amount" stroke="var(--color-amount)" name="판매 금액" /><Line yAxisId="right" type="monotone" dataKey="count" stroke="var(--color-count)" name="판매 건수" /></LineChart>
+                            <LineChart data={salesAnalysis.salesTrend} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis yAxisId="left" label={{ value: '금액(만 원)', angle: -90, position: 'insideLeft' }} /><YAxis yAxisId="right" orientation="right" label={{ value: '건수', angle: -90, position: 'insideRight' }} /><ChartTooltip content={ChartTooltipContent} /><ChartLegend content={ChartLegendContent} /><Line yAxisId="left" type="monotone" dataKey="amount" stroke="var(--color-amount)" name="판매 금액" /><Line yAxisId="right" type="monotone" dataKey="count" stroke="var(--color-count)" name="판매 건수" /></LineChart>
                         </ChartContainer>
-                    </div>
-                    <div>
-                        <h3 className="font-semibold mb-2">거래처별 납품 비율 (건수)</h3>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  <TabsContent value="companyRatio">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>거래처별 납품 비율 (건수)</CardTitle>
+                      </CardHeader>
+                      <CardContent>
                         <ChartContainer config={{ count: { label: "납품 건수" } }} className="h-[300px] w-full">
                             <PieChart>
-                                <ChartTooltip content={ChartTooltipContent} />
-                                <Pie data={salesAnalysis.companyPieChartData} dataKey="count" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100}>
+                                <Pie
+                                    activeIndex={activePieIndex}
+                                    activeShape={renderActiveShape}
+                                    data={salesAnalysis.companyPieChartData}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={80}
+                                    outerRadius={110}
+                                    dataKey="count"
+                                    onMouseEnter={onPieEnter}
+                                >
                                     {salesAnalysis.companyPieChartData.map((entry, index) => (
                                         <Cell key={`cell-${index}`} fill={`hsl(var(--chart-${index + 1}))`} />
                                     ))}
                                 </Pie>
-                                <ChartLegend content={ChartLegendContent} />
                             </PieChart>
                         </ChartContainer>
-                    </div>
-                </div>
-                <div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+                <div className="mt-6">
                     <h3 className="font-semibold mb-2">거래처별 상세</h3>
-                    <Table>
-                        <TableHeader><TableRow><TableHead>거래처명</TableHead><TableHead>납품 건수</TableHead><TableHead className="text-right">총 판매 금액</TableHead><TableHead></TableHead></TableRow></TableHeader>
+                    <Table className="table-fixed w-full">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[40%]">거래처명</TableHead>
+                                <TableHead className="w-[25%] text-center">납품 건수</TableHead>
+                                <TableHead className="w-[25%] text-left">총 판매 금액</TableHead>
+                                <TableHead className="w-[10%]"></TableHead>
+                            </TableRow>
+                        </TableHeader>
                         <TableBody>
                             {salesAnalysis.allCompanies.map(c => (
                                 <React.Fragment key={c.name}>
                                     <TableRow className="cursor-pointer" onClick={() => setSelectedCompany(prev => prev === c.name ? null : c.name)}>
                                         <TableCell className="font-medium">{c.name}</TableCell>
-                                        <TableCell>{c.count}</TableCell>
-                                        <TableCell className="text-right">₩{formatNumber(c.amount)}</TableCell>
+                                        <TableCell className="text-center">{c.count}</TableCell>
+                                        <TableCell className="text-left">₩{formatNumber(c.amount)}</TableCell>
                                         <TableCell className="text-right"><Button variant="ghost" size="sm">{selectedCompany === c.name ? '숨기기' : '상세 보기'}</Button></TableCell>
                                     </TableRow>
                                     {selectedCompany === c.name && (
@@ -400,15 +599,27 @@ const UnifiedDashboard = () => {
                                             <TableCell colSpan={4}>
                                                 <div className="p-4 bg-gray-50 rounded-md">
                                                     <h4 className="font-semibold mb-2">{c.name} 납품 내역</h4>
-                                                    <Table>
-                                                        <TableHeader><TableRow><TableHead>날짜</TableHead><TableHead>품목</TableHead><TableHead>수량</TableHead><TableHead className="text-right">금액</TableHead></TableRow></TableHeader>
+                                                    <Table className="table-fixed w-full">
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                <TableHead className="w-[15%]">유형</TableHead>
+                                                                <TableHead className="w-[15%]">품목</TableHead>
+                                                                <TableHead className="w-[15%] text-center pr-12">수량</TableHead>
+                                                                <TableHead className="w-[20%] text-center pr-12">금액</TableHead>
+                                                                <TableHead className="w-[15%] text-center">일시</TableHead>
+                                                            </TableRow>
+                                                        </TableHeader>
                                                         <TableBody>
                                                             {c.items.map(item => (
                                                                 <TableRow key={item.id}>
-                                                                    <TableCell>{item.date}</TableCell>
+                                                                    <TableCell>{item.type === 'inbound' ? '입고' : '출고'}</TableCell>
                                                                     <TableCell>{item.productName}</TableCell>
-                                                                    <TableCell>{item.quantity}</TableCell>
-                                                                    <TableCell className="text-right">₩{formatNumber(item.quantity * (mockPriceData[item.sku] || 0))}</TableCell>
+                                                                    <TableCell className="text-center pr-12">{item.quantity}</TableCell>
+                                                                    <TableCell className="text-center pr-12">₩{formatNumber(item.quantity * (mockPriceData[item.sku] || 0))}</TableCell>
+                                                                    <TableCell className="text-center">
+                                                                        <div>{item.date}</div>
+                                                                        <div className="text-xs text-gray-500">{item.time}</div>
+                                                                    </TableCell>
                                                                 </TableRow>
                                                             ))}
                                                         </TableBody>

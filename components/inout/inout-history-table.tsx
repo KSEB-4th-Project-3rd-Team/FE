@@ -179,19 +179,19 @@ export default function InOutHistoryTable({ historyType }: InOutHistoryTableProp
             </div>
           </div>
           <div>
-            <table className="w-full text-sm min-w-[1200px]">
+            <table className="w-full text-sm min-w-[1200px] table-fixed">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3">유형</th>
-                  <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3">상품명</th>
-                  <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3">개별코드</th>
-                  <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3">규격</th>
-                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3">수량</th>
-                  <th className="text-center p-2 md:p-3 font-semibold align-bottom">
-                    <div className="flex flex-col items-center justify-end" style={{ height: '3.5rem' }}>
+                  <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[8%]">유형</th>
+                  <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[18%]">상품명</th>
+                  <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">개별코드</th>
+                  <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">규격</th>
+                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[7%]">수량</th>
+                  <th className="text-center p-2 md:p-3 font-semibold align-bottom w-[12%]">
+                    <div className="flex flex-col items-center justify-center" style={{ height: '3.5rem' }}>
                       <p className={`text-xs text-gray-500 font-normal whitespace-nowrap ${displayUnit === 'set' ? 'visible' : 'invisible'}`}>(1 set = {SET_QUANTITY}개)</p>
                       <div className="flex items-center justify-center gap-2">
-                        <span>주문수량</span>
+                        <span className="whitespace-nowrap">주문수량</span>
                         <Select value={displayUnit} onValueChange={(value: DisplayUnit) => setDisplayUnit(value)}>
                           <SelectTrigger className="w-20 h-7 text-xs"><SelectValue /></SelectTrigger>
                           <SelectContent>
@@ -202,26 +202,26 @@ export default function InOutHistoryTable({ historyType }: InOutHistoryTableProp
                       </div>
                     </div>
                   </th>
-                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3">구역</th>
-                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3">거래처</th>
-                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3">상태</th>
-                  {historyType !== 'inbound' && <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3">목적지</th>}
-                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3">날짜</th>
+                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[8%]">구역</th>
+                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">거래처</th>
+                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[8%]">상태</th>
+                  {historyType !== 'inbound' && <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">목적지</th>}
+                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">날짜</th>
                 </tr>
               </thead>
               <tbody>
                 {currentItems.map((item) => (
                   <tr key={item.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(item)}>
                     <td className="p-2 md:p-3"><span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${item.type === "inbound" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"}`}>{item.type === "inbound" ? "입고" : "출고"}</span></td>
-                    <td className="p-2 md:p-3 text-left"><p className="font-medium">{item.productName}</p><p className="text-xs text-gray-500">SKU: {item.sku}</p></td>
-                    <td className="p-2 md:p-3 text-left">{item.individualCode}</td>
-                    <td className="p-2 md:p-3 text-left">{item.specification}</td>
+                    <td className="p-2 md:p-3 text-left truncate"><p className="font-medium">{item.productName}</p><p className="text-xs text-gray-500">SKU: {item.sku}</p></td>
+                    <td className="p-2 md:p-3 text-left truncate">{item.individualCode}</td>
+                    <td className="p-2 md:p-3 text-left truncate">{item.specification}</td>
                     <td className="p-2 md:p-3 text-center"><span className="font-semibold">{item.quantity}</span></td>
                     <td className="p-2 md:p-3 text-center"><div className="font-semibold">{displayUnit === 'set' ? `${Math.floor(item.quantity / SET_QUANTITY)} set` : `${item.quantity} 개`}</div></td>
                     <td className="p-2 md:p-3 text-center">{item.location}</td>
                     <td className="p-2 md:p-3 text-center"><p className="font-medium">{item.company}</p><p className="text-xs text-gray-500">코드: {item.companyCode}</p></td>
                     <td className="p-2 md:p-3 text-center"><span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusChipClass(item.status)}`}>{item.status}</span></td>
-                    {historyType !== 'inbound' && <td className="p-2 md:p-3 text-left">{item.destination || "-"}</td>}
+                    {historyType !== 'inbound' && <td className="p-2 md:p-3 text-left truncate">{item.destination || "-"}</td>}
                     <td className="p-2 md:p-3 text-center"><div><p>{item.date}</p><p className="text-xs text-gray-500">{item.time}</p></div></td>
                   </tr>
                 ))}

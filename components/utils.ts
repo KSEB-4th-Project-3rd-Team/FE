@@ -52,214 +52,61 @@ export interface InventoryItem {
 }
 
 // Mock Data Arrays
-export const mockInOutData: InOutRecord[] = [
-  // From mockInOutHistoryData (status: "완료")
-  {
-    id: 1,
-    type: "inbound",
-    productName: "스마트폰 (갤럭시 S24)",
-    sku: "SM-G998B",
-    individualCode: "P001-001",
-    specification: "전자제품",
-    quantity: 100,
-    location: "창고1",
-    company: "삼성전자",
-    companyCode: "COMP-003",
-    status: "완료",
-    destination: "",
-    date: "2025-07-10",
-    time: "10:30",
-    notes: ""
-  },
-  {
-    id: 2,
-    type: "outbound",
-    productName: "노트북 (LG 그램)",
-    sku: "LG-17Z90P",
-    individualCode: "P002-001",
-    specification: "전자제품",
-    quantity: 50,
-    location: "창고2",
-    company: "LG전자",
-    companyCode: "COMP-004",
-    status: "완료",
-    destination: "서울 강남점",
-    date: "2025-07-10",
-    time: "14:00",
-    notes: ""
-  },
-  {
-    id: 3,
-    type: "inbound",
-    productName: "무선 이어폰 (버즈 프로)",
-    sku: "SM-R190",
-    individualCode: "P003-001",
-    specification: "악세서리",
-    quantity: 200,
-    location: "창고1",
-    company: "삼성전자",
-    companyCode: "COMP-003",
-    status: "완료",
-    destination: "",
-    date: "2025-07-11",
-    time: "09:00",
-    notes: ""
-  },
-  {
-    id: 4,
-    type: "outbound",
-    productName: "태블릿 (아이패드 에어)",
-    sku: "IPAD-AIR4",
-    individualCode: "P004-001",
-    specification: "전자제품",
-    quantity: 30,
-    location: "창고3",
-    company: "애플코리아",
-    companyCode: "COMP-005",
-    status: "완료",
-    destination: "부산 해운대점",
-    date: "2025-07-11",
-    time: "11:00",
-    notes: ""
-  },
-  {
-    id: 5,
-    type: "inbound",
-    productName: "스마트워치 (애플워치 S8)",
-    sku: "AW-S8",
-    individualCode: "P005-001",
-    specification: "악세서리",
-    quantity: 70,
-    location: "창고2",
-    company: "애플코리아",
-    companyCode: "COMP-005",
-    status: "완료",
-    destination: "",
-    date: "2025-07-12",
-    time: "16:00",
-    notes: ""
-  },
-  // From mockInOutStatusData
-  {
-    id: 6,
-    type: "inbound",
-    productName: "스마트폰 (갤럭시 S24)",
-    sku: "SM-G998B",
-    individualCode: "P001-002",
-    specification: "전자제품",
-    quantity: 50,
-    location: "창고1",
-    company: "삼성전자",
-    companyCode: "COMP-003",
-    status: "예약",
-    destination: "",
-    date: "2025-07-16",
-    time: "11:00",
-    notes: ""
-  },
-  {
-    id: 7,
-    type: "outbound",
-    productName: "노트북 (LG 그램)",
-    sku: "LG-17Z90P",
-    individualCode: "P002-002",
-    specification: "전자제품",
-    quantity: 20,
-    location: "창고2",
-    company: "LG전자",
-    companyCode: "COMP-004",
-    status: "진행 중",
-    destination: "광주 서구점",
-    date: "2025-07-15",
-    time: "15:00",
-    notes: ""
-  },
-  {
-    id: 8,
-    type: "inbound",
-    productName: "무선 이어폰 (버즈 프로)",
-    sku: "SM-R190",
-    individualCode: "P003-002",
-    specification: "악세서리",
-    quantity: 100,
-    location: "창고1",
-    company: "삼성전자",
-    companyCode: "COMP-003",
-    status: "예약",
-    destination: "",
-    date: "2025-07-17",
-    time: "09:30",
-    notes: ""
-  },
-  {
-    id: 9,
-    type: "outbound",
-    productName: "태블릿 (아이패드 에어)",
-    sku: "IPAD-AIR4",
-    individualCode: "P004-002",
-    specification: "전자제품",
-    quantity: 15,
-    location: "창고3",
-    company: "애플코리아",
-    companyCode: "COMP-005",
-    status: "예약",
-    destination: "대구 수성점",
-    date: "2025-07-16",
-    time: "13:00",
-    notes: "긴급 출고 요청"
-  },
-  {
-    id: 10,
-    type: "outbound",
-    productName: "스마트폰 (갤럭시 S24)",
-    sku: "SM-G998B",
-    individualCode: "P001-003",
-    specification: "전자제품",
-    quantity: 25,
-    location: "창고1",
-    company: "하이마트",
-    companyCode: "COMP-006",
-    status: "완료",
-    destination: "인천 부평점",
-    date: "2025-07-13",
-    time: "11:30",
-    notes: ""
-  },
-  {
-    id: 11,
-    type: "outbound",
-    productName: "무선 이어폰 (버즈 프로)",
-    sku: "SM-R190",
-    individualCode: "P003-003",
-    specification: "악세서리",
-    quantity: 40,
-    location: "창고1",
-    company: "전자랜드",
-    companyCode: "COMP-007",
-    status: "완료",
-    destination: "수원 영통점",
-    date: "2025-07-14",
-    time: "15:00",
-    notes: ""
-  },
-  {
-    id: 12,
-    type: "outbound",
-    productName: "노트북 (LG 그램)",
-    sku: "LG-17Z90P",
-    individualCode: "P002-003",
-    specification: "전자제품",
-    quantity: 10,
-    location: "창고2",
-    company: "이마트",
-    companyCode: "COMP-008",
-    status: "완료",
-    destination: "온라인 배송",
-    date: "2025-07-15",
-    time: "18:00",
-    notes: "익일 배송 요청"
-  },
-];
+const generateRandomData = () => {
+  const data: InOutRecord[] = [];
+  const productDetails = [
+    { productName: "스마트폰 (갤럭시 S24)", sku: "SM-G998B", specification: "전자제품", company: "삼성전자", companyCode: "COMP-003" },
+    { productName: "노트북 (LG 그램)", sku: "LG-17Z90P", specification: "전자제품", company: "LG전자", companyCode: "COMP-004" },
+    { productName: "무선 이어폰 (버즈 프로)", sku: "SM-R190", specification: "악세서리", company: "삼성전자", companyCode: "COMP-003" },
+    { productName: "태블릿 (아이패드 에어)", sku: "IPAD-AIR4", specification: "전자제품", company: "애플코리아", companyCode: "COMP-005" },
+    { productName: "스마트워치 (애플워치 S8)", sku: "AW-S8", specification: "악세서리", company: "애플코리아", companyCode: "COMP-005" },
+    { productName: "스마트폰 (갤럭시 S24)", sku: "SM-G998B", specification: "전자제품", company: "하이마트", companyCode: "COMP-006" },
+    { productName: "무선 이어폰 (버즈 프로)", sku: "SM-R190", specification: "악세서리", company: "전자랜드", companyCode: "COMP-007" },
+    { productName: "노트북 (LG 그램)", sku: "LG-17Z90P", specification: "전자제품", company: "이마트", companyCode: "COMP-008" },
+  ];
+  const locations = ["창고1", "창고2", "창고3"];
+  const statuses: ("완료" | "진행 중" | "예약")[] = ["완료", "완료", "완료", "완료", "진행 중", "예약"];
+
+  let id = 1;
+  const today = new Date("2025-07-15T00:00:00.000Z");
+
+  for (let i = 0; i < 12; i++) { // Last 12 months
+    const date = new Date(today);
+    date.setMonth(today.getMonth() - i);
+    
+    const numberOfEntries = Math.floor(Math.random() * 15) + 5; // 5 to 20 entries per month
+
+    for (let j = 0; j < numberOfEntries; j++) {
+      const day = Math.floor(Math.random() * 28) + 1;
+      date.setDate(day);
+      
+      const product = productDetails[Math.floor(Math.random() * productDetails.length)];
+      const type = Math.random() > 0.4 ? "outbound" : "inbound";
+      
+      data.push({
+        id: id++,
+        type: type,
+        productName: product.productName,
+        sku: product.sku,
+        individualCode: `P${String(id).padStart(3, '0')}-${String(j).padStart(3, '0')}`,
+        specification: product.specification,
+        quantity: Math.floor(Math.random() * 100) + 1,
+        location: locations[Math.floor(Math.random() * locations.length)],
+        company: product.company,
+        companyCode: product.companyCode,
+        status: statuses[Math.floor(Math.random() * statuses.length)],
+        destination: type === "outbound" ? `지점-${id % 10}` : "",
+        date: date.toISOString().split('T')[0],
+        time: `${String(Math.floor(Math.random() * 24)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
+        notes: ""
+      });
+    }
+  }
+  return data;
+};
+
+export const mockInOutData: InOutRecord[] = generateRandomData();
+
 
 export const mockInOutRequests: InOutRequest[] = [
   {
