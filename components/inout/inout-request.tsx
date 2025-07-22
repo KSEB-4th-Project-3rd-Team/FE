@@ -82,7 +82,7 @@ export default function InOutRequestPage() {
                   <th className="p-3 font-semibold text-left">규격</th>
                   <th className="p-3 font-semibold">수량</th>
                   <th className="p-3 font-semibold">
-                    <div style={{ transform: 'translateY(-10px)' }}>
+                    <div style={{ transform: 'translateY(-11.5px)' }}>
                       <p 
                         className="text-xs text-gray-500 font-normal mb-1"
                         style={{ visibility: displayUnit === 'set' ? 'visible' : 'hidden' }}
