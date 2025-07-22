@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Filter, Package } from "lucide-react"
+import { CustomPagination } from "@/components/ui/custom-pagination"
 import { InOutRecord, mockInOutData } from "@/components/utils"
 import { Separator } from "@/components/ui/separator"
 
@@ -232,15 +233,11 @@ export default function InOutHistoryTable({ historyType }: InOutHistoryTableProp
           {filteredHistory.length > 0 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t">
               <div className="text-sm text-gray-600 flex-shrink-0">총 {filteredHistory.length}개 중 {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredHistory.length)}개 표시</div>
-              <div className="flex gap-1 ml-4">
-                <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)} className="px-3">이전</Button>
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                  let page: number;
-                  if (totalPages <= 5) { page = i + 1; } else if (currentPage <= 3) { page = i + 1; } else if (currentPage >= totalPages - 2) { page = totalPages - 4 + i; } else { page = currentPage - 2 + i; }
-                  return (<Button key={page} variant="outline" size="sm" className={`px-3 ${currentPage === page ? "bg-blue-50 text-blue-600" : ""}`} onClick={() => handlePageChange(page)}>{page}</Button>)
-                })}
-                <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)} className="px-3">다음</Button>
-              </div>
+              <CustomPagination
+                totalPages={totalPages}
+                currentPage={currentPage}
+                onPageChange={handlePageChange}
+              />
             </div>
           )}
         </CardContent>

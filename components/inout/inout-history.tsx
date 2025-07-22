@@ -394,29 +394,28 @@ export default function InOutHistory() {
                   >
                     이전
                   </Button>
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    let page: number
-                    if (totalPages <= 5) {
-                      page = i + 1
-                    } else if (currentPage <= 3) {
-                      page = i + 1
-                    } else if (currentPage >= totalPages - 2) {
-                      page = totalPages - 4 + i
-                    } else {
-                      page = currentPage - 2 + i
+                  {(() => {
+                    const pageNumbers = []
+                    const pageGroupSize = 5
+                    const currentGroup = Math.ceil(currentPage / pageGroupSize)
+                    const startPage = (currentGroup - 1) * pageGroupSize + 1
+                    const endPage = Math.min(startPage + pageGroupSize - 1, totalPages)
+
+                    for (let i = startPage; i <= endPage; i++) {
+                      pageNumbers.push(
+                        <Button
+                          key={i}
+                          variant="outline"
+                          size="sm"
+                          className={`px-3 ${currentPage === i ? "bg-blue-50 text-blue-600" : ""}`}
+                          onClick={() => handlePageChange(i)}
+                        >
+                          {i}
+                        </Button>
+                      )
                     }
-                    return (
-                      <Button
-                        key={page}
-                        variant="outline"
-                        size="sm"
-                        className={`px-3 ${currentPage === page ? "bg-blue-50 text-blue-600" : ""}`}
-                        onClick={() => handlePageChange(page)}
-                      >
-                        {page}
-                      </Button>
-                    )
-                  })}
+                    return pageNumbers
+                  })()}
                   <Button
                     variant="outline"
                     size="sm"
