@@ -47,6 +47,24 @@ export function UnifiedDashboard() {
   const [selectedCompany, setSelectedCompany] = React.useState<string | null>(null)
   const [selectedItem, setSelectedItem] = React.useState<string | null>(null)
   const [isMobile, setIsMobile] = React.useState(false)
+  const [activeInventoryDetail, setActiveInventoryDetail] = useState<string | null>(null);
+  const [activeWorkDetail, setActiveWorkDetail] = useState<string | null>(null);
+  const [workCurrentPage, setWorkCurrentPage] = useState(1);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [filterType, setFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('monthly');
+  const [fromMonth, setFromMonth] = useState(startOfMonth(subMonths(new Date(), 1)));
+  const [toMonth, setToMonth] = useState(startOfMonth(new Date()));
+  const [salesDateRange, setSalesDateRange] = useState<DateRange | undefined>(undefined);
+  const [salesFilterType, setSalesFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('monthly');
+  const [salesFromMonth, setSalesFromMonth] = useState(startOfMonth(subMonths(new Date(), 1)));
+  const [salesToMonth, setSalesToMonth] = useState(startOfMonth(new Date()));
+  const [activePieIndex, setActivePieIndex] = useState(0);
+
+  useEffect(() => {
+    const today = new Date();
+    setDateRange({ from: subDays(today, 29), to: today });
+    setSalesDateRange({ from: subDays(today, 29), to: today });
+  }, []);
 
   React.useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
