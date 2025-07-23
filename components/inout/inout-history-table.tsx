@@ -19,10 +19,10 @@ type InOutStatus = "완료" | "진행 중" | "예약";
 type InOutHistoryTableProps = {
   historyType: "inbound" | "outbound" | "all";
   data: InOutRecord[];
-  setData: React.Dispatch<React.SetStateAction<InOutRecord[]>>;
+  setData: () => void;
 }
 
-export default function InOutHistoryTable({ historyType, data, setData }: InOutHistoryTableProps) {
+export default function InOutHistoryTable({ historyType, data, setData: reloadData }: InOutHistoryTableProps) {
   
   const initialFilters = useMemo(() => ({
     type: historyType === 'all' ? 'all' : historyType,
@@ -80,10 +80,9 @@ export default function InOutHistoryTable({ historyType, data, setData }: InOutH
 
   const handleFormSubmit = () => {
     if (!selectedRecord) return;
-    const updatedData = data.map(item => 
-      item.id === selectedRecord.id ? { ...item, ...formData } : item
-    );
-    setData(updatedData);
+    // TODO: Implement API call for update
+    // await updateInOutRecord(formData);
+    reloadData();
     setIsModalOpen(false);
     setSelectedRecord(null);
   };
@@ -229,7 +228,19 @@ export default function InOutHistoryTable({ historyType, data, setData }: InOutH
               </tbody>
             </table>
           </div>
-          {filteredHistory.length === 0 && (<div className="text-center py-8 text-gray-500"><Package className="w-12 h-12 mx-auto mb-4 text-gray-300" /><p>검색 결과가 없습니다.</p><p className="text-sm mt-1">다른 검색어를 시도해보세요.</p></div>)}
+          {filteredHistory.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              {isFiltered ? (
+                <>
+                  <p>검색 결과가 없습니다.</p>
+                  <p className="text-sm mt-1">다른 검색어를 시도해보세요.</p>
+                </>
+              ) : (
+                <p>표시할 입출고 내역이 없습니다.</p>
+              )}
+            </div>
+          ) : null}
           {filteredHistory.length > 0 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t">
               <div className="text-sm text-gray-600 flex-shrink-0">총 {filteredHistory.length}개 중 {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredHistory.length)}개 표시</div>

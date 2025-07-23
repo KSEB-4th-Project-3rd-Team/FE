@@ -38,7 +38,7 @@ export default function AmrStatusPanel({ amrList }: { amrList: Amr[] }) {
     return <BatteryFull className="w-5 h-5 text-green-500" />
   }
 
-  const filteredData = amrList.filter(
+  const filteredData = (amrList || []).filter(
     (amr) => filter === "all" || amr.status === filter
   )
 

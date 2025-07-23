@@ -1,16 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, Plus } from "lucide-react"
-// import { scheduleService, type Schedule } from "@/lib/schedule" // Removed for Spring backend integration
 import ScheduleModal from "@/components/schedule/schedule-modal"
 import DayDetailModal from "@/components/schedule/day-detail-modal"
 import CalendarHeader from "@/components/schedule/calendar-header"
-import { InOutRecord } from "@/components/utils"
-
-import { fetchSchedules, fetchInOutData } from "@/lib/api"
+import { useData } from "@/contexts/data-context"
+import SchedulePageSkeleton from "@/components/schedule/schedule-page-skeleton"
+import ErrorMessage from "@/components/ui/error-message"
 
 // Temporary Schedule type until API is connected
 export type Schedule = {
@@ -32,40 +31,14 @@ const formatDateToString = (date: Date): string => {
 }
 
 export default function SchedulePage() {
+  const { schedules, inOutData, loading, error, reloadData } = useData()
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [schedules, setSchedules] = useState<Schedule[]>([])
-  const [inOutData, setInOutData] = useState<InOutRecord[]>([])
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
   const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string>("")
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      const [fetchedSchedules, fetchedInOutData] = await Promise.all([
-        fetchSchedules(),
-        fetchInOutData(),
-      ]);
-      setSchedules(fetchedSchedules);
-      setInOutData(fetchedInOutData);
-    } catch (err) {
-      setError("Failed to load data.");
-      console.error(err);
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  const handleScheduleAdded = (schedule: Schedule) => {
-    setSchedules([...schedules, schedule])
-    loadData()
-  }
+  const handleScheduleAdded = () => {
+    reloadData("schedules")
+}
 
   const handleDayClick = (day: number) => {
     const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
@@ -146,6 +119,9 @@ export default function SchedulePage() {
     )
   }
 
+  if (loading) return <SchedulePageSkeleton />
+  if (error) return <ErrorMessage message={error} onRetry={loadData} />
+
   return (
     <>
       <div className="p-6 bg-gray-100 min-h-screen">
@@ -202,7 +178,7 @@ export default function SchedulePage() {
         isOpen={isDayDetailModalOpen}
         onClose={() => setIsDayDetailModalOpen(false)}
         selectedDate={selectedDate}
-        onScheduleDeleted={loadData}
+        onScheduleDeleted={() => reloadData("schedules")}
         schedules={schedules}
         inOutData={inOutData}
       />

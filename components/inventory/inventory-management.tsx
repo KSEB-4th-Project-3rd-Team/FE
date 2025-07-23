@@ -314,8 +314,14 @@ const inventoryData: InventoryItem[] = data;
             {filteredInventory.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>검색 결과가 없습니다.</p>
-                <p className="text-sm mt-1">다른 검색어를 시도해보세요.</p>
+                {Object.values(searchFilters).some(val => val !== "") ? (
+                  <>
+                    <p>검색 결과가 없습니다.</p>
+                    <p className="text-sm mt-1">다른 검색어를 시도해보세요.</p>
+                  </>
+                ) : (
+                  <p>재고 데이터가 없습니다.</p>
+                )}
               </div>
             )}
 

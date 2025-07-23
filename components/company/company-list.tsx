@@ -25,7 +25,7 @@ export type Company = {
 
 
 
-export default function CompanyList({ companies, setCompanies }: { companies: Company[], setCompanies: React.Dispatch<React.SetStateAction<Company[]>> }) {
+export default function CompanyList({ companies, setCompanies: reloadCompanies }: { companies: Company[], setCompanies: () => void }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCompany, setEditingCompany] = useState<Company | null>(null)
   const [searchFilters, setSearchFilters] = useState({
@@ -52,11 +52,13 @@ export default function CompanyList({ companies, setCompanies }: { companies: Co
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    // TODO: Implement API call for create/update
     if (editingCompany) {
-      setCompanies(companies.map((c) => (c.id === editingCompany.id ? { ...formData, id: c.id } : c)))
+      // await updateCompany(formData);
     } else {
-      setCompanies([...companies, { ...formData, id: (companies.length + 1).toString() }])
+      // await createCompany(formData);
     }
+    reloadCompanies();
     resetForm()
   }
 
@@ -77,7 +79,9 @@ export default function CompanyList({ companies, setCompanies }: { companies: Co
   const handleDelete = (e: React.MouseEvent, id: string) => {
     e.stopPropagation(); // 행 클릭 이벤트 전파 방���
     if (confirm("이 거래처를 삭제하시겠습니까?")) {
-      setCompanies(companies.filter((c) => c.id !== id))
+      // TODO: Implement API call for delete
+      // await deleteCompany(id);
+      reloadCompanies();
     }
   }
 
@@ -176,9 +180,24 @@ export default function CompanyList({ companies, setCompanies }: { companies: Co
                 ))}
               </tbody>
             </table>
-            {filteredCompanies.length === 0 && (
-              <div className="text-center py-8 text-gray-500">등록된 거래처가 없습니다.</div>
-            )}
+            {filteredCompanies.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                {Object.values(searchFilters).some(val => val !== "" && val !== "전체") ? (
+                  <>
+                    <p>검색 결과가 없습니다.</p>
+                    <p className="text-sm mt-1">다른 검색어를 시도해보세요.</p>
+                  </>
+                ) : (
+                  <>
+                    <p>등록된 거래처가 없습니다.</p>
+                    <Button onClick={() => setIsModalOpen(true)} className="mt-4">
+                      <Plus className="w-4 h-4 mr-2" />
+                      첫 거래처 등록하기
+                    </Button>
+                  </>
+                )}
+              </div>
+            ) : null}
           </div>
           {totalPages > 1 && (
             <div className="flex justify-center mt-4">

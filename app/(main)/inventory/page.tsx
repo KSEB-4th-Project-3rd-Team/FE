@@ -1,33 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import InventoryManagement from "@/components/inventory/inventory-management"
-import { InventoryItem } from "@/components/utils"
-import { fetchInventoryData } from "@/lib/api"
+import { useData } from "@/contexts/data-context"
+import InventoryManagementSkeleton from "@/components/inventory/inventory-management-skeleton"
+import ErrorMessage from "@/components/ui/error-message"
 
 export default function InventoryPage() {
-  const [inventoryData, setInventoryData] = useState<InventoryItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { inventoryData, loading, error, reloadData } = useData()
 
-  useEffect(() => {
-    const loadInventoryData = async () => {
-      try {
-        setLoading(true)
-        const fetchedInventoryData = await fetchInventoryData();
-        setInventoryData(fetchedInventoryData);
-      } catch (err) {
-        setError("Failed to load inventory data.");
-        console.error(err);
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadInventoryData()
-  }, [])
-
-  if (loading) return <div>Loading...</div>
-  if (error) return <div>Error: {error}</div>
+  if (loading) return <InventoryManagementSkeleton />
+  if (error) return <ErrorMessage message={error} onRetry={() => reloadData("inventoryData")} />
 
   return <InventoryManagement data={inventoryData} />
 }

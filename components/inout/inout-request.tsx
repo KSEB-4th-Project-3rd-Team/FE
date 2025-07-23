@@ -11,7 +11,7 @@ import { CustomPagination } from "@/components/ui/custom-pagination"
 
 type DisplayUnit = "개수" | "set"
 
-export default function InOutRequestPage({ requests, setRequests }: { requests: InOutRequest[], setRequests: React.Dispatch<React.SetStateAction<InOutRequest[]>> }) {
+export default function InOutRequestPage({ requests, setRequests: reloadRequests }: { requests: InOutRequest[], setRequests: () => void }) {
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null)
   const [displayUnit, setDisplayUnit] = useState<DisplayUnit>('set')
   const [selectedRequest, setSelectedRequest] = useState<InOutRequest | null>(null)
@@ -29,13 +29,17 @@ export default function InOutRequestPage({ requests, setRequests }: { requests: 
 
   const handleApprove = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    setRequests(requests.map((r) => (r.id === id ? { ...r, status: "approved" } : r)))
+    // TODO: Implement API call for approve
+    // await approveRequest(id);
+    reloadRequests();
     showNotification("요청이 승인되었습니다.", "success")
   }
 
   const handleReject = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    setRequests(requests.map((r) => (r.id === id ? { ...r, status: "rejected" } : r)))
+    // TODO: Implement API call for reject
+    // await rejectRequest(id);
+    reloadRequests();
     showNotification("요청이 거절되었습니다.", "error")
   }
   

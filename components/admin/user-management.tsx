@@ -24,7 +24,7 @@ interface User {
   permissions: string[]
 }
 
-export default function UserManagement({ users, setUsers }: { users: User[], setUsers: React.Dispatch<React.SetStateAction<User[]>> }) {
+export default function UserManagement({ users, setUsers: reloadUsers }: { users: User[], setUsers: () => void }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -44,21 +44,13 @@ export default function UserManagement({ users, setUsers }: { users: User[], set
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
+    // TODO: Implement API call for create/update
     if (editingUser) {
-      // 사용자 수정
-      setUsers(users.map((user) => (user.id === editingUser.id ? { ...user, ...formData, id: editingUser.id } : user)))
+      // await updateUser(formData);
     } else {
-      // 새 사용자 추가
-      const newUser: User = {
-        ...formData,
-        id: Date.now().toString(),
-        lastLogin: "미접속",
-        createdAt: new Date().toISOString().split("T")[0],
-      }
-      setUsers([...users, newUser])
+      // await createUser(formData);
     }
-
+    reloadUsers();
     resetForm()
   }
 
@@ -92,16 +84,16 @@ export default function UserManagement({ users, setUsers }: { users: User[], set
 
   const handleDelete = (id: string) => {
     if (confirm("이 사용자를 삭제하시겠습니까?")) {
-      setUsers(users.filter((user) => user.id !== id))
+      // TODO: Implement API call for delete
+      // await deleteUser(id);
+      reloadUsers();
     }
   }
 
   const toggleUserStatus = (id: string) => {
-    setUsers(
-      users.map((user) =>
-        user.id === id ? { ...user, status: user.status === "active" ? "inactive" : "active" } : user,
-      ),
-    )
+    // TODO: Implement API call for status toggle
+    // await updateUserStatus(id);
+    reloadUsers();
   }
 
   const filteredUsers = users.filter((user) => {
@@ -337,7 +329,24 @@ export default function UserManagement({ users, setUsers }: { users: User[], set
                 ))}
               </tbody>
             </table>
-            {filteredUsers.length === 0 && <div className="text-center py-8 text-gray-500">검색 결과가 없습니다.</div>}
+            {filteredUsers.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                {searchTerm || roleFilter || statusFilter ? (
+                  <>
+                    <p>검색 결과가 없습니다.</p>
+                    <p className="text-sm mt-1">다른 검색어를 시도해보세요.</p>
+                  </>
+                ) : (
+                  <>
+                    <p>등록된 사용자가 없습니다.</p>
+                    <Button onClick={() => setIsModalOpen(true)} className="mt-4">
+                      <Plus className="w-4 h-4 mr-2" />
+                      첫 사용자 등록하기
+                    </Button>
+                  </>
+                )}
+              </div>
+            ) : null}
           </div>
           {totalPages > 1 && (
             <div className="flex justify-center mt-4">

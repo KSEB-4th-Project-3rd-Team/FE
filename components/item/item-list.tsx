@@ -23,24 +23,28 @@ export type Item = {
 
 
 
-export default function ItemList({ items, setItems }: { items: Item[], setItems: React.Dispatch<React.SetStateAction<Item[]>> }) {
+export default function ItemList({ items, setItems: reloadItems }: { items: Item[], setItems: () => void }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<Item | null>(null)
   const [searchFilters, setSearchFilters] = useState({
     code: "", name: "", group: "", specification: "", barcode: "",
   })
   const [showSearchFilters, setShowSearchFilters] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
   const [formData, setFormData] = useState({
     code: "", name: "", group: "", specification: "", barcode: "", inboundPrice: 0, outboundPrice: 0, notes: "",
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    // TODO: Implement API call for create/update
     if (editingItem) {
-      setItems(items.map((i) => (i.id === editingItem.id ? { ...formData, id: i.id } : i)))
+      // await updateItem(formData);
     } else {
-      setItems([...items, { ...formData, id: (items.length + 1).toString() }])
+      // await createItem(formData);
     }
+    reloadItems();
     resetForm()
   }
 
@@ -59,7 +63,9 @@ export default function ItemList({ items, setItems }: { items: Item[], setItems:
   const handleDelete = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (confirm("이 품목을 삭제하시겠습니까?")) {
-      setItems(items.filter((i) => i.id !== id))
+      // TODO: Implement API call for delete
+      // await deleteItem(id);
+      reloadItems();
     }
   }
 
@@ -72,6 +78,9 @@ export default function ItemList({ items, setItems }: { items: Item[], setItems:
       item.barcode.toLowerCase().includes(searchFilters.barcode.toLowerCase())
     )
   })
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage)
+  const paginatedItems = filteredItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -135,10 +144,34 @@ export default function ItemList({ items, setItems }: { items: Item[], setItems:
                 ))}
               </tbody>
             </table>
-            {filteredItems.length === 0 && (
-              <div className="text-center py-8 text-gray-500">등록된 품목이 없습니다.</div>
-            )}
+            {filteredItems.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                {Object.values(searchFilters).some(val => val !== "") ? (
+                  <>
+                    <p>검색 결과가 없습니다.</p>
+                    <p className="text-sm mt-1">다른 검색어를 시도해보세요.</p>
+                  </>
+                ) : (
+                  <>
+                    <p>등록된 품목이 없습니다.</p>
+                    <Button onClick={() => setIsModalOpen(true)} className="mt-4">
+                      <Plus className="w-4 h-4 mr-2" />
+                      첫 품목 등록하기
+                    </Button>
+                  </>
+                )}
+              </div>
+            ) : null}
           </div>
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-4">
+              <CustomPagination
+                totalPages={totalPages}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

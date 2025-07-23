@@ -1,33 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import ItemList from "@/components/item/item-list"
-import type { Item } from "@/components/item/item-list"
-import { fetchItems } from "@/lib/api"
+import { useData } from "@/contexts/data-context"
+import ItemListSkeleton from "@/components/item/item-list-skeleton"
+import ErrorMessage from "@/components/ui/error-message"
 
 export default function ItemListPage() {
-  const [items, setItems] = useState<Item[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { items, loading, error, reloadData } = useData()
 
-  useEffect(() => {
-    const loadItems = async () => {
-      try {
-        setLoading(true)
-        const fetchedItems = await fetchItems();
-        setItems(fetchedItems);
-      } catch (err) {
-        setError("Failed to load items.");
-        console.error(err);
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadItems()
-  }, [])
+  if (loading) return <ItemListSkeleton />
+  if (error) return <ErrorMessage message={error} onRetry={() => reloadData("items")} />
 
-  if (loading) return <div>Loading...</div>
-  if (error) return <div>Error: {error}</div>
-
-  return <ItemList items={items} setItems={setItems} />
+  return <ItemList items={items} setItems={() => reloadData("items")} />
 }

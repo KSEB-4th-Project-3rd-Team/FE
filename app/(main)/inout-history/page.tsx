@@ -1,33 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import InOutHistoryTable from "@/components/inout/inout-history-table"
-import { InOutRecord } from "@/components/utils"
-import { fetchInOutData } from "@/lib/api"
+import { useData } from "@/contexts/data-context"
+import InOutHistoryTableSkeleton from "@/components/inout/inout-history-table-skeleton"
+import ErrorMessage from "@/components/ui/error-message"
 
 export default function InOutHistoryPage() {
-  const [inOutData, setInOutData] = useState<InOutRecord[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { inOutData, loading, error, reloadData } = useData()
 
-  useEffect(() => {
-    const loadInOutData = async () => {
-      try {
-        setLoading(true)
-        const fetchedInOutData = await fetchInOutData();
-        setInOutData(fetchedInOutData);
-      } catch (err) {
-        setError("Failed to load in-out history.");
-        console.error(err);
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadInOutData()
-  }, [])
-
-  if (loading) return <div>Loading...</div>
-  if (error) return <div>Error: {error}</div>
+  if (loading) return <InOutHistoryTableSkeleton />
+  if (error) return <ErrorMessage message={error} onRetry={() => reloadData("inOutData")} />
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -38,7 +20,7 @@ export default function InOutHistoryPage() {
       <InOutHistoryTable 
         historyType="all" 
         data={inOutData}
-        setData={setInOutData}
+        setData={() => reloadData("inOutData")}
       />
     </div>
   )

@@ -19,51 +19,61 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 // --- Auth ---
 export async function login(username: string, password: string): Promise<User> {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-  });
-  return handleResponse<User>(response);
+  // const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: JSON.stringify({ username, password }),
+  // });
+  // return handleResponse<User>(response);
+  
+  // Mock login for development without a backend
+  return { id: "1", username, fullName: "Test User", role: "Admin" };
 }
 
 // --- Companies ---
 export async function fetchCompanies(): Promise<Company[]> {
-  const response = await fetch(`${API_BASE_URL}/companies`);
-  return handleResponse<Company[]>(response);
+  // const response = await fetch(`${API_BASE_URL}/companies`);
+  // return handleResponse<Company[]>(response);
+  return [];
 }
 
 // --- Items ---
 export async function fetchItems(): Promise<Item[]> {
-  const response = await fetch(`${API_BASE_URL}/items`);
-  return handleResponse<Item[]>(response);
+  // const response = await fetch(`${API_BASE_URL}/items`);
+  // return handleResponse<Item[]>(response);
+  return [];
 }
 
 // --- InOut ---
 export async function fetchInOutData(): Promise<InOutRecord[]> {
-  const response = await fetch(`${API_BASE_URL}/inout/history`);
-  return handleResponse<InOutRecord[]>(response);
+  // const response = await fetch(`${API_BASE_URL}/inout/history`);
+  // return handleResponse<InOutRecord[]>(response);
+  return [];
 }
 
 export async function fetchInOutRequests(): Promise<InOutRequest[]> {
-  const response = await fetch(`${API_BASE_URL}/inout/requests`);
-  return handleResponse<InOutRequest[]>(response);
+  // const response = await fetch(`${API_BASE_URL}/inout/requests`);
+  // return handleResponse<InOutRequest[]>(response);
+  return [];
 }
 
 // --- Inventory ---
 export async function fetchInventoryData(): Promise<InventoryItem[]> {
-  const response = await fetch(`${API_BASE_URL}/inventory`);
-  return handleResponse<InventoryItem[]>(response);
+  // const response = await fetch(`${API_BASE_URL}/inventory`);
+  // return handleResponse<InventoryItem[]>(response);
+  return [];
 }
 
 // --- Schedules ---
 export async function fetchSchedules(): Promise<Schedule[]> {
-  const response = await fetch(`${API_BASE_URL}/schedules`);
-  return handleResponse<Schedule[]>(response);
+  // const response = await fetch(`${API_BASE_URL}/schedules`);
+  // return handleResponse<Schedule[]>(response);
+  return [];
 }
 
 // --- Users ---
 export async function fetchUsers(): Promise<User[]> {
-    const response = await fetch(`${API_BASE_URL}/users`);
-    return handleResponse<User[]>(response);
+    // const response = await fetch(`${API_BASE_URL}/users`);
+    // return handleResponse<User[]>(response);
+    return [];
 }

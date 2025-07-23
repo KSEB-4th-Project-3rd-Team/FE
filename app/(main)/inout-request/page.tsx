@@ -1,33 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import InOutRequestPage from "@/components/inout/inout-request"
-import { InOutRequest as InOutRequestType } from "@/components/utils"
-import { fetchInOutRequests } from "@/lib/api"
+import { useData } from "@/contexts/data-context"
+import InOutRequestPageSkeleton from "@/components/inout/inout-request-page-skeleton"
+import ErrorMessage from "@/components/ui/error-message"
 
 export default function InOutRequest() {
-  const [requests, setRequests] = useState<InOutRequestType[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { inOutRequests, loading, error, reloadData } = useData()
 
-  useEffect(() => {
-    const loadRequests = async () => {
-      try {
-        setLoading(true)
-        const fetchedRequests = await fetchInOutRequests();
-        setRequests(fetchedRequests);
-      } catch (err) {
-        setError("Failed to load in-out requests.");
-        console.error(err);
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadRequests()
-  }, [])
+  if (loading) return <InOutRequestPageSkeleton />
+  if (error) return <ErrorMessage message={error} onRetry={() => reloadData("inOutRequests")} />
 
-  if (loading) return <div>Loading...</div>
-  if (error) return <div>Error: {error}</div>
-
-  return <InOutRequestPage requests={requests} setRequests={setRequests} />
+  return <InOutRequestPage requests={inOutRequests} setRequests={() => reloadData("inOutRequests")} />
 }
