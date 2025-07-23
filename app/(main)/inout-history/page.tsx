@@ -3,14 +3,31 @@
 import { useState, useEffect } from "react"
 import InOutHistoryTable from "@/components/inout/inout-history-table"
 import { InOutRecord } from "@/components/utils"
+import { fetchInOutData } from "@/lib/api"
 
 export default function InOutHistoryPage() {
   const [inOutData, setInOutData] = useState<InOutRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // TODO: Fetch in-out data from API
-    // setInOutData(fetchedInOutData);
+    const loadInOutData = async () => {
+      try {
+        setLoading(true)
+        const fetchedInOutData = await fetchInOutData();
+        setInOutData(fetchedInOutData);
+      } catch (err) {
+        setError("Failed to load in-out history.");
+        console.error(err);
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadInOutData()
   }, [])
+
+  if (loading) return <div>Loading...</div>
+  if (error) return <div>Error: {error}</div>
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">

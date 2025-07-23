@@ -10,6 +10,8 @@ import DayDetailModal from "@/components/schedule/day-detail-modal"
 import CalendarHeader from "@/components/schedule/calendar-header"
 import { InOutRecord } from "@/components/utils"
 
+import { fetchSchedules, fetchInOutData } from "@/lib/api"
+
 // Temporary Schedule type until API is connected
 export type Schedule = {
   id: string
@@ -36,23 +38,33 @@ export default function SchedulePage() {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
   const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string>("")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      const [fetchedSchedules, fetchedInOutData] = await Promise.all([
+        fetchSchedules(),
+        fetchInOutData(),
+      ]);
+      setSchedules(fetchedSchedules);
+      setInOutData(fetchedInOutData);
+    } catch (err) {
+      setError("Failed to load data.");
+      console.error(err);
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    loadSchedules()
-    // TODO: Fetch inOutData from API
-    // const allInOutData = await fetchInOutData();
-    // setInOutData(allInOutData)
+    loadData()
   }, [])
-
-  const loadSchedules = () => {
-    // TODO: Fetch schedules from API
-    // const allSchedules = await fetchSchedules();
-    // setSchedules(allSchedules)
-  }
 
   const handleScheduleAdded = (schedule: Schedule) => {
     setSchedules([...schedules, schedule])
-    loadSchedules()
+    loadData()
   }
 
   const handleDayClick = (day: number) => {
@@ -190,7 +202,7 @@ export default function SchedulePage() {
         isOpen={isDayDetailModalOpen}
         onClose={() => setIsDayDetailModalOpen(false)}
         selectedDate={selectedDate}
-        onScheduleDeleted={loadSchedules}
+        onScheduleDeleted={loadData}
         schedules={schedules}
         inOutData={inOutData}
       />

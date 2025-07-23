@@ -24,8 +24,7 @@ interface User {
   permissions: string[]
 }
 
-export default function UserManagement() {
-  const [users, setUsers] = useState<User[]>([])
+export default function UserManagement({ users, setUsers }: { users: User[], setUsers: React.Dispatch<React.SetStateAction<User[]>> }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
@@ -42,16 +41,6 @@ export default function UserManagement() {
     password: "",
     permissions: [] as string[],
   })
-
-  useEffect(() => {
-    loadUsers()
-  }, [])
-
-  const loadUsers = () => {
-    // TODO: Fetch users from API
-    // const fetchedUsers = await fetchUsers();
-    // setUsers(fetchedUsers)
-  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
