@@ -42,31 +42,18 @@ type MetricItem = {
     items: (typeof mockInventoryData[0] | InOutRecord)[];
 };
 
-const UnifiedDashboard = () => {
-  const [activeInventoryDetail, setActiveInventoryDetail] = useState<string | null>(null);
-  const [activeWorkDetail, setActiveWorkDetail] = useState<string | null>(null);
-  
-  // Date states for InOut Analysis
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [filterType, setFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
-  const [fromMonth, setFromMonth] = useState(startOfMonth(subDays(new Date(), 6)));
-  const [toMonth, setToMonth] = useState(startOfMonth(new Date()));
+export function UnifiedDashboard() {
+  const [isCollapsed, setIsCollapsed] = React.useState(false)
+  const [selectedCompany, setSelectedCompany] = React.useState<string | null>(null)
+  const [selectedItem, setSelectedItem] = React.useState<string | null>(null)
+  const [isMobile, setIsMobile] = React.useState(false)
 
-  // Date states for Sales Analysis
-  const [salesDateRange, setSalesDateRange] = useState<DateRange | undefined>();
-  const [salesFilterType, setSalesFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
-  const [salesFromMonth, setSalesFromMonth] = useState(startOfMonth(subDays(new Date(), 6)));
-  const [salesToMonth, setSalesToMonth] = useState(startOfMonth(new Date()));
-
-  const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
-  const [activePieIndex, setActivePieIndex] = useState(0);
-  const [workCurrentPage, setWorkCurrentPage] = useState(1);
-
-  useEffect(() => {
-    const today = new Date();
-    setDateRange({ from: subDays(today, 6), to: today });
-    setSalesDateRange({ from: subDays(today, 6), to: today });
-  }, []);
+  React.useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const onPieEnter = (_: any, index: number) => {
     setActivePieIndex(index);
