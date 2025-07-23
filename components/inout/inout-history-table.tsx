@@ -100,7 +100,7 @@ export default function InOutHistoryTable({ historyType }: InOutHistoryTableProp
       item.destination.toLowerCase().includes(filters.destination.toLowerCase()) &&
       (filters.date === "" || item.date === filters.date)
     )
-  }), [filters, historyData]);
+  }).sort((a, b) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime()), [filters, historyData]);
 
   const isFiltered = useMemo(() => {
     return JSON.stringify(filters) !== JSON.stringify(initialFilters);

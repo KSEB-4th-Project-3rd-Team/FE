@@ -44,7 +44,7 @@ export default function InOutStatusPanel({ showSearch }: InOutStatusPanelProps) 
       item.productName.toLowerCase().includes(filters.productName.toLowerCase()) &&
       (filters.date === "" || item.date === filters.date)
     )
-  })
+  }).sort((a, b) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime())
 
   const getStatusChipClass = (status: "완료" | "진행 중" | "예약") => {
     switch (status) {

@@ -49,8 +49,13 @@ export default function InOutRequestPage() {
     setIsModalOpen(true);
   }
 
-  const pendingRequests = requests.filter((req) => req.status === "pending")
-  const completedRequests = requests.filter((req) => req.status !== "pending")
+  const pendingRequests = requests
+    .filter((req) => req.status === "pending")
+    .sort((a, b) => new Date(b.scheduledDateTime).getTime() - new Date(a.scheduledDateTime).getTime());
+  
+  const completedRequests = requests
+    .filter((req) => req.status !== "pending")
+    .sort((a, b) => new Date(b.scheduledDateTime).getTime() - new Date(a.scheduledDateTime).getTime());
 
   const formatDateTime = (dateTimeString: string) => {
     const date = new Date(dateTimeString);

@@ -50,16 +50,20 @@ export function InOutStatus() {
   }
 
   const getFilteredData = (filter: string) => {
-    if (filter === "all") return data
-    if (filter === "inbound")
-      return data.filter(item => item.type === "입고")
-    if (filter === "outbound")
-      return data.filter(item => item.type === "출고")
-    if (filter === "pending")
-      return data.filter(item => item.status === "예약")
-    if (filter === "completed")
-      return data.filter(item => item.status === "완료")
-    return data
+    let filteredData: InOutData[];
+
+    if (filter === "all") filteredData = data
+    else if (filter === "inbound")
+      filteredData = data.filter(item => item.type === "입고")
+    else if (filter === "outbound")
+      filteredData = data.filter(item => item.type === "출고")
+    else if (filter === "pending")
+      filteredData = data.filter(item => item.status === "예약" || item.status === "진행중")
+    else if (filter === "completed")
+      filteredData = data.filter(item => item.status === "완료")
+    else filteredData = data;
+
+    return filteredData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }
 
   const renderTable = (filter: string) => (

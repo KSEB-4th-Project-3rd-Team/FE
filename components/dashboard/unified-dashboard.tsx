@@ -145,9 +145,10 @@ const UnifiedDashboard = () => {
 
   // 2. 오늘 작업 현황 분석
   const workStatusSummary = useMemo(() => {
-    const completed = mockInOutData.filter(item => item.status === '완료');
-    const inProgress = mockInOutData.filter(item => item.status === '진행 중');
-    const pending = mockInOutData.filter(item => item.status === '예약');
+    const sortFn = (a: InOutRecord, b: InOutRecord) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime();
+    const completed = mockInOutData.filter(item => item.status === '완료').sort(sortFn);
+    const inProgress = mockInOutData.filter(item => item.status === '진행 중').sort(sortFn);
+    const pending = mockInOutData.filter(item => item.status === '예약').sort(sortFn);
     return { completed: { count: completed.length, items: completed }, inProgress: { count: inProgress.length, items: inProgress }, pending: { count: pending.length, items: pending } };
   }, []);
 
@@ -229,6 +230,7 @@ const UnifiedDashboard = () => {
         acc[item.company].count += 1;
         acc[item.company].amount += item.quantity * (mockPriceData[item.sku] || 0);
         acc[item.company].items.push(item);
+        acc[item.company].items.sort((a, b) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime());
         return acc;
     }, {} as Record<string, { name: string; count: number; amount: number; items: InOutRecord[] }>);
 
