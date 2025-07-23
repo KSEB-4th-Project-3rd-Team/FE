@@ -75,7 +75,7 @@ export default function InOutStatusPanel({ showSearch }: InOutStatusPanelProps) 
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col">
       <div className="space-y-4">
         {/* 검색 필터 */}
         {showSearch && (
@@ -141,7 +141,7 @@ export default function InOutStatusPanel({ showSearch }: InOutStatusPanelProps) 
       </div>
 
       {/* 현황 목록 */}
-      <div className="flex-1 overflow-y-auto space-y-3 pr-2 mt-4">
+      <div className="flex-1 overflow-y-auto space-y-2 pr-2 mt-4">
         {paginatedData.length > 0 ? (
           paginatedData.map((item) => (
             <div key={item.id} className="p-3 rounded-lg border bg-gray-50 hover:bg-gray-100 transition-colors">
@@ -149,7 +149,7 @@ export default function InOutStatusPanel({ showSearch }: InOutStatusPanelProps) 
                 <div className="flex items-start gap-3">
                   <div className="mt-1">{getTypeIcon(item.type)}</div>
                   <div>
-                    <p className="font-semibold text-sm text-gray-800 break-words">{item.productName}</p>
+                    <p className="font-semibold text-sm text-gray-800 break-words truncate">{item.productName}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span
                         className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusChipClass(item.status)}`}
@@ -176,7 +176,7 @@ export default function InOutStatusPanel({ showSearch }: InOutStatusPanelProps) 
       </div>
       
       {totalPages > 1 && (
-        <div className="mt-auto pt-4">
+        <div className="mt-4 pt-2">
           <CustomPagination
             totalPages={totalPages}
             currentPage={currentPage}
