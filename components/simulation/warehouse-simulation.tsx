@@ -9,39 +9,20 @@ import { Play, Pause, RotateCcw, Eye, ExternalLink } from "lucide-react"
 import AGVStatusModal from "./agv-status-modal"
 import type { AGV } from "./agv-status-modal"
 
-// Mock warehouse layout data
+// TODO: Fetch warehouse layout data from API
 const warehouseLayout = {
   width: 1000,
   height: 600,
-  zones: [
-    { name: "입고 구역", x: 0, y: 0, width: 200, height: 200, color: "#e3f2fd" },
-    { name: "출고 구역", x: 800, y: 0, width: 200, height: 200, color: "#ffebee" },
-    { name: "보관 구역 A", x: 200, y: 0, width: 600, height: 300, color: "#f3e5f5" },
-    { name: "보관 구역 B", x: 0, y: 200, width: 1000, height: 300, color: "#e8f5e9" },
-    { name: "충전소", x: 0, y: 500, width: 200, height: 100, color: "#fffde7" },
-  ],
-  obstacles: [
-    { id: "shelf1", type: "shelf", x: 300, y: 50, width: 400, height: 50 },
-    { id: "shelf2", type: "shelf", x: 300, y: 150, width: 400, height: 50 },
-    { id: "shelf3", type: "shelf", x: 100, y: 300, width: 800, height: 50 },
-    { id: "shelf4", type: "shelf", x: 100, y: 400, width: 800, height: 50 },
-  ],
+  zones: [],
+  obstacles: [],
 }
 
-// Mock AGV simulation service
+// TODO: Implement AGV simulation service
 const agvSimulation = {
   getAGVs: (): AGV[] => [],
   subscribe: (callback: (agvs: AGV[]) => void) => {
-    const interval = setInterval(() => {
-      const agvs = agvSimulation.getAGVs().map((agv) => ({
-        ...agv,
-        x: agv.x + (Math.random() - 0.5) * 10,
-        y: agv.y + (Math.random() - 0.5) * 10,
-        path: [...agv.path, { x: agv.x, y: agv.y }],
-      }))
-      callback(agvs)
-    }, 1000)
-    return () => clearInterval(interval)
+    // Implement subscription logic
+    return () => {};
   },
   startSimulation: () => console.log("Start simulation"),
   stopSimulation: () => console.log("Stop simulation"),

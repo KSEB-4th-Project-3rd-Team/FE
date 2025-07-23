@@ -23,14 +23,9 @@ export type Company = {
   type: "매입처" | "납품처"
 }
 
-export const mockCompanies: Company[] = [
-    { id: '1', code: 'C001', name: '삼성전자', representative: '이재용', phone: '02-111-1111', email: 'contact@samsung.com', address: '서울시 서초구', notes: '주요 파트너', type: '납품처' },
-    { id: '2', code: 'C002', name: 'LG전자', representative: '구광모', phone: '02-222-2222', email: 'contact@lge.com', address: '서울시 영등포구', notes: '', type: '납품처' },
-    { id: '3', code: 'C003', name: '하이닉스', representative: '곽노정', phone: '031-123-4567', email: 'contact@hynix.com', address: '경기도 이천시', notes: '반도체 공급', type: '매입처' },
-];
 
-export default function CompanyList() {
-  const [companies, setCompanies] = useState<Company[]>([])
+
+export default function CompanyList({ companies, setCompanies }: { companies: Company[], setCompanies: React.Dispatch<React.SetStateAction<Company[]>> }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCompany, setEditingCompany] = useState<Company | null>(null)
   const [searchFilters, setSearchFilters] = useState({
@@ -54,10 +49,6 @@ export default function CompanyList() {
     notes: "",
     type: "납품처" as "매입처" | "납품처",
   })
-
-  useEffect(() => {
-    setCompanies(mockCompanies)
-  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

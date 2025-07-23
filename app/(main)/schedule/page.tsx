@@ -8,6 +8,7 @@ import { Calendar, Plus } from "lucide-react"
 import ScheduleModal from "@/components/schedule/schedule-modal"
 import DayDetailModal from "@/components/schedule/day-detail-modal"
 import CalendarHeader from "@/components/schedule/calendar-header"
+import { InOutRecord } from "@/components/utils"
 
 // Temporary Schedule type until API is connected
 export type Schedule = {
@@ -20,9 +21,6 @@ export type Schedule = {
   type: "inbound" | "outbound" | "work" | "meeting" | "other" // Added type property
 }
 
-// Mock schedule data
-const mockSchedules: Schedule[] = []
-
 // 날짜를 YYYY-MM-DD 형식으로 변환하는 함수 (시간대 문제 해결)
 const formatDateToString = (date: Date): string => {
   const year = date.getFullYear()
@@ -34,17 +32,22 @@ const formatDateToString = (date: Date): string => {
 export default function SchedulePage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [schedules, setSchedules] = useState<Schedule[]>([])
+  const [inOutData, setInOutData] = useState<InOutRecord[]>([])
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
   const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string>("")
 
   useEffect(() => {
     loadSchedules()
+    // TODO: Fetch inOutData from API
+    // const allInOutData = await fetchInOutData();
+    // setInOutData(allInOutData)
   }, [])
 
   const loadSchedules = () => {
-    // const allSchedules = scheduleService.getSchedules() // Removed for Spring backend integration
-    setSchedules(mockSchedules)
+    // TODO: Fetch schedules from API
+    // const allSchedules = await fetchSchedules();
+    // setSchedules(allSchedules)
   }
 
   const handleScheduleAdded = (schedule: Schedule) => {
@@ -188,6 +191,8 @@ export default function SchedulePage() {
         onClose={() => setIsDayDetailModalOpen(false)}
         selectedDate={selectedDate}
         onScheduleDeleted={loadSchedules}
+        schedules={schedules}
+        inOutData={inOutData}
       />
     </>
   )

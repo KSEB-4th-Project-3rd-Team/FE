@@ -4,15 +4,16 @@ import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Package, TruckIcon } from "lucide-react"
-import { InOutRecord, mockInOutData } from "@/components/utils"
+import { InOutRecord } from "@/components/utils"
 import { Separator } from "@/components/ui/separator"
 import { CustomPagination } from "@/components/ui/custom-pagination"
 
 interface InOutStatusPanelProps {
   showSearch: boolean;
+  data: InOutRecord[];
 }
 
-export default function InOutStatusPanel({ showSearch }: InOutStatusPanelProps) {
+export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelProps) {
   const [filters, setFilters] = useState({
     type: "all",
     status: "all",
@@ -22,9 +23,9 @@ export default function InOutStatusPanel({ showSearch }: InOutStatusPanelProps) 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  const statusData: InOutRecord[] = useMemo(() => mockInOutData.filter(
+  const statusData: InOutRecord[] = useMemo(() => data.filter(
     (item) => item.status === "진행 중" || item.status === "예약"
-  ), []);
+  ), [data]);
 
   const handleToggleFilter = (field: 'type' | 'status', value: string) => {
     setFilters(prev => ({

@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { format, startOfWeek, subDays, subMonths, addMonths, startOfMonth, isSameMonth, subYears } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
-import { mockInventoryData, mockInOutData, InOutRecord } from '@/components/utils';
+import { InOutRecord, InventoryItem } from '@/components/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -20,29 +20,23 @@ import { CustomPagination } from '@/components/ui/custom-pagination';
 // Helper function to format numbers with commas
 const formatNumber = (num: number) => num.toLocaleString();
 
-// --- Mock Data Section ---
+// --- Data-related Types ---
 type AmrStatus = "moving" | "charging" | "idle" | "error";
 interface Amr { id: string; name: string; status: AmrStatus; battery: number; location: string; currentTask: string | null; }
-const mockAmrData: Amr[] = [
-  { id: "AMR-001", name: "Pioneer 1", status: "moving", battery: 82, location: "A-3", currentTask: "Order #1234" },
-  { id: "AMR-002", name: "Pioneer 2", status: "charging", battery: 34, location: "Charging Bay 1", currentTask: null },
-  { id: "AMR-003", name: "Scout 1", status: "idle", battery: 95, location: "Home Base", currentTask: null },
-  { id: "AMR-004", name: "Pioneer 3", status: "moving", battery: 65, location: "B-1", currentTask: "Order #1235" },
-  { id: "AMR-005", name: "Scout 2", status: "error", battery: 5, location: "C-4", currentTask: "Order #1236" },
-];
-const mockPriceData: Record<string, number> = {
-    "SM-G998B": 1200000, "LG-17Z90P": 1800000, "SM-R190": 200000, "IPAD-AIR4": 900000, "AW-S8": 600000,
-};
 
 type MetricItem = {
     id: string;
     title: string;
     value: number | string;
     icon: React.ElementType;
-    items: (typeof mockInventoryData[0] | InOutRecord)[];
+    items: (InventoryItem | InOutRecord)[];
 };
 
 export function UnifiedDashboard() {
+  const [inventoryData, setInventoryData] = useState<InventoryItem[]>([]);
+  const [inOutData, setInOutData] = useState<InOutRecord[]>([]);
+  const [amrData, setAmrData] = useState<Amr[]>([]);
+  const [priceData, setPriceData] = useState<Record<string, number>>({});
   const [isCollapsed, setIsCollapsed] = React.useState(false)
   const [selectedCompany, setSelectedCompany] = React.useState<string | null>(null)
   const [selectedItem, setSelectedItem] = React.useState<string | null>(null)
@@ -59,6 +53,14 @@ export function UnifiedDashboard() {
   const [salesFromMonth, setSalesFromMonth] = useState(startOfMonth(subMonths(new Date(), 1)));
   const [salesToMonth, setSalesToMonth] = useState(startOfMonth(new Date()));
   const [activePieIndex, setActivePieIndex] = useState(0);
+
+  useEffect(() => {
+    // TODO: Fetch data from API and update the state
+    // setInventoryData(fetchedInventoryData);
+    // setInOutData(fetchedInOutData);
+    // setAmrData(fetchedAmrData);
+    // setPriceData(fetchedPriceData);
+  }, []);
 
   useEffect(() => {
     const today = new Date();
@@ -146,26 +148,26 @@ export function UnifiedDashboard() {
 
   // 1. 재고 현황 분석
   const inventorySummary = useMemo(() => {
-    const totalItems = mockInventoryData.length;
-    const normalStockItems = mockInventoryData.filter(item => item.status === '정상');
-    const lowStockItems = mockInventoryData.filter(item => item.status === '부족');
-    const outOfStockItems = mockInventoryData.filter(item => item.quantity === 0);
-    const totalQuantity = mockInventoryData.reduce((sum, item) => sum + item.quantity, 0);
+    const totalItems = inventoryData.length;
+    const normalStockItems = inventoryData.filter(item => item.status === '정상');
+    const lowStockItems = inventoryData.filter(item => item.status === '부족');
+    const outOfStockItems = inventoryData.filter(item => item.quantity === 0);
+    const totalQuantity = inventoryData.reduce((sum, item) => sum + item.quantity, 0);
     return { totalItems, normalStock: { count: normalStockItems.length, items: normalStockItems }, lowStock: { count: lowStockItems.length, items: lowStockItems }, outOfStock: { count: outOfStockItems.length, items: outOfStockItems }, totalQuantity };
   }, []);
 
   // 2. 오늘 작업 현황 분석
   const workStatusSummary = useMemo(() => {
     const sortFn = (a: InOutRecord, b: InOutRecord) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime();
-    const completed = mockInOutData.filter(item => item.status === '완료').sort(sortFn);
-    const inProgress = mockInOutData.filter(item => item.status === '진행 중').sort(sortFn);
-    const pending = mockInOutData.filter(item => item.status === '예약').sort(sortFn);
+    const completed = inOutData.filter(item => item.status === '완료').sort(sortFn);
+    const inProgress = inOutData.filter(item => item.status === '진행 중').sort(sortFn);
+    const pending = inOutData.filter(item => item.status === '예약').sort(sortFn);
     return { completed: { count: completed.length, items: completed }, inProgress: { count: inProgress.length, items: inProgress }, pending: { count: pending.length, items: pending } };
   }, []);
 
   // 3. 입출고 분석
   const inOutAnalysis = useMemo(() => {
-    const filteredData = mockInOutData.filter(item => {
+    const filteredData = inOutData.filter(item => {
         const itemDate = new Date(item.date);
         if (!dateRange?.from || !dateRange?.to) return true;
         return itemDate >= dateRange.from && itemDate <= dateRange.to;
@@ -212,10 +214,10 @@ export function UnifiedDashboard() {
       idle: '대기 중',
       error: '오류',
     };
-    const totalAmrs = mockAmrData.length;
-    const activeAmrs = mockAmrData.filter(amr => amr.status === 'moving').length;
-    const errorAmrs = mockAmrData.filter(amr => amr.status === 'error').length;
-    const statusDistribution = mockAmrData.reduce((acc, amr) => { acc[amr.status] = (acc[amr.status] || 0) + 1; return acc; }, {} as Record<AmrStatus, number>);
+    const totalAmrs = amrData.length;
+    const activeAmrs = amrData.filter(amr => amr.status === 'moving').length;
+    const errorAmrs = amrData.filter(amr => amr.status === 'error').length;
+    const statusDistribution = amrData.reduce((acc, amr) => { acc[amr.status] = (acc[amr.status] || 0) + 1; return acc; }, {} as Record<AmrStatus, number>);
     const chartData = Object.entries(statusDistribution).map(([name, value]) => ({
         name: name,
         displayName: amrStatusKorean[name as AmrStatus] || name,
@@ -227,19 +229,19 @@ export function UnifiedDashboard() {
 
   // 5. 매출 및 거래처 분석
   const salesAnalysis = useMemo(() => {
-    const salesData = mockInOutData.filter(item => {
+    const salesData = inOutData.filter(item => {
         const itemDate = new Date(item.date);
         if (!salesDateRange?.from || !salesDateRange?.to) return true;
         return item.type === 'outbound' && itemDate >= salesDateRange.from && itemDate <= salesDateRange.to;
     });
 
-    const totalSalesAmount = salesData.reduce((sum, item) => sum + (item.quantity * (mockPriceData[item.sku] || 0)), 0);
+    const totalSalesAmount = salesData.reduce((sum, item) => sum + (item.quantity * (priceData[item.sku] || 0)), 0);
     const totalSalesCount = salesData.length;
 
     const byCompany = salesData.reduce((acc, item) => {
         if (!acc[item.company]) { acc[item.company] = { name: item.company, count: 0, amount: 0, items: [] }; }
         acc[item.company].count += 1;
-        acc[item.company].amount += item.quantity * (mockPriceData[item.sku] || 0);
+        acc[item.company].amount += item.quantity * (priceData[item.sku] || 0);
         acc[item.company].items.push(item);
         acc[item.company].items.sort((a, b) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime());
         return acc;
@@ -268,7 +270,7 @@ export function UnifiedDashboard() {
     const salesTrend = salesData.reduce((acc, item) => {
         const key = getGroupKey(new Date(item.date));
         if (!acc[key]) { acc[key] = { date: key, amount: 0, count: 0 }; }
-        acc[key].amount += (item.quantity * (mockPriceData[item.sku] || 0)) / 10000; // Convert to 만원
+        acc[key].amount += (item.quantity * (priceData[item.sku] || 0)) / 10000; // Convert to 만원
         acc[key].count += 1;
         return acc;
     }, {} as Record<string, { date: string; amount: number; count: number }>);
@@ -317,7 +319,7 @@ export function UnifiedDashboard() {
   }
 
   const inventoryMetrics: MetricItem[] = [
-    { id: 'totalItems', title: '총 품목 수', value: inventorySummary.totalItems, icon: Package, items: mockInventoryData },
+    { id: 'totalItems', title: '총 품목 수', value: inventorySummary.totalItems, icon: Package, items: inventoryData },
     { id: 'normalStock', title: '정상 재고', value: inventorySummary.normalStock.count, icon: CheckCircle, items: inventorySummary.normalStock.items },
     { id: 'lowStock', title: '부족 재고', value: inventorySummary.lowStock.count, icon: AlertTriangle, items: inventorySummary.lowStock.items },
     { id: 'outOfStock', title: '품절', value: inventorySummary.outOfStock.count, icon: XCircle, items: inventorySummary.outOfStock.items },
@@ -629,7 +631,7 @@ export function UnifiedDashboard() {
                                                                     <TableCell>{item.type === 'inbound' ? '입고' : '출고'}</TableCell>
                                                                     <TableCell>{item.productName}</TableCell>
                                                                     <TableCell className="text-center pr-12">{item.quantity}</TableCell>
-                                                                    <TableCell className="text-center pr-12">₩{formatNumber(item.quantity * (mockPriceData[item.sku] || 0))}</TableCell>
+                                                                    <TableCell className="text-center pr-12">₩{formatNumber(item.quantity * (priceData[item.sku] || 0))}</TableCell>
                                                                     <TableCell className="text-center">
                                                                         <div>{item.date}</div>
                                                                         <div className="text-xs text-gray-500">{item.time}</div>

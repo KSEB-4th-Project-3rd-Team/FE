@@ -21,13 +21,9 @@ export type Item = {
   notes: string
 }
 
-const mockItems: Item[] = [
-    { id: '1', code: 'ITEM-001', name: '게이밍 마우스', group: '주변기기', specification: 'G-Pro-Wireless', barcode: '8801234567890', inboundPrice: 80000, outboundPrice: 120000, notes: '인기 상품' },
-    { id: '2', code: 'ITEM-002', name: '기계식 키보드', group: '주변기기', specification: 'K70-RGB-MK.2', barcode: '8809876543210', inboundPrice: 150000, outboundPrice: 220000, notes: '' },
-];
 
-export default function ItemList() {
-  const [items, setItems] = useState<Item[]>([])
+
+export default function ItemList({ items, setItems }: { items: Item[], setItems: React.Dispatch<React.SetStateAction<Item[]>> }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<Item | null>(null)
   const [searchFilters, setSearchFilters] = useState({
@@ -37,10 +33,6 @@ export default function ItemList() {
   const [formData, setFormData] = useState({
     code: "", name: "", group: "", specification: "", barcode: "", inboundPrice: 0, outboundPrice: 0, notes: "",
   })
-
-  useEffect(() => {
-    setItems(mockItems)
-  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ItemAutocomplete } from "./item-autocomplete"
 import { CompanyAutocomplete } from "./company-autocomplete"
-import { mockInventoryData } from "@/components/utils"
+import { InventoryItem } from "@/components/utils"
 
 interface OutboundFormData {
   productName: string;
@@ -21,9 +21,10 @@ interface OutboundFormData {
 interface OutboundFormProps {
   onSubmit: (data: OutboundFormData) => void;
   onClose: () => void;
+  items: InventoryItem[];
 }
 
-export default function OutboundForm({ onSubmit, onClose }: OutboundFormProps) {
+export default function OutboundForm({ onSubmit, onClose, items }: OutboundFormProps) {
   const [formData, setFormData] = useState({
     productName: "",
     quantity: "",
@@ -63,7 +64,7 @@ export default function OutboundForm({ onSubmit, onClose }: OutboundFormProps) {
       <div>
         <Label htmlFor="productName">상품명 *</Label>
         <ItemAutocomplete
-          items={mockInventoryData}
+          items={items}
           value={formData.productName}
           onValueChange={(value) => handleValueChange("productName", value)}
         />

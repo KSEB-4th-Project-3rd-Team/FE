@@ -15,16 +15,9 @@ interface Amr {
   currentTask: string | null
 }
 
-const mockAmrData: Amr[] = [
-  { id: "AMR-001", name: "Pioneer 1", status: "moving", battery: 82, location: "A-3", currentTask: "Order #1234" },
-  { id: "AMR-002", name: "Pioneer 2", status: "charging", battery: 34, location: "Charging Bay 1", currentTask: null },
-  { id: "AMR-003", name: "Scout 1", status: "idle", battery: 95, location: "Home Base", currentTask: null },
-  { id: "AMR-004", name: "Pioneer 3", status: "moving", battery: 65, location: "B-1", currentTask: "Order #1235" },
-  { id: "AMR-005", name: "Scout 2", status: "error", battery: 5, location: "C-4", currentTask: "Order #1236" },
-]
 
-export default function AmrStatusPanel() {
-  const [amrList] = useState<Amr[]>(mockAmrData)
+
+export default function AmrStatusPanel({ amrList }: { amrList: Amr[] }) {
   const [filter, setFilter] = useState<"all" | AmrStatus>("all")
 
   const handleFilterToggle = (newFilter: AmrStatus) => {

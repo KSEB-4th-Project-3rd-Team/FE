@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Filter, Package } from "lucide-react"
 import { CustomPagination } from "@/components/ui/custom-pagination"
-import { InOutRecord, mockInOutData } from "@/components/utils"
+import { InOutRecord } from "@/components/utils"
 import { Separator } from "@/components/ui/separator"
 
 type DisplayUnit = "개수" | "set"
@@ -18,9 +18,11 @@ type InOutStatus = "완료" | "진행 중" | "예약";
 
 type InOutHistoryTableProps = {
   historyType: "inbound" | "outbound" | "all";
+  data: InOutRecord[];
+  setData: React.Dispatch<React.SetStateAction<InOutRecord[]>>;
 }
 
-export default function InOutHistoryTable({ historyType }: InOutHistoryTableProps) {
+export default function InOutHistoryTable({ historyType, data, setData }: InOutHistoryTableProps) {
   
   const initialFilters = useMemo(() => ({
     type: historyType === 'all' ? 'all' : historyType,
@@ -32,8 +34,6 @@ export default function InOutHistoryTable({ historyType }: InOutHistoryTableProp
     destination: "",
     date: "",
   }), [historyType]);
-
-  const [allData, setAllData] = useState<InOutRecord[]>(mockInOutData);
   const [filters, setFilters] = useState(initialFilters);
   const [showFilters, setShowFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -46,11 +46,11 @@ export default function InOutHistoryTable({ historyType }: InOutHistoryTableProp
   const SET_QUANTITY = 14
 
   const historyData: InOutRecord[] = useMemo(() => 
-    allData.filter(item => {
+    data.filter(item => {
       const typeMatch = historyType === 'all' || item.type === historyType;
       if (!typeMatch) return false;
       return true;
-    }), [allData, historyType]);
+    }), [data, historyType]);
 
   const handleFilterChange = (field: string, value: string) => {
     setFilters((prev) => ({ ...prev, [field]: value, }))
@@ -80,10 +80,10 @@ export default function InOutHistoryTable({ historyType }: InOutHistoryTableProp
 
   const handleFormSubmit = () => {
     if (!selectedRecord) return;
-    const updatedData = allData.map(item => 
+    const updatedData = data.map(item => 
       item.id === selectedRecord.id ? { ...item, ...formData } : item
     );
-    setAllData(updatedData);
+    setData(updatedData);
     setIsModalOpen(false);
     setSelectedRecord(null);
   };

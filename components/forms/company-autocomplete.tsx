@@ -17,17 +17,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { mockCompanies } from "@/components/company/company-list"
+import { Company } from "@/components/company/company-list"
 
 interface CompanyAutocompleteProps {
   value: string;
   onValueChange: (value: string) => void;
+  companies: Company[];
 }
 
-export function CompanyAutocomplete({ value, onValueChange }: CompanyAutocompleteProps) {
+export function CompanyAutocomplete({ value, onValueChange, companies }: CompanyAutocompleteProps) {
   const [open, setOpen] = React.useState(false)
 
-  const frameworks = Array.isArray(mockCompanies) ? mockCompanies.map(company => ({
+  const frameworks = Array.isArray(companies) ? companies.map(company => ({
     value: company.name.toLowerCase(),
     label: company.name,
   })) : [];

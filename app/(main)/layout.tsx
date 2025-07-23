@@ -23,9 +23,10 @@ import {
 import AuthForm from "@/components/auth/auth-form"
 import GlobalSearch from "@/components/search/global-search"
 import InOutStatusPanel from "@/components/inout/inout-status-panel"
-import AmrStatusPanel from "@/components/simulation/amr-status-panel"
+import AmrStatusPanel, { type Amr } from "@/components/simulation/amr-status-panel"
 import NotificationPopover from "@/components/notifications/notification-popover"
 import { NotificationProvider } from "@/hooks/use-notifications"
+import { InOutRecord } from "@/components/utils"
 
 // Temporary User type until API is connected
 export type User = {
@@ -38,18 +39,28 @@ export type User = {
 type SidePanelType = "inout-status" | "amr-status" | null
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
-  // Mock user data for development
-  const [user, setUser] = useState<User | null>({
-    id: "1",
-    username: "johndoe",
-    fullName: "John Doe",
-    role: "Admin",
-  })
-  const [isLoading] = useState(false) // Set to false as we are not fetching user
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [sidePanel, setSidePanel] = useState<SidePanelType>(null)
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [inOutData, setInOutData] = useState<InOutRecord[]>([])
+  const [amrData, setAmrData] = useState<Amr[]>([])
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user")
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
+    }
+    // TODO: Fetch inOutData from API
+    // const fetchedInOutData = await fetchInOutData();
+    // setInOutData(fetchedInOutData);
+    // TODO: Fetch amrData from API
+    // const fetchedAmrData = await fetchAmrData();
+    // setAmrData(fetchedAmrData);
+    setIsLoading(false);
+  }, [])
 
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -82,10 +93,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }, [pathname, searchParams])
 
   const handleAuthSuccess = (user: User) => {
+    localStorage.setItem("user", JSON.stringify(user))
     setUser(user)
   }
 
   const handleLogout = () => {
+    localStorage.removeItem("user")
     setUser(null)
   }
 
@@ -106,11 +119,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
     switch (sidePanel) {
       case "inout-status":
-        panelContent = <InOutStatusPanel showSearch={false} />
+        panelContent = <InOutStatusPanel showSearch={false} data={inOutData} />
         panelTitle = "실시간 작업 현황"
         break
       case "amr-status":
-        panelContent = <AmrStatusPanel />
+        panelContent = <AmrStatusPanel amrList={amrData} />
         panelTitle = "실시간 AMR 현황"
         break
     }

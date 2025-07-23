@@ -1,14 +1,23 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import InboundForm from "@/components/forms/inbound-form"
 import InOutHistoryTable from "@/components/inout/inout-history-table"
 import { Plus } from "lucide-react"
+import { InOutRecord, InventoryItem } from "@/components/utils"
 
 export default function InboundRegistrationPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [inOutData, setInOutData] = useState<InOutRecord[]>([])
+  const [inventoryData, setInventoryData] = useState<InventoryItem[]>([])
+
+  useEffect(() => {
+    // TODO: Fetch in-out and inventory data from API
+    // setInOutData(fetchedInOutData);
+    // setInventoryData(fetchedInventoryData);
+  }, [])
 
   const handleFormSubmit = (formData: unknown) => {
     console.log("Inbound data submitted:", formData)
@@ -31,11 +40,19 @@ export default function InboundRegistrationPage() {
             <DialogHeader>
               <DialogTitle>신규 입고 등록</DialogTitle>
             </DialogHeader>
-            <InboundForm onSubmit={handleFormSubmit} onClose={() => setIsModalOpen(false)} />
+            <InboundForm 
+              onSubmit={handleFormSubmit} 
+              onClose={() => setIsModalOpen(false)}
+              items={inventoryData}
+            />
           </DialogContent>
         </Dialog>
       </div>
-      <InOutHistoryTable historyType="inbound" />
+      <InOutHistoryTable 
+        historyType="inbound" 
+        data={inOutData}
+        setData={setInOutData}
+      />
     </div>
   )
 }

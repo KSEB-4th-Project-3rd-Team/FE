@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { X, Calendar, MapPin, Clock, Trash2, Package, TruckIcon } from "lucide-react"
 import type { Schedule } from "@/app/(main)/schedule/page"
-import { mockInOutData, type InOutRecord } from "@/components/utils"
+import { type InOutRecord } from "@/components/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface DayDetailModalProps {
@@ -13,13 +13,12 @@ interface DayDetailModalProps {
   onClose: () => void
   selectedDate: string
   onScheduleDeleted: () => void
+  schedules: Schedule[];
+  inOutData: InOutRecord[];
 }
 
-// Mock schedule data for a specific date
-const mockSchedules: Schedule[] = []
-
-export default function DayDetailModal({ isOpen, onClose, selectedDate, onScheduleDeleted }: DayDetailModalProps) {
-  const [schedules, setSchedules] = useState<Schedule[]>([])
+export default function DayDetailModal({ isOpen, onClose, selectedDate, onScheduleDeleted, schedules, inOutData }: DayDetailModalProps) {
+  const [daySchedules, setDaySchedules] = useState<Schedule[]>([])
   const [inboundRecords, setInboundRecords] = useState<InOutRecord[]>([])
   const [outboundRecords, setOutboundRecords] = useState<InOutRecord[]>([])
   const [activeTab, setActiveTab] = useState<"schedule" | "inbound" | "outbound">("schedule")
@@ -27,23 +26,22 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
   useEffect(() => {
     if (isOpen && selectedDate) {
       setActiveTab("schedule") // Reset tab to default
-      // const daySchedules = scheduleService.getSchedulesByDate(selectedDate) // Removed for Spring backend integration
-      const daySchedules = mockSchedules.filter((s) => s.date === selectedDate)
-      setSchedules(daySchedules)
+      const filteredSchedules = schedules.filter((s) => s.date === selectedDate)
+      setDaySchedules(filteredSchedules)
 
       // Filter In/Out records for the selected date
-      const dayInOutRecords = mockInOutData.filter((record) => record.date === selectedDate)
+      const dayInOutRecords = inOutData.filter((record) => record.date === selectedDate)
       setInboundRecords(dayInOutRecords.filter((r) => r.type === "inbound"))
       setOutboundRecords(dayInOutRecords.filter((r) => r.type === "outbound"))
     }
-  }, [isOpen, selectedDate])
+  }, [isOpen, selectedDate, schedules, inOutData])
 
   const handleDeleteSchedule = (id: string) => {
     if (confirm("이 일정을 삭제하시겠습니까?")) {
-      // scheduleService.deleteSchedule(id) // Removed for Spring backend integration
-      const updatedSchedules = schedules.filter((schedule) => schedule.id !== id)
-      setSchedules(updatedSchedules)
-      onScheduleDeleted()
+      // This should ideally call a service to delete and then trigger a refresh via onScheduleDeleted
+      const updatedSchedules = daySchedules.filter((schedule) => schedule.id !== id)
+      setDaySchedules(updatedSchedules)
+      onScheduleDeleted() // Notify parent to refetch all schedules
     }
   }
 
@@ -152,7 +150,7 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
               }`}
               onClick={() => setActiveTab("schedule")}
             >
-              일정 ({schedules.length})
+              일정 ({daySchedules.length})
             </button>
             <button
               className={`px-4 py-2 text-sm font-medium border-b-2 ${
@@ -180,13 +178,13 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
         <CardContent className="overflow-y-auto flex-grow">
           {activeTab === "schedule" && (
             <div className="space-y-4">
-              {schedules.length === 0 ? (
+              {daySchedules.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                   <p>등록된 일정이 없습니다.</p>
                 </div>
               ) : (
-                schedules.map((schedule) => (
+                daySchedules.map((schedule) => (
                   <div key={schedule.id} className="border rounded-lg p-4 hover:bg-gray-50">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

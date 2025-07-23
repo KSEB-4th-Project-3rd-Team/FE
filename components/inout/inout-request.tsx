@@ -6,13 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Check, X } from "lucide-react"
-import { InOutRequest, mockInOutRequests } from "@/components/utils"
+import { InOutRequest } from "@/components/utils"
 import { CustomPagination } from "@/components/ui/custom-pagination"
 
 type DisplayUnit = "개수" | "set"
 
-export default function InOutRequestPage() {
-  const [requests, setRequests] = useState<InOutRequest[]>([])
+export default function InOutRequestPage({ requests, setRequests }: { requests: InOutRequest[], setRequests: React.Dispatch<React.SetStateAction<InOutRequest[]>> }) {
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null)
   const [displayUnit, setDisplayUnit] = useState<DisplayUnit>('set')
   const [selectedRequest, setSelectedRequest] = useState<InOutRequest | null>(null)
@@ -22,10 +21,6 @@ export default function InOutRequestPage() {
 
   const itemsPerPage = 5; // 페이지당 5개 항목
   const SET_QUANTITY = 14
-
-  useEffect(() => {
-    setRequests(mockInOutRequests)
-  }, [])
 
   const showNotification = (message: string, type: "success" | "error" = "success") => {
     setNotification({ message, type })

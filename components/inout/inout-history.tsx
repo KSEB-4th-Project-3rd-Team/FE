@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Search, Filter, Package, TruckIcon, BarChart3, X } from "lucide-react"
-import { InOutRecord, mockInOutData } from "@/components/utils"
+import { InOutRecord } from "@/components/utils"
 import { Separator } from "@/components/ui/separator"
 
 type DisplayUnit = "개수" | "set"
@@ -25,7 +25,7 @@ interface RegistrationItem {
   type?: "inbound" | "outbound";
 }
 
-export default function InOutHistory() {
+export default function InOutHistory({ data }: { data: InOutRecord[] }) {
   const [filters, setFilters] = useState({
     type: "all",
     productName: "",
@@ -45,7 +45,7 @@ export default function InOutHistory() {
   const itemsPerPage = 10
   const SET_QUANTITY = 14
 
-  const historyData: InOutRecord[] = mockInOutData
+  const historyData: InOutRecord[] = data
 
   const handleFilterChange = (field: string, value: string) => {
     setFilters((prev) => ({

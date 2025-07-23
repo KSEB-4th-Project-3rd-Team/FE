@@ -8,11 +8,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Package, Search, Filter, BarChart3, TrendingUp, TrendingDown } from "lucide-react"
 import { CustomPagination } from "@/components/ui/custom-pagination"
-import { InventoryItem, mockInventoryData } from "@/components/utils"
+import { InventoryItem } from "@/components/utils"
 
 type DisplayUnit = "개수" | "set"
 
-export default function InventoryManagement() {
+export default function InventoryManagement({ data }: { data: InventoryItem[] }) {
   const [searchFilters, setSearchFilters] = useState({
     name: "",
     specification: "",
@@ -25,8 +25,8 @@ export default function InventoryManagement() {
   const itemsPerPage = 10
   const SET_QUANTITY = 14
 
-  // 더미 재고 데이터
-const inventoryData: InventoryItem[] = mockInventoryData;
+  // 재고 데이터
+const inventoryData: InventoryItem[] = data;
 
   const handleFilterChange = (field: string, value: string) => {
     setSearchFilters((prev) => ({

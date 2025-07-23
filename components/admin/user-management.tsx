@@ -48,9 +48,9 @@ export default function UserManagement() {
   }, [])
 
   const loadUsers = () => {
-    // 더미 사용자 데이터
-    const dummyUsers: User[] = []
-    setUsers(dummyUsers)
+    // TODO: Fetch users from API
+    // const fetchedUsers = await fetchUsers();
+    // setUsers(fetchedUsers)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
