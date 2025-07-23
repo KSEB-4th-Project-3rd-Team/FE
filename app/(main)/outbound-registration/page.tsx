@@ -1,28 +1,47 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import OutboundForm from "@/components/forms/outbound-form"
 import InOutHistoryTable from "@/components/inout/inout-history-table"
 import { Plus } from "lucide-react"
-import { InOutRecord, InventoryItem } from "@/components/utils"
+import { useData } from "@/contexts/data-context"
+import { createOutboundOrder } from "@/lib/api"
+import { toast } from "sonner"
+import InOutHistoryTableSkeleton from "@/components/inout/inout-history-table-skeleton"
+import ErrorMessage from "@/components/ui/error-message"
 
 export default function OutboundRegistrationPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [inOutData, setInOutData] = useState<InOutRecord[]>([])
-  const [inventoryData, setInventoryData] = useState<InventoryItem[]>([])
+  const { inOutData, inventoryData, loading, error, reloadData } = useData()
 
-  useEffect(() => {
-    // TODO: Fetch in-out and inventory data from API
-    // setInOutData(fetchedInOutData);
-    // setInventoryData(fetchedInventoryData);
-  }, [])
+  if (loading) return <InOutHistoryTableSkeleton />
+  if (error) return <ErrorMessage message={error} onRetry={reloadData} />
 
-  const handleFormSubmit = (formData: unknown) => {
-    console.log("Outbound data submitted:", formData)
-    // 여기에 실제 데이터 전송 로직 추가
-    setIsModalOpen(false)
+  const handleFormSubmit = async (formData: any) => {
+    try {
+      const selectedItem = inventoryData.find(item => item.name === formData.productName);
+      if (!selectedItem) {
+        throw new Error("Selected product not found in inventory.");
+      }
+
+      const orderData = {
+        type: 'OUTBOUND' as const,
+        itemId: selectedItem.id,
+        quantity: Number(formData.quantity),
+        companyName: formData.client, // In outbound, it's 'client'
+        notes: formData.notes,
+      };
+      
+      await createOutboundOrder(orderData);
+      toast.success("신규 출고가 성공적으로 등록되었습니다.");
+      reloadData();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Failed to submit outbound order:", error);
+      toast.error("출고 등록에 실패했습니다.");
+    }
   }
 
   return (
@@ -50,8 +69,7 @@ export default function OutboundRegistrationPage() {
       </div>
       <InOutHistoryTable 
         historyType="outbound" 
-        data={inOutData}
-        setData={setInOutData}
+        data={inOutData.filter(d => d.type === 'OUTBOUND')}
       />
     </div>
   )

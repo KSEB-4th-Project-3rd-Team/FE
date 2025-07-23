@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, Trash2 } from "lucide-react"
 import { CustomPagination } from "@/components/ui/custom-pagination"
 
+import { createCompany, updateCompany, deleteCompany } from "@/lib/api"
+
 export type Company = {
   id: string
   code: string
@@ -50,16 +52,21 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
     type: "납품처" as "매입처" | "납품처",
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // TODO: Implement API call for create/update
-    if (editingCompany) {
-      // await updateCompany(formData);
-    } else {
-      // await createCompany(formData);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingCompany) {
+        await updateCompany(editingCompany.id, formData);
+      } else {
+        const { id, ...companyData } = formData;
+        await createCompany(companyData);
+      }
+      reloadCompanies();
+      resetForm();
+    } catch (error) {
+      console.error("Failed to save company:", error);
+      // Optionally, show an error message to the user
     }
-    reloadCompanies();
-    resetForm()
   }
 
   const resetForm = () => {
@@ -76,12 +83,16 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
     setIsModalOpen(true);
   };
 
-  const handleDelete = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation(); // 행 클릭 이벤트 전파 방���
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); // 행 클릭 이벤트 전파 방지
     if (confirm("이 거래처를 삭제하시겠습니까?")) {
-      // TODO: Implement API call for delete
-      // await deleteCompany(id);
-      reloadCompanies();
+      try {
+        await deleteCompany(id);
+        reloadCompanies();
+      } catch (error) {
+        console.error("Failed to delete company:", error);
+        // Optionally, show an error message to the user
+      }
     }
   }
 

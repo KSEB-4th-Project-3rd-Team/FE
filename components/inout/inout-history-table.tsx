@@ -12,6 +12,7 @@ import { Search, Filter, Package } from "lucide-react"
 import { CustomPagination } from "@/components/ui/custom-pagination"
 import { InOutRecord } from "@/components/utils"
 import { Separator } from "@/components/ui/separator"
+import { updateInOutRecord } from "@/lib/api"
 
 type DisplayUnit = "개수" | "set"
 type InOutStatus = "완료" | "진행 중" | "예약";
@@ -78,13 +79,18 @@ export default function InOutHistoryTable({ historyType, data, setData: reloadDa
     setIsModalOpen(true);
   }
 
-  const handleFormSubmit = () => {
+  const handleFormSubmit = async () => {
     if (!selectedRecord) return;
-    // TODO: Implement API call for update
-    // await updateInOutRecord(formData);
-    reloadData();
-    setIsModalOpen(false);
-    setSelectedRecord(null);
+    try {
+      await updateInOutRecord(selectedRecord.id, formData);
+      reloadData();
+      setIsModalOpen(false);
+      setSelectedRecord(null);
+      // Optionally, add a success toast message here
+    } catch (error) {
+      console.error("Failed to update record:", error);
+      // Optionally, add an error toast message here
+    }
   };
 
   const filteredHistory = useMemo(() => historyData.filter((item) => {

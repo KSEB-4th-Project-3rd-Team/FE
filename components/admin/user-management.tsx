@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Edit, Trash2, Users, Shield, UserCheck, UserX } from "lucide-react"
 
 import { CustomPagination } from "@/components/ui/custom-pagination"
+import { createUser, updateUser, deleteUser } from "@/lib/api"
 
 interface User {
   id: string
@@ -42,16 +43,21 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
     permissions: [] as string[],
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement API call for create/update
-    if (editingUser) {
-      // await updateUser(formData);
-    } else {
-      // await createUser(formData);
+    try {
+      if (editingUser) {
+        const { password, ...userData } = formData; // Don't send password if not changed
+        await updateUser(editingUser.id, userData);
+      } else {
+        await createUser(formData);
+      }
+      reloadUsers();
+      resetForm();
+    } catch (error) {
+      console.error("Failed to save user:", error);
+      // Optionally, show an error message
     }
-    reloadUsers();
-    resetForm()
   }
 
   const resetForm = () => {
@@ -82,18 +88,32 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
     setIsModalOpen(true)
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm("이 사용자를 삭제하시겠습니까?")) {
-      // TODO: Implement API call for delete
-      // await deleteUser(id);
-      reloadUsers();
+      try {
+        await deleteUser(id);
+        reloadUsers();
+      } catch (error) {
+        console.error("Failed to delete user:", error);
+        // Optionally, show an error message
+      }
     }
   }
 
-  const toggleUserStatus = (id: string) => {
-    // TODO: Implement API call for status toggle
-    // await updateUserStatus(id);
-    reloadUsers();
+  const toggleUserStatus = async (id: string) => {
+    const user = users.find(u => u.id === id);
+    if (!user) return;
+
+    const newStatus = user.status === 'active' ? 'inactive' : 'active';
+    if (confirm(`이 사용자를 ${newStatus === 'active' ? '활성' : '비활성'} 상태로 변경하시겠습니까?`)) {
+      try {
+        await updateUser(id, { status: newStatus });
+        reloadUsers();
+      } catch (error) {
+        console.error("Failed to toggle user status:", error);
+        // Optionally, show an error message
+      }
+    }
   }
 
   const filteredUsers = users.filter((user) => {

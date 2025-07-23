@@ -17,8 +17,11 @@ import { Line, XAxis, YAxis, CartesianGrid, LineChart, Pie, PieChart, Cell, Sect
 import { Package, CheckCircle, AlertTriangle, XCircle, Archive, Truck, Clock, CalendarCheck, TrendingUp, TrendingDown, Percent, CalendarIcon, Bot, Activity, AlertCircle, Building, DollarSign, ShoppingCart } from 'lucide-react';
 import { CustomPagination } from '@/components/ui/custom-pagination';
 
+import { useData } from '@/contexts/data-context';
+
 // Helper function to format numbers with commas
 const formatNumber = (num: number) => num.toLocaleString();
+
 
 // --- Data-related Types ---
 type AmrStatus = "moving" | "charging" | "idle" | "error";
@@ -33,10 +36,9 @@ type MetricItem = {
 };
 
 export function UnifiedDashboard() {
-  const [inventoryData, setInventoryData] = useState<InventoryItem[]>([]);
-  const [inOutData, setInOutData] = useState<InOutRecord[]>([]);
-  const [amrData, setAmrData] = useState<Amr[]>([]);
-  const [priceData, setPriceData] = useState<Record<string, number>>({});
+  const { inventoryData, inOutData, loading, error } = useData();
+  const [amrData, setAmrData] = useState<Amr[]>([]); // Keep this until AMR data is in context
+  const [priceData, setPriceData] = useState<Record<string, number>>({}); // Keep this until price data is in context
   const [isCollapsed, setIsCollapsed] = React.useState(false)
   const [selectedCompany, setSelectedCompany] = React.useState<string | null>(null)
   const [selectedItem, setSelectedItem] = React.useState<string | null>(null)
@@ -53,14 +55,6 @@ export function UnifiedDashboard() {
   const [salesFromMonth, setSalesFromMonth] = useState(startOfMonth(subMonths(new Date(), 1)));
   const [salesToMonth, setSalesToMonth] = useState(startOfMonth(new Date()));
   const [activePieIndex, setActivePieIndex] = useState(0);
-
-  useEffect(() => {
-    // TODO: Fetch data from API and update the state
-    // setInventoryData(fetchedInventoryData);
-    // setInOutData(fetchedInOutData);
-    // setAmrData(fetchedAmrData);
-    // setPriceData(fetchedPriceData);
-  }, []);
 
   useEffect(() => {
     const today = new Date();
@@ -491,9 +485,17 @@ export function UnifiedDashboard() {
                         </Popover>
                     </div>
                 </div>
-                <ChartContainer config={{ inbound: { label: "입고", color: "hsl(var(--chart-2))" }, outbound: { label: "출고", color: "hsl(var(--chart-1))" }, }} className="h-[300px] w-full">
-                    <LineChart data={inOutAnalysis.chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}><CartesianGrid vertical={false} /><XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={xAxisTickFormatter} /><YAxis /><ChartTooltip content={ChartTooltipContent} /><ChartLegend content={ChartLegendContent} /><Line type="monotone" dataKey="inbound" stroke="var(--color-inbound)" strokeWidth={2} dot={false} name="입고" /><Line type="monotone" dataKey="outbound" stroke="var(--color-outbound)" strokeWidth={2} dot={false} name="출고" /></LineChart>
-                </ChartContainer>
+                <div className="h-[300px] w-full">
+                  {inOutAnalysis.chartData.length > 0 ? (
+                    <ChartContainer config={{ inbound: { label: "입고", color: "hsl(var(--chart-2))" }, outbound: { label: "출고", color: "hsl(var(--chart-1))" }, }} className="h-full w-full">
+                        <LineChart data={inOutAnalysis.chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}><CartesianGrid vertical={false} /><XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} tickFormatter={xAxisTickFormatter} /><YAxis /><ChartTooltip content={ChartTooltipContent} /><ChartLegend content={ChartLegendContent} /><Line type="monotone" dataKey="inbound" stroke="var(--color-inbound)" strokeWidth={2} dot={false} name="입고" /><Line type="monotone" dataKey="outbound" stroke="var(--color-outbound)" strokeWidth={2} dot={false} name="출고" /></LineChart>
+                    </ChartContainer>
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-gray-500">
+                      분석할 데이터가 없습니다.
+                    </div>
+                  )}
+                </div>
             </AccordionContent>
         </AccordionItem>
 
@@ -507,14 +509,20 @@ export function UnifiedDashboard() {
                         ))}
                     </div>
                     <div className="h-[200px]">
-                        <ChartContainer config={{
-                            moving: { label: '이동 중', color: 'hsl(var(--chart-1))' },
-                            charging: { label: '충전 중', color: 'hsl(var(--chart-2))' },
-                            idle: { label: '대기 중', color: 'hsl(var(--chart-3))' },
-                            error: { label: '오류', color: 'hsl(var(--chart-4))' }
-                        }} className="h-full w-full">
-                            <PieChart><ChartTooltip content={ChartTooltipContent} /><Pie data={amrAnalysis.chartData} dataKey="value" nameKey="displayName" innerRadius={60} outerRadius={80} paddingAngle={5}>{amrAnalysis.chartData.map((entry) => (<Cell key={`cell-${entry.name}`} fill={entry.fill} />))}</Pie><ChartLegend content={ChartLegendContent} /></PieChart>
-                        </ChartContainer>
+                        {amrAnalysis.chartData.length > 0 ? (
+                          <ChartContainer config={{
+                              moving: { label: '이동 중', color: 'hsl(var(--chart-1))' },
+                              charging: { label: '충전 중', color: 'hsl(var(--chart-2))' },
+                              idle: { label: '대기 중', color: 'hsl(var(--chart-3))' },
+                              error: { label: '오류', color: 'hsl(var(--chart-4))' }
+                          }} className="h-full w-full">
+                              <PieChart><ChartTooltip content={ChartTooltipContent} /><Pie data={amrAnalysis.chartData} dataKey="value" nameKey="displayName" innerRadius={60} outerRadius={80} paddingAngle={5}>{amrAnalysis.chartData.map((entry) => (<Cell key={`cell-${entry.name}`} fill={entry.fill} />))}</Pie><ChartLegend content={ChartLegendContent} /></PieChart>
+                          </ChartContainer>
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center text-gray-500">
+                            데이터가 없습니다.
+                          </div>
+                        )}
                     </div>
                 </div>
             </AccordionContent>
@@ -555,9 +563,15 @@ export function UnifiedDashboard() {
                         <CardTitle>매출 추이 (금액 및 건수)</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <ChartContainer config={{ amount: { label: "판매 금액", color: "hsl(var(--chart-1))" }, count: { label: "판매 건수", color: "hsl(var(--chart-2))" } }} className="h-[300px] w-full">
-                            <LineChart data={salesAnalysis.salesTrend} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" tickFormatter={salesXAxisTickFormatter} /><YAxis yAxisId="left" label={{ value: '금액(만 원)', angle: -90, position: 'insideLeft' }} /><YAxis yAxisId="right" orientation="right" label={{ value: '건수', angle: -90, position: 'insideRight' }} allowDecimals={false} /><ChartTooltip content={ChartTooltipContent} /><ChartLegend content={ChartLegendContent} /><Line yAxisId="left" type="monotone" dataKey="amount" stroke="var(--color-amount)" name="판매 금액" /><Line yAxisId="right" type="monotone" dataKey="count" stroke="var(--color-count)" name="판매 건수" /></LineChart>
-                        </ChartContainer>
+                        {salesAnalysis.salesTrend.length > 0 ? (
+                          <ChartContainer config={{ amount: { label: "판매 금액", color: "hsl(var(--chart-1))" }, count: { label: "판매 건수", color: "hsl(var(--chart-2))" } }} className="h-[300px] w-full">
+                              <LineChart data={salesAnalysis.salesTrend} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" tickFormatter={salesXAxisTickFormatter} /><YAxis yAxisId="left" label={{ value: '금액(만 원)', angle: -90, position: 'insideLeft' }} /><YAxis yAxisId="right" orientation="right" label={{ value: '건수', angle: -90, position: 'insideRight' }} allowDecimals={false} /><ChartTooltip content={ChartTooltipContent} /><ChartLegend content={ChartLegendContent} /><Line yAxisId="left" type="monotone" dataKey="amount" stroke="var(--color-amount)" name="판매 금액" /><Line yAxisId="right" type="monotone" dataKey="count" stroke="var(--color-count)" name="판매 건수" /></LineChart>
+                          </ChartContainer>
+                        ) : (
+                          <div className="h-[300px] w-full flex items-center justify-center text-gray-500">
+                            데이터가 없습니다.
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </TabsContent>
@@ -567,25 +581,31 @@ export function UnifiedDashboard() {
                         <CardTitle>거래처별 납품 비율 (건수)</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <ChartContainer config={{ count: { label: "납품 건수" } }} className="h-[300px] w-full">
-                            <PieChart>
-                                <Pie
-                                    activeIndex={activePieIndex}
-                                    activeShape={renderActiveShape}
-                                    data={salesAnalysis.companyPieChartData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={80}
-                                    outerRadius={110}
-                                    dataKey="count"
-                                    onMouseEnter={onPieEnter}
-                                >
-                                    {salesAnalysis.companyPieChartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={`hsl(var(--chart-${index + 1}))`} />
-                                    ))}
-                                </Pie>
-                            </PieChart>
-                        </ChartContainer>
+                        {salesAnalysis.companyPieChartData.length > 0 ? (
+                          <ChartContainer config={{ count: { label: "납품 건수" } }} className="h-[300px] w-full">
+                              <PieChart>
+                                  <Pie
+                                      activeIndex={activePieIndex}
+                                      activeShape={renderActiveShape}
+                                      data={salesAnalysis.companyPieChartData}
+                                      cx="50%"
+                                      cy="50%"
+                                      innerRadius={80}
+                                      outerRadius={110}
+                                      dataKey="count"
+                                      onMouseEnter={onPieEnter}
+                                  >
+                                      {salesAnalysis.companyPieChartData.map((entry, index) => (
+                                          <Cell key={`cell-${index}`} fill={`hsl(var(--chart-${index + 1}))`} />
+                                      ))}
+                                  </Pie>
+                              </PieChart>
+                          </ChartContainer>
+                        ) : (
+                          <div className="h-[300px] w-full flex items-center justify-center text-gray-500">
+                            데이터가 없습니다.
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   </TabsContent>

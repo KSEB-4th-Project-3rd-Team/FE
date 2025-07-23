@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, Trash2 } from "lucide-react"
 
+import { createItem, updateItem, deleteItem } from "@/lib/api"
+
 export type Item = {
   id: string
   code: string
@@ -36,16 +38,21 @@ export default function ItemList({ items, setItems: reloadItems }: { items: Item
     code: "", name: "", group: "", specification: "", barcode: "", inboundPrice: 0, outboundPrice: 0, notes: "",
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement API call for create/update
-    if (editingItem) {
-      // await updateItem(formData);
-    } else {
-      // await createItem(formData);
+    try {
+      if (editingItem) {
+        await updateItem(editingItem.id, formData);
+      } else {
+        const { id, ...itemData } = formData;
+        await createItem(itemData);
+      }
+      reloadItems();
+      resetForm();
+    } catch (error) {
+      console.error("Failed to save item:", error);
+      // Optionally, show an error message to the user
     }
-    reloadItems();
-    resetForm()
   }
 
   const resetForm = () => {
@@ -60,12 +67,16 @@ export default function ItemList({ items, setItems: reloadItems }: { items: Item
     setIsModalOpen(true);
   };
 
-  const handleDelete = (e: React.MouseEvent, id: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (confirm("이 품목을 삭제하시겠습니까?")) {
-      // TODO: Implement API call for delete
-      // await deleteItem(id);
-      reloadItems();
+      try {
+        await deleteItem(id);
+        reloadItems();
+      } catch (error) {
+        console.error("Failed to delete item:", error);
+        // Optionally, show an error message to the user
+      }
     }
   }
 
