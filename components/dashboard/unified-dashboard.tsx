@@ -430,7 +430,7 @@ export function UnifiedDashboard() {
             </div>
             <div className="mt-4">{renderDetailTable(activeInventoryDetail, inventoryMetrics as MetricItem[], [
                 { key: 'name', label: '상품명', className: 'w-[30%] text-left' },
-                { key: 'specification', label: '규격', className: 'w-[20%] text-left' },
+                { key: 'specification', label: '규격', className: 'w-[15%] text-left' },
                 { key: 'quantity', label: '현재 수량', className: 'w-[15%] text-center' },
                 { key: 'location', label: '구역', className: 'w-[20%] text-center' },
                 { key: 'status', label: '상태', className: 'w-[15%] text-center' },
@@ -452,7 +452,7 @@ export function UnifiedDashboard() {
             <div className="mt-4">{renderDetailTable(activeWorkDetail, workStatusMetrics as MetricItem[], [
                 { key: 'type', label: '유형', className: 'w-[10%] text-center', render: (item) => item.type === 'inbound' ? '입고' : '출고' },
                 { key: 'productName', label: '상품명', className: 'w-[25%] text-left truncate' },
-                { key: 'quantity', label: '수량', className: 'w-[15%] text-center' },
+                { key: 'quantity', label: '수량', className: 'w-[30%] text-center' },
                 { key: 'company', label: '거래처', className: 'w-[15%] text-left' },
                 { key: 'status', label: '상태', className: 'w-[15%] text-center' },
                 { key: 'date', label: '일자', className: 'w-[20%] text-center', render: (item) => (
@@ -617,8 +617,8 @@ export function UnifiedDashboard() {
                                                         <TableHeader>
                                                             <TableRow>
                                                                 <TableHead className="w-[15%]">유형</TableHead>
-                                                                <TableHead className="w-[15%]">품목</TableHead>
-                                                                <TableHead className="w-[15%] text-center pr-12">수량</TableHead>
+                                                                <TableHead className="w-[27%]">품목</TableHead>
+                                                                <TableHead className="w-[12%] text-center pr-12">수량</TableHead>
                                                                 <TableHead className="w-[20%] text-center pr-12">금액</TableHead>
                                                                 <TableHead className="w-[15%] text-center">일시</TableHead>
                                                             </TableRow>
