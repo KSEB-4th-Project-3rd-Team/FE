@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { X, Calendar, MapPin, Clock, Trash2, Package, TruckIcon } from "lucide-react"
-// import { scheduleService, type Schedule } from "@/lib/schedule" // Removed for Spring backend integration
 import type { Schedule } from "@/app/(main)/schedule/page"
+import { mockInOutData, type InOutRecord } from "@/components/utils"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 interface DayDetailModalProps {
   isOpen: boolean
@@ -19,13 +20,21 @@ const mockSchedules: Schedule[] = []
 
 export default function DayDetailModal({ isOpen, onClose, selectedDate, onScheduleDeleted }: DayDetailModalProps) {
   const [schedules, setSchedules] = useState<Schedule[]>([])
+  const [inboundRecords, setInboundRecords] = useState<InOutRecord[]>([])
+  const [outboundRecords, setOutboundRecords] = useState<InOutRecord[]>([])
   const [activeTab, setActiveTab] = useState<"schedule" | "inbound" | "outbound">("schedule")
 
   useEffect(() => {
     if (isOpen && selectedDate) {
+      setActiveTab("schedule") // Reset tab to default
       // const daySchedules = scheduleService.getSchedulesByDate(selectedDate) // Removed for Spring backend integration
       const daySchedules = mockSchedules.filter((s) => s.date === selectedDate)
       setSchedules(daySchedules)
+
+      // Filter In/Out records for the selected date
+      const dayInOutRecords = mockInOutData.filter((record) => record.date === selectedDate)
+      setInboundRecords(dayInOutRecords.filter((r) => r.type === "inbound"))
+      setOutboundRecords(dayInOutRecords.filter((r) => r.type === "outbound"))
     }
   }, [isOpen, selectedDate])
 
@@ -77,11 +86,51 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
     }
   }
 
+  const renderHistoryTable = (records: InOutRecord[], type: "inbound" | "outbound") => {
+    if (records.length === 0) {
+      return (
+        <div className="text-center py-8 text-gray-500">
+          {type === "inbound" ? (
+            <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          ) : (
+            <TruckIcon className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          )}
+          <p>해당 날짜에 {type === "inbound" ? "입고" : "출고"} 내역이 없습니다.</p>
+        </div>
+      )
+    }
+
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[15%]">시간</TableHead>
+            <TableHead className="w-[25%]">품목명</TableHead>
+            <TableHead className="w-[20%] text-center">수량</TableHead>
+            <TableHead className="w-[20%]">거래처</TableHead>
+            <TableHead className="w-[20%]">상태</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {records.map((record) => (
+            <TableRow key={record.id}>
+              <TableCell>{record.time}</TableCell>
+              <TableCell>{record.productName}</TableCell>
+              <TableCell className="text-center">{record.quantity}</TableCell>
+              <TableCell>{record.company}</TableCell>
+              <TableCell>{record.status}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    )
+  }
+
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden">
+      <Card className="w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden flex flex-col">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -103,7 +152,7 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
               }`}
               onClick={() => setActiveTab("schedule")}
             >
-              일정
+              일정 ({schedules.length})
             </button>
             <button
               className={`px-4 py-2 text-sm font-medium border-b-2 ${
@@ -113,7 +162,7 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
               }`}
               onClick={() => setActiveTab("inbound")}
             >
-              입고 내역
+              입고 내역 ({inboundRecords.length})
             </button>
             <button
               className={`px-4 py-2 text-sm font-medium border-b-2 ${
@@ -123,12 +172,12 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
               }`}
               onClick={() => setActiveTab("outbound")}
             >
-              출고 내역
+              출고 내역 ({outboundRecords.length})
             </button>
           </div>
         </CardHeader>
 
-        <CardContent className="overflow-y-auto max-h-96">
+        <CardContent className="overflow-y-auto flex-grow">
           {activeTab === "schedule" && (
             <div className="space-y-4">
               {schedules.length === 0 ? (
@@ -181,25 +230,9 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
             </div>
           )}
 
-          {activeTab === "inbound" && (
-            <div className="space-y-4">
-              <div className="text-center py-8 text-gray-500">
-                <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>입고 내역 데이터를 불러오는 중...</p>
-                <p className="text-xs mt-2">백엔드 API 연결 후 실제 데이터가 표시됩니다.</p>
-              </div>
-            </div>
-          )}
+          {activeTab === "inbound" && renderHistoryTable(inboundRecords, "inbound")}
 
-          {activeTab === "outbound" && (
-            <div className="space-y-4">
-              <div className="text-center py-8 text-gray-500">
-                <TruckIcon className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>출고 내역 데이터를 불러오는 중...</p>
-                <p className="text-xs mt-2">백엔드 API 연결 후 실제 데이터가 표시됩니다.</p>
-              </div>
-            </div>
-          )}
+          {activeTab === "outbound" && renderHistoryTable(outboundRecords, "outbound")}
         </CardContent>
       </Card>
     </div>

@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Edit, Trash2, Users, Shield, UserCheck, UserX } from "lucide-react"
 
+import { CustomPagination } from "@/components/ui/custom-pagination"
+
 interface User {
   id: string
   username: string
@@ -29,6 +31,8 @@ export default function UserManagement() {
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const usersPerPage = 10
   const [formData, setFormData] = useState({
     username: "",
     fullName: "",
@@ -121,6 +125,10 @@ export default function UserManagement() {
 
     return matchesSearch && matchesRole && matchesStatus
   })
+
+  // 페이지네이션 로직
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage)
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage)
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
@@ -278,7 +286,7 @@ export default function UserManagement() {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
+                {paginatedUsers.map((user) => (
                   <tr key={user.id} className="border-b hover:bg-gray-50">
                     <td className="p-3">
                       <div>
@@ -342,6 +350,15 @@ export default function UserManagement() {
             </table>
             {filteredUsers.length === 0 && <div className="text-center py-8 text-gray-500">검색 결과가 없습니다.</div>}
           </div>
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-4">
+              <CustomPagination
+                totalPages={totalPages}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

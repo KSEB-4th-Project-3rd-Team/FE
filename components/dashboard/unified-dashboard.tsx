@@ -47,20 +47,26 @@ const UnifiedDashboard = () => {
   const [activeWorkDetail, setActiveWorkDetail] = useState<string | null>(null);
   
   // Date states for InOut Analysis
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({ from: subDays(new Date(), 6), to: new Date() });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [filterType, setFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
-  const [fromMonth, setFromMonth] = useState(startOfMonth(dateRange?.from || subDays(new Date(), 6)));
-  const [toMonth, setToMonth] = useState(startOfMonth(dateRange?.to || new Date()));
+  const [fromMonth, setFromMonth] = useState(startOfMonth(subDays(new Date(), 6)));
+  const [toMonth, setToMonth] = useState(startOfMonth(new Date()));
 
   // Date states for Sales Analysis
-  const [salesDateRange, setSalesDateRange] = useState<DateRange | undefined>({ from: subDays(new Date(), 6), to: new Date() });
+  const [salesDateRange, setSalesDateRange] = useState<DateRange | undefined>();
   const [salesFilterType, setSalesFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
-  const [salesFromMonth, setSalesFromMonth] = useState(startOfMonth(salesDateRange?.from || subDays(new Date(), 6)));
-  const [salesToMonth, setSalesToMonth] = useState(startOfMonth(salesDateRange?.to || new Date()));
+  const [salesFromMonth, setSalesFromMonth] = useState(startOfMonth(subDays(new Date(), 6)));
+  const [salesToMonth, setSalesToMonth] = useState(startOfMonth(new Date()));
 
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [activePieIndex, setActivePieIndex] = useState(0);
   const [workCurrentPage, setWorkCurrentPage] = useState(1);
+
+  useEffect(() => {
+    const today = new Date();
+    setDateRange({ from: subDays(today, 6), to: today });
+    setSalesDateRange({ from: subDays(today, 6), to: today });
+  }, []);
 
   const onPieEnter = (_: any, index: number) => {
     setActivePieIndex(index);
@@ -404,7 +410,7 @@ const UnifiedDashboard = () => {
   return (
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
       <header className="mb-8"><h1 className="text-3xl font-bold text-gray-800">통합 대시보드</h1><p className="text-md text-gray-600 mt-1">전체 현황을 요약하고 분석합니다.</p></header>
-      <Accordion type="multiple" defaultValue={['inventory']} className="w-full space-y-4">
+      <Accordion type="multiple" defaultValue={['inventory', 'workStatus', 'inOutAnalysis', 'amrPerformance', 'salesManagement']} className="w-full space-y-4">
         
         <AccordionItem value="inventory" className="border rounded-lg bg-white shadow-sm">
           <AccordionTrigger className="p-6 font-semibold text-lg">재고 현황</AccordionTrigger>

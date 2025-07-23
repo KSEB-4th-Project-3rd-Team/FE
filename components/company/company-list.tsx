@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, Trash2 } from "lucide-react"
+import { CustomPagination } from "@/components/ui/custom-pagination"
 
 export type Company = {
   id: string
@@ -41,6 +42,8 @@ export default function CompanyList() {
     type: "전체",
   })
   const [showSearchFilters, setShowSearchFilters] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const companiesPerPage = 10
   const [formData, setFormData] = useState({
     code: "",
     name: "",
@@ -98,6 +101,13 @@ export default function CompanyList() {
     )
   })
 
+  // 페이지네이션 로직
+  const totalPages = Math.ceil(filteredCompanies.length / companiesPerPage)
+  const paginatedCompanies = filteredCompanies.slice(
+    (currentPage - 1) * companiesPerPage,
+    currentPage * companiesPerPage,
+  )
+
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="flex items-center justify-between mb-6">
@@ -153,7 +163,7 @@ export default function CompanyList() {
                 </tr>
               </thead>
               <tbody>
-                {filteredCompanies.map((company) => (
+                {paginatedCompanies.map((company) => (
                   <tr key={company.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(company)}>
                     <td className="p-3">{company.code}</td>
                     <td className="p-3 font-medium">{company.name}</td>
@@ -179,6 +189,15 @@ export default function CompanyList() {
               <div className="text-center py-8 text-gray-500">등록된 거래처가 없습니다.</div>
             )}
           </div>
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-4">
+              <CustomPagination
+                totalPages={totalPages}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

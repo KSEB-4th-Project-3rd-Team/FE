@@ -15,6 +15,7 @@ import {
   Filter,
 } from "lucide-react"
 import { useNotifications } from "@/hooks/use-notifications"
+import { CustomPagination } from "@/components/ui/custom-pagination"
 
 type NotificationType = "info" | "warning" | "error" | "success"
 type CategoryType = "system" | "inventory" | "agv" | "user"
@@ -31,6 +32,8 @@ export default function NotificationCenter() {
 
   const [typeFilter, setTypeFilter] = useState<"all" | "unread" | NotificationType>("all")
   const [categoryFilter, setCategoryFilter] = useState<"all" | CategoryType>("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const notificationsPerPage = 10
 
   const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
@@ -82,6 +85,13 @@ export default function NotificationCenter() {
     const categoryMatch = categoryFilter === "all" || notif.category === categoryFilter
     return typeMatch && categoryMatch
   })
+
+  // 페이지네이션 로직
+  const totalPages = Math.ceil(filteredNotifications.length / notificationsPerPage)
+  const paginatedNotifications = filteredNotifications.slice(
+    (currentPage - 1) * notificationsPerPage,
+    currentPage * notificationsPerPage,
+  )
 
   const typeStats = {
     info: notifications.filter((n) => n.type === "info").length,
@@ -204,14 +214,14 @@ export default function NotificationCenter() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {filteredNotifications.length === 0 ? (
+            {paginatedNotifications.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <Bell className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <p className="font-medium">표시할 알림이 없습니다.</p>
                 <p className="text-sm">필터를 조정해 보세요.</p>
               </div>
             ) : (
-              filteredNotifications.map((notification) => (
+              paginatedNotifications.map((notification) => (
                 <div
                   key={notification.id}
                   className={`p-4 rounded-lg border transition-all hover:shadow-md ${
@@ -262,6 +272,15 @@ export default function NotificationCenter() {
               ))
             )}
           </div>
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-4">
+              <CustomPagination
+                totalPages={totalPages}
+                currentPage={currentPage}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
