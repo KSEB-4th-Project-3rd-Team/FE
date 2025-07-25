@@ -134,7 +134,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600" style={{ height: "120px" }}>
             <Link href="/dashboard">
               <div className="flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity h-full">
-                <Image src="/images/smart-wms-logo.png" alt="Smart WMS Logo" width={200} height={100} className="h-full w-full object-contain filter brightness-0 invert" />
+                <Image src="/images/smart-wms-logo.png" alt="Smart WMS Logo" width={200} height={100} className="h-full w-full object-contain filter brightness-0 invert" priority />
               </div>
             </Link>
           </div>

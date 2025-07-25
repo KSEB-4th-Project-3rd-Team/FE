@@ -55,20 +55,31 @@ export const DataProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setError(null);
       const [
         companies, items, inOutData, inOutRequests, 
-        inventoryData, schedules, users
+        schedules, users
       ] = await Promise.all([
         fetchCompanies(),
         fetchItems(),
         fetchInOutData(),
         fetchInOutRequests(),
-        fetchInventoryData(),
-        fetchSchedules(),
+        (() => {
+          const today = new Date();
+          const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+          const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          const formatDateTime = (date: Date) => {
+            return date.toISOString();
+          };
+          return fetchSchedules(startDate.toISOString(), new Date(today.getFullYear(), today.getMonth() + 1, 1).toISOString());
+        })(),
         fetchUsers(),
       ]);
-      setData({ companies, items, inOutData, inOutRequests, inventoryData, schedules, users });
+      setData({ companies, items, inOutData, inOutRequests, inventoryData: [], schedules, users });
     } catch (err) {
-      setError("Failed to load initial data.");
       console.error(err);
+      if (err instanceof Error) {
+        setError(`Failed to load initial data: ${err.message}. Is the backend server running?`);
+      } else {
+        setError("Failed to load initial data. An unknown error occurred. Is the backend server running?");
+      }
     } finally {
       setLoading(false);
     }

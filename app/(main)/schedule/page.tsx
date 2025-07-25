@@ -120,7 +120,7 @@ export default function SchedulePage() {
   }
 
   if (loading) return <SchedulePageSkeleton />
-  if (error) return <ErrorMessage message={error} onRetry={loadData} />
+  if (error) return <ErrorMessage message={error} onRetry={reloadData} />
 
   return (
     <>
