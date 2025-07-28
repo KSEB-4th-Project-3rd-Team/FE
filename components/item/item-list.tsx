@@ -12,30 +12,32 @@ import { Plus, Search, Trash2 } from "lucide-react"
 import { createItem, updateItem, deleteItem } from "@/lib/api"
 
 export type Item = {
-  id: string
-  code: string
-  name: string
-  group: string
-  specification: string
-  barcode: string
-  inboundPrice: number
-  outboundPrice: number
-  notes: string
+  id: number;
+  itemCode: string;
+  itemName: string;
+  itemGroup: string;
+  spec: string;
+  unit: string;
+  unitPriceIn: number;
+  unitPriceOut: number;
+};
+
+interface ItemListProps {
+  items: Item[];
+  setItems: () => void;
 }
 
-
-
-export default function ItemList({ items, setItems: reloadItems }: { items: Item[], setItems: () => void }) {
+export default function ItemList({ items, setItems: reloadItems }: ItemListProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<Item | null>(null)
   const [searchFilters, setSearchFilters] = useState({
-    code: "", name: "", group: "", specification: "", barcode: "",
+    itemCode: "", itemName: "", itemGroup: "", spec: "",
   })
   const [showSearchFilters, setShowSearchFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
-  const [formData, setFormData] = useState({
-    code: "", name: "", group: "", specification: "", barcode: "", inboundPrice: 0, outboundPrice: 0, notes: "",
+  const [formData, setFormData] = useState<Omit<Item, 'id'> & { id?: number }> ({
+    itemCode: "", itemName: "", itemGroup: "", spec: "", unit: "", unitPriceIn: 0, unitPriceOut: 0,
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,8 +46,7 @@ export default function ItemList({ items, setItems: reloadItems }: { items: Item
       if (editingItem) {
         await updateItem(editingItem.id, formData);
       } else {
-        const { id, ...itemData } = formData;
-        await createItem(itemData);
+        await createItem(formData);
       }
       reloadItems();
       resetForm();
@@ -56,7 +57,7 @@ export default function ItemList({ items, setItems: reloadItems }: { items: Item
   }
 
   const resetForm = () => {
-    setFormData({ code: "", name: "", group: "", specification: "", barcode: "", inboundPrice: 0, outboundPrice: 0, notes: "" })
+    setFormData({ itemCode: "", itemName: "", itemGroup: "", spec: "", unit: "", unitPriceIn: 0, unitPriceOut: 0 })
     setEditingItem(null)
     setIsModalOpen(false)
   }
@@ -67,7 +68,7 @@ export default function ItemList({ items, setItems: reloadItems }: { items: Item
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
     if (confirm("이 품목을 삭제하시겠습니까?")) {
       try {
@@ -81,12 +82,16 @@ export default function ItemList({ items, setItems: reloadItems }: { items: Item
   }
 
   const filteredItems = items.filter((item) => {
+    const itemCode = item.itemCode || "";
+    const itemName = item.itemName || "";
+    const itemGroup = item.itemGroup || "";
+    const itemSpecification = item.spec || "";
+
     return (
-      item.code.toLowerCase().includes(searchFilters.code.toLowerCase()) &&
-      item.name.toLowerCase().includes(searchFilters.name.toLowerCase()) &&
-      item.group.toLowerCase().includes(searchFilters.group.toLowerCase()) &&
-      item.specification.toLowerCase().includes(searchFilters.specification.toLowerCase()) &&
-      item.barcode.toLowerCase().includes(searchFilters.barcode.toLowerCase())
+      itemCode.toLowerCase().includes(searchFilters.itemCode.toLowerCase()) &&
+      itemName.toLowerCase().includes(searchFilters.itemName.toLowerCase()) &&
+      itemGroup.toLowerCase().includes(searchFilters.itemGroup.toLowerCase()) &&
+      itemSpecification.toLowerCase().includes(searchFilters.spec.toLowerCase())
     )
   })
 
@@ -97,7 +102,7 @@ export default function ItemList({ items, setItems: reloadItems }: { items: Item
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">품목 관리</h2>
-        <Button onClick={() => { setEditingItem(null); setFormData({ code: "", name: "", group: "", specification: "", barcode: "", inboundPrice: 0, outboundPrice: 0, notes: "" }); setIsModalOpen(true); }} className="flex items-center gap-2">
+        <Button onClick={() => { setEditingItem(null); setFormData({ itemCode: "", itemName: "", itemGroup: "", spec: "", unit: "", unitPriceIn: 0, unitPriceOut: 0 }); setIsModalOpen(true); }} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
           품목 등록
         </Button>
@@ -114,12 +119,11 @@ export default function ItemList({ items, setItems: reloadItems }: { items: Item
         </CardHeader>
         <CardContent>
           {showSearchFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
-              <Input placeholder="품목코드" value={searchFilters.code} onChange={(e) => setSearchFilters(prev => ({ ...prev, code: e.target.value }))} />
-              <Input placeholder="품목명" value={searchFilters.name} onChange={(e) => setSearchFilters(prev => ({ ...prev, name: e.target.value }))} />
-              <Input placeholder="품목그룹" value={searchFilters.group} onChange={(e) => setSearchFilters(prev => ({ ...prev, group: e.target.value }))} />
-              <Input placeholder="규격" value={searchFilters.specification} onChange={(e) => setSearchFilters(prev => ({ ...prev, specification: e.target.value }))} />
-              <Input placeholder="바코드" value={searchFilters.barcode} onChange={(e) => setSearchFilters(prev => ({ ...prev, barcode: e.target.value }))} />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+              <Input placeholder="품목코드" value={searchFilters.itemCode} onChange={(e) => setSearchFilters(prev => ({ ...prev, itemCode: e.target.value }))} />
+              <Input placeholder="품목명" value={searchFilters.itemName} onChange={(e) => setSearchFilters(prev => ({ ...prev, itemName: e.target.value }))} />
+              <Input placeholder="품목그룹" value={searchFilters.itemGroup} onChange={(e) => setSearchFilters(prev => ({ ...prev, itemGroup: e.target.value }))} />
+              <Input placeholder="규격" value={searchFilters.spec} onChange={(e) => setSearchFilters(prev => ({ ...prev, spec: e.target.value }))} />
             </div>
           )}
           <div className="overflow-x-auto">
@@ -130,22 +134,22 @@ export default function ItemList({ items, setItems: reloadItems }: { items: Item
                   <th className="text-left p-3 font-semibold">품목명</th>
                   <th className="text-left p-3 font-semibold">품목그룹</th>
                   <th className="text-left p-3 font-semibold">규격</th>
-                  <th className="text-left p-3 font-semibold">바코드</th>
+                  <th className="text-left p-3 font-semibold">단위</th>
                   <th className="text-right p-3 font-semibold">입고단가</th>
                   <th className="text-right p-3 font-semibold">출고단가</th>
                   <th className="text-center p-3 font-semibold">삭제</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredItems.map((item) => (
+                {paginatedItems.map((item) => (
                   <tr key={item.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(item)}>
-                    <td className="p-3">{item.code}</td>
-                    <td className="p-3 font-medium">{item.name}</td>
-                    <td className="p-3">{item.group}</td>
-                    <td className="p-3">{item.specification}</td>
-                    <td className="p-3">{item.barcode}</td>
-                    <td className="p-3 text-right">{item.inboundPrice.toLocaleString()}원</td>
-                    <td className="p-3 text-right">{item.outboundPrice.toLocaleString()}원</td>
+                    <td className="p-3">{item.itemCode}</td>
+                    <td className="p-3 font-medium">{item.itemName}</td>
+                    <td className="p-3">{item.itemGroup}</td>
+                    <td className="p-3">{item.spec}</td>
+                    <td className="p-3">{item.unit}</td>
+                    <td className="p-3 text-right">{(item.unitPriceIn || 0).toLocaleString()}원</td>
+                    <td className="p-3 text-right">{(item.unitPriceOut || 0).toLocaleString()}원</td>
                     <td className="p-3 text-center">
                       <Button variant="ghost" size="sm" onClick={(e) => handleDelete(e, item.id)} className="text-red-600 hover:text-red-700">
                         <Trash2 className="w-4 h-4" />
@@ -196,36 +200,32 @@ export default function ItemList({ items, setItems: reloadItems }: { items: Item
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                   <div className="space-y-1">
-                    <Label htmlFor="code">품목코드 *</Label>
-                    <Input id="code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value })} required />
+                    <Label htmlFor="itemCode">품목코드 *</Label>
+                    <Input id="itemCode" name="itemCode" value={formData.itemCode} onChange={(e) => setFormData({ ...formData, itemCode: e.target.value })} required />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="name">품목명 *</Label>
-                    <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+                    <Label htmlFor="itemName">품목명 *</Label>
+                    <Input id="itemName" name="itemName" value={formData.itemName} onChange={(e) => setFormData({ ...formData, itemName: e.target.value })} required />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="group">품목그룹</Label>
-                    <Input id="group" value={formData.group} onChange={(e) => setFormData({ ...formData, group: e.target.value })} />
+                    <Label htmlFor="itemGroup">품목그룹</Label>
+                    <Input id="itemGroup" name="itemGroup" value={formData.itemGroup} onChange={(e) => setFormData({ ...formData, itemGroup: e.target.value })} />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="specification">규격</Label>
-                    <Input id="specification" value={formData.specification} onChange={(e) => setFormData({ ...formData, specification: e.target.value })} />
-                  </div>
-                  <div className="col-span-2 space-y-1">
-                    <Label htmlFor="barcode">바코드</Label>
-                    <Input id="barcode" value={formData.barcode} onChange={(e) => setFormData({ ...formData, barcode: e.target.value })} />
+                    <Label htmlFor="spec">규격</Label>
+                    <Input id="spec" name="spec" value={formData.spec} onChange={(e) => setFormData({ ...formData, spec: e.target.value })} />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="inboundPrice">입고단가</Label>
-                    <Input id="inboundPrice" type="number" value={formData.inboundPrice} onChange={(e) => setFormData({ ...formData, inboundPrice: Number(e.target.value) })} />
+                    <Label htmlFor="unit">단위</Label>
+                    <Input id="unit" name="unit" value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="outboundPrice">출고단가</Label>
-                    <Input id="outboundPrice" type="number" value={formData.outboundPrice} onChange={(e) => setFormData({ ...formData, outboundPrice: Number(e.target.value) })} />
+                    <Label htmlFor="unitPriceIn">입고단가</Label>
+                    <Input id="unitPriceIn" name="unitPriceIn" type="number" value={formData.unitPriceIn} onChange={(e) => setFormData({ ...formData, unitPriceIn: Number(e.target.value) })} />
                   </div>
-                  <div className="col-span-2 space-y-1">
-                    <Label htmlFor="notes">비고</Label>
-                    <Textarea id="notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} />
+                  <div className="space-y-1">
+                    <Label htmlFor="unitPriceOut">출고단가</Label>
+                    <Input id="unitPriceOut" name="unitPriceOut" type="number" value={formData.unitPriceOut} onChange={(e) => setFormData({ ...formData, unitPriceOut: Number(e.target.value) })} />
                   </div>
                 </div>
                 <div className="flex gap-2 pt-4">

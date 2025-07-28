@@ -20,18 +20,21 @@ import {
 import { Company } from "@/components/company/company-list"
 
 interface CompanyAutocompleteProps {
-  value: string;
-  onValueChange: (value: string) => void;
+  value: string | number;
+  onValueChange: (value: string | number) => void;
   companies: Company[];
 }
 
 export function CompanyAutocomplete({ value, onValueChange, companies }: CompanyAutocompleteProps) {
   const [open, setOpen] = React.useState(false)
 
-  const frameworks = Array.isArray(companies) ? companies.map(company => ({
-    value: company.name.toLowerCase(),
+  const companyOptions = Array.isArray(companies) ? companies.map(company => ({
+    id: company.id,
+    value: typeof company.name === 'string' ? company.name.toLowerCase() : '',
     label: company.name,
   })) : [];
+
+  const selectedCompany = companyOptions.find((company) => company.id === value || (typeof value === 'string' && company.value === value.toLowerCase()));
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -42,8 +45,8 @@ export function CompanyAutocomplete({ value, onValueChange, companies }: Company
           aria-expanded={open}
           className="w-full justify-between"
         >
-          {value
-            ? frameworks.find((framework) => framework.value === value)?.label
+          {selectedCompany
+            ? selectedCompany.label
             : "거래처를 선택하세요..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -53,22 +56,22 @@ export function CompanyAutocomplete({ value, onValueChange, companies }: Company
           <CommandInput placeholder="거래처 검색..." />
           <CommandEmpty>해당 거래처가 없습니다.</CommandEmpty>
           <CommandGroup>
-            {frameworks.map((framework) => (
+            {companyOptions.map((company) => (
               <CommandItem
-                key={framework.value}
-                value={framework.value}
+                key={company.id}
+                value={company.value}
                 onSelect={(currentValue) => {
-                  onValueChange(currentValue === value ? "" : currentValue)
+                  onValueChange(company.id === value ? "" : company.id)
                   setOpen(false)
                 }}
               >
                 <Check
                   className={cn(
                     "mr-2 h-4 w-4",
-                    value === framework.value ? "opacity-100" : "opacity-0"
+                    company.id === value ? "opacity-100" : "opacity-0"
                   )}
                 />
-                {framework.label}
+                {company.label}
               </CommandItem>
             ))}
           </CommandGroup>

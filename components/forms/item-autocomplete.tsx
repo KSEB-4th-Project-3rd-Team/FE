@@ -21,17 +21,20 @@ import { InventoryItem } from "@/components/utils"
 
 interface ItemAutocompleteProps {
   items: InventoryItem[];
-  value: string;
-  onValueChange: (value: string) => void;
+  value: string | number; // Allow string (name) or number (id)
+  onValueChange: (value: string | number) => void;
 }
 
 export function ItemAutocomplete({ items, value, onValueChange }: ItemAutocompleteProps) {
   const [open, setOpen] = React.useState(false)
 
-  const frameworks = items.map(item => ({
-    value: item.name.toLowerCase(),
-    label: item.name,
+  const itemOptions = items.map(item => ({
+    id: item.id,
+    value: item.name ? item.name.toLowerCase() : '',
+    label: item.name || '',
   }));
+
+  const selectedItem = itemOptions.find((item) => item.id === value || item.value === (value as string)?.toLowerCase());
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -42,8 +45,8 @@ export function ItemAutocomplete({ items, value, onValueChange }: ItemAutocomple
           aria-expanded={open}
           className="w-full justify-between"
         >
-          {value
-            ? frameworks.find((framework) => framework.value === value)?.label
+          {selectedItem
+            ? selectedItem.label
             : "품목을 선택하세요..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -53,22 +56,22 @@ export function ItemAutocomplete({ items, value, onValueChange }: ItemAutocomple
           <CommandInput placeholder="품목 검색..." />
           <CommandEmpty>해당 품목이 없습니다.</CommandEmpty>
           <CommandGroup>
-            {frameworks.map((framework) => (
+            {itemOptions.map((item) => (
               <CommandItem
-                key={framework.value}
-                value={framework.value}
+                key={item.id}
+                value={item.value}
                 onSelect={(currentValue) => {
-                  onValueChange(currentValue === value ? "" : currentValue)
+                  onValueChange(item.id === value ? "" : item.id) // Return ID
                   setOpen(false)
                 }}
               >
                 <Check
                   className={cn(
                     "mr-2 h-4 w-4",
-                    value === framework.value ? "opacity-100" : "opacity-0"
+                    item.id === value ? "opacity-100" : "opacity-0"
                   )}
                 />
-                {framework.label}
+                {item.label}
               </CommandItem>
             ))}
           </CommandGroup>

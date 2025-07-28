@@ -8,62 +8,73 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ItemAutocomplete } from "./item-autocomplete"
 import { CompanyAutocomplete } from "./company-autocomplete"
-import { InventoryItem } from "@/components/utils"
+import { CalendarIcon } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { format } from "date-fns"
+import { cn } from "@/components/utils"
+import { useData } from "@/contexts/data-context"
 
 interface InboundFormData {
-  productName: string;
-  quantity: string;
-  supplier: string;
+  itemId: number | null;
+  quantity: number;
+  companyId: number | null;
+  expectedDate: string;
   notes: string;
 }
 
 interface InboundFormProps {
   onSubmit: (data: InboundFormData) => void;
   onClose: () => void;
-  items: InventoryItem[];
 }
 
-export default function InboundForm({ onSubmit, onClose, items }: InboundFormProps) {
-  const [formData, setFormData] = useState({
-    productName: "",
-    quantity: "",
-    supplier: "",
+export default function InboundForm({ onSubmit, onClose }: InboundFormProps) {
+  const { items, companies } = useData();
+  const [formData, setFormData] = useState<InboundFormData>({
+    itemId: null,
+    quantity: 0,
+    companyId: null,
+    expectedDate: format(new Date(), "yyyy-MM-dd"),
     notes: "",
   })
+  const [date, setDate] = useState<Date | undefined>(new Date());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSubmit(formData)
     setFormData({
-      productName: "",
-      quantity: "",
-      supplier: "",
+      itemId: null,
+      quantity: 0,
+      companyId: null,
+      expectedDate: format(new Date(), "yyyy-MM-dd"),
       notes: "",
     })
+    setDate(new Date());
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
-  }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === "quantity" ? Number(value) : value,
+    }));
+  };
 
-  const handleValueChange = (field: string, value: string) => {
-    setFormData({
-      ...formData,
+  const handleValueChange = (field: keyof InboundFormData, value: any) => {
+    setFormData(prev => ({
+      ...prev,
       [field]: value,
-    })
-  }
+    }));
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="productName">상품명 *</Label>
+        <Label htmlFor="itemId">상품명 *</Label>
         <ItemAutocomplete
           items={items}
-          value={formData.productName}
-          onValueChange={(value) => handleValueChange("productName", value)}
+          value={formData.itemId || ""}
+          onValueChange={(value) => handleValueChange("itemId", value as number)}
         />
       </div>
 
@@ -82,11 +93,43 @@ export default function InboundForm({ onSubmit, onClose, items }: InboundFormPro
       </div>
 
       <div>
-        <Label htmlFor="supplier">거래처</Label>
+        <Label htmlFor="companyId">거래처</Label>
         <CompanyAutocomplete
-          value={formData.supplier}
-          onValueChange={(value) => handleValueChange("supplier", value)}
+          companies={companies}
+          value={formData.companyId || ""}
+          onValueChange={(value) => handleValueChange("companyId", value as number)}
         />
+      </div>
+
+      <div>
+        <Label htmlFor="expectedDate">예정일 *</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !date && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date ? format(date, "yyyy-MM-dd") : <span>날짜 선택</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={(selectedDate) => {
+                setDate(selectedDate);
+                if (selectedDate) {
+                  handleValueChange("expectedDate", format(selectedDate, "yyyy-MM-dd"));
+                }
+              }}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div>

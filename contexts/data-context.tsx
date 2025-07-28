@@ -8,8 +8,9 @@ import { Schedule } from '@/app/(main)/schedule/page';
 import { User } from '@/app/(main)/layout';
 import { 
   fetchCompanies, fetchItems, fetchInOutData, fetchInOutRequests, 
-  fetchInventoryData, fetchSchedules, fetchUsers 
+  fetchInventoryData, fetchSchedules, fetchUsers, fetchDashboardSummary 
 } from '@/lib/api';
+import { DashboardSummary } from '@/components/dashboard/unified-dashboard';
 
 interface DataContextType {
   companies: Company[];
@@ -19,6 +20,7 @@ interface DataContextType {
   inventoryData: InventoryItem[];
   schedules: Schedule[];
   users: User[];
+  dashboardSummary: DashboardSummary | null;
   loading: boolean;
   error: string | null;
   reloadData: (dataType?: keyof DataStates) => void;
@@ -32,6 +34,7 @@ interface DataStates {
   inventoryData: InventoryItem[];
   schedules: Schedule[];
   users: User[];
+  dashboardSummary: DashboardSummary | null;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -45,6 +48,7 @@ export const DataProvider: FC<{ children: ReactNode }> = ({ children }) => {
     inventoryData: [],
     schedules: [],
     users: [],
+    dashboardSummary: null,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +59,7 @@ export const DataProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setError(null);
       const [
         companies, items, inOutData, inOutRequests, 
-        schedules, users
+        schedules, users, dashboardSummary
       ] = await Promise.all([
         fetchCompanies(),
         fetchItems(),
@@ -71,8 +75,9 @@ export const DataProvider: FC<{ children: ReactNode }> = ({ children }) => {
           return fetchSchedules(startDate.toISOString(), new Date(today.getFullYear(), today.getMonth() + 1, 1).toISOString());
         })(),
         fetchUsers(),
+        fetchDashboardSummary(),
       ]);
-      setData({ companies, items, inOutData, inOutRequests, inventoryData: [], schedules, users });
+      setData({ companies, items, inOutData, inOutRequests, inventoryData: [], schedules, users, dashboardSummary });
     } catch (err) {
       console.error(err);
       if (err instanceof Error) {

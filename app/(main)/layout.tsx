@@ -20,11 +20,12 @@ import { AuthProvider, useAuth } from "@/contexts/auth-context"
 import { DataProvider, useData } from "@/contexts/data-context"
 
 export type User = {
-  id: string,
-  username: string,
-  fullName: string,
-  role: string,
-}
+  id: number;
+  username: string;
+  email: string;
+  fullName: string;
+  role: "ADMIN" | "USER";
+};
 
 type SidePanelType = "inout-status" | "amr-status" | null
 

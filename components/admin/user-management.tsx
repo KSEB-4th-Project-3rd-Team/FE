@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,38 +8,32 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Edit, Trash2, Users, Shield, UserCheck, UserX } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 import { CustomPagination } from "@/components/ui/custom-pagination"
 import { createUser, updateUser, deleteUser } from "@/lib/api"
+import { User } from "@/app/(main)/layout"
 
-interface User {
-  id: string
-  username: string
-  fullName: string
-  email: string
-  role: "admin" | "manager" | "operator" | "viewer"
-  status: "active" | "inactive" | "suspended"
-  lastLogin: string
-  createdAt: string
-  permissions: string[]
+interface UserManagementProps {
+  users: User[];
+  setUsers: () => void;
 }
 
-export default function UserManagement({ users, setUsers: reloadUsers }: { users: User[], setUsers: () => void }) {
+export default function UserManagement({ users, setUsers: reloadUsers }: UserManagementProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
-  const [roleFilter, setRoleFilter] = useState("")
-  const [statusFilter, setStatusFilter] = useState("")
+  const [roleFilter, setRoleFilter] = useState<"ADMIN" | "USER" | undefined>(undefined)
+  const [statusFilter, setStatusFilter] = useState<"ACTIVE" | "INACTIVE" | "SUSPENDED" | undefined>(undefined)
   const [currentPage, setCurrentPage] = useState(1)
   const usersPerPage = 10
   const [formData, setFormData] = useState({
     username: "",
-    fullName: "",
     email: "",
-    role: "operator" as "admin" | "manager" | "operator" | "viewer",
-    status: "active" as "active" | "inactive" | "suspended",
+    fullName: "",
+    role: "USER" as "ADMIN" | "USER",
+    status: "ACTIVE" as "ACTIVE" | "INACTIVE" | "SUSPENDED",
     password: "",
-    permissions: [] as string[],
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,12 +56,11 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
   const resetForm = () => {
     setFormData({
       username: "",
-      fullName: "",
       email: "",
-      role: "operator",
-      status: "active",
+      fullName: "",
+      role: "USER",
+      status: "ACTIVE",
       password: "",
-      permissions: [],
     })
     setEditingUser(null)
     setIsModalOpen(false)
@@ -77,21 +69,20 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
   const handleEdit = (user: User) => {
     setFormData({
       username: user.username,
-      fullName: user.fullName,
       email: user.email,
+      fullName: user.fullName,
       role: user.role,
-      status: user.status,
+      status: user.status as "ACTIVE" | "INACTIVE" | "SUSPENDED", // Assuming status exists and is one of these
       password: "",
-      permissions: user.permissions,
     })
     setEditingUser(user)
     setIsModalOpen(true)
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     if (confirm("이 사용자를 삭제하시겠습니까?")) {
       try {
-        await deleteUser(id);
+        await deleteUser(id.toString()); // API expects string ID
         reloadUsers();
       } catch (error) {
         console.error("Failed to delete user:", error);
@@ -100,14 +91,14 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
     }
   }
 
-  const toggleUserStatus = async (id: string) => {
+  const toggleUserStatus = async (id: number) => {
     const user = users.find(u => u.id === id);
     if (!user) return;
 
-    const newStatus = user.status === 'active' ? 'inactive' : 'active';
-    if (confirm(`이 사용자를 ${newStatus === 'active' ? '활성' : '비활성'} 상태로 변경하시겠습니까?`)) {
+    const newStatus = user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    if (confirm(`이 사용자를 ${newStatus === 'ACTIVE' ? '활성' : '비활성'} 상태로 변경하시겠습니까?`)) {
       try {
-        await updateUser(id, { status: newStatus });
+        await updateUser(id.toString(), { status: newStatus }); // API expects string ID
         reloadUsers();
       } catch (error) {
         console.error("Failed to toggle user status:", error);
@@ -133,14 +124,10 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case "admin":
+      case "ADMIN":
         return "bg-red-100 text-red-800"
-      case "manager":
+      case "USER":
         return "bg-blue-100 text-blue-800"
-      case "operator":
-        return "bg-green-100 text-green-800"
-      case "viewer":
-        return "bg-gray-100 text-gray-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
@@ -148,11 +135,11 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
-      case "active":
+      case "ACTIVE":
         return "bg-green-100 text-green-800"
-      case "inactive":
+      case "INACTIVE":
         return "bg-gray-100 text-gray-800"
-      case "suspended":
+      case "SUSPENDED":
         return "bg-red-100 text-red-800"
       default:
         return "bg-gray-100 text-gray-800"
@@ -160,16 +147,14 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
   }
 
   const roleStats = {
-    admin: users.filter((u) => u.role === "admin").length,
-    manager: users.filter((u) => u.role === "manager").length,
-    operator: users.filter((u) => u.role === "operator").length,
-    viewer: users.filter((u) => u.role === "viewer").length,
+    ADMIN: users.filter((u) => u.role === "ADMIN").length,
+    USER: users.filter((u) => u.role === "USER").length,
   }
 
   const statusStats = {
-    active: users.filter((u) => u.status === "active").length,
-    inactive: users.filter((u) => u.status === "inactive").length,
-    suspended: users.filter((u) => u.status === "suspended").length,
+    ACTIVE: users.filter((u) => u.status === "ACTIVE").length,
+    INACTIVE: users.filter((u) => u.status === "INACTIVE").length,
+    SUSPENDED: users.filter((u) => u.status === "SUSPENDED").length,
   }
 
   return (
@@ -200,7 +185,7 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">활성 사용자</p>
-                <p className="text-2xl font-bold text-green-600">{statusStats.active}</p>
+                <p className="text-2xl font-bold text-green-600">{statusStats.ACTIVE}</p>
               </div>
               <UserCheck className="w-8 h-8 text-green-500" />
             </div>
@@ -211,7 +196,7 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">비활성 사용자</p>
-                <p className="text-2xl font-bold text-gray-600">{statusStats.inactive}</p>
+                <p className="text-2xl font-bold text-gray-600">{statusStats.INACTIVE}</p>
               </div>
               <UserX className="w-8 h-8 text-gray-500" />
             </div>
@@ -222,7 +207,7 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">관리자</p>
-                <p className="text-2xl font-bold text-red-600">{roleStats.admin}</p>
+                <p className="text-2xl font-bold text-red-600">{roleStats.ADMIN}</p>
               </div>
               <Shield className="w-8 h-8 text-red-500" />
             </div>
@@ -247,29 +232,35 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
               </div>
 
               {/* 역할 필터 */}
-              <select
+              <Select
                 value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onValueChange={(value) => setRoleFilter(value === "" ? undefined : value)}
               >
-                <option value="">모든 역할</option>
-                <option value="admin">관리자</option>
-                <option value="manager">매니저</option>
-                <option value="operator">운영자</option>
-                <option value="viewer">조회자</option>
-              </select>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="모든 역할" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={undefined}>모든 역할</SelectItem>
+                  <SelectItem value="ADMIN">관리자</SelectItem>
+                  <SelectItem value="USER">일반 사용자</SelectItem>
+                </SelectContent>
+              </Select>
 
               {/* 상태 필터 */}
-              <select
+              <Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onValueChange={(value) => setStatusFilter(value === "" ? undefined : value)}
               >
-                <option value="">모든 상태</option>
-                <option value="active">활성</option>
-                <option value="inactive">비활성</option>
-                <option value="suspended">정지</option>
-              </select>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="모든 상태" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={undefined}>모든 상태</SelectItem>
+                  <SelectItem value="ACTIVE">활성</SelectItem>
+                  <SelectItem value="INACTIVE">비활성</SelectItem>
+                  <SelectItem value="SUSPENDED">정지</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardHeader>
@@ -298,17 +289,15 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
                     </td>
                     <td className="p-3">
                       <Badge className={getRoleBadgeColor(user.role)}>
-                        {user.role === "admin" && "관리자"}
-                        {user.role === "manager" && "매니저"}
-                        {user.role === "operator" && "운영자"}
-                        {user.role === "viewer" && "조회자"}
+                        {user.role === "ADMIN" && "관리자"}
+                        {user.role === "USER" && "일반 사용자"}
                       </Badge>
                     </td>
                     <td className="p-3 text-center">
                       <Badge className={getStatusBadgeColor(user.status)}>
-                        {user.status === "active" && "활성"}
-                        {user.status === "inactive" && "비활성"}
-                        {user.status === "suspended" && "정지"}
+                        {user.status === "ACTIVE" && "활성"}
+                        {user.status === "INACTIVE" && "비활성"}
+                        {user.status === "SUSPENDED" && "정지"}
                       </Badge>
                     </td>
                     <td className="p-3 text-sm text-gray-600">{user.lastLogin}</td>
@@ -328,12 +317,12 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
                           size="sm"
                           onClick={() => toggleUserStatus(user.id)}
                           className={
-                            user.status === "active"
+                            user.status === "ACTIVE"
                               ? "text-gray-600 hover:text-gray-700"
                               : "text-green-600 hover:text-green-700"
                           }
                         >
-                          {user.status === "active" ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                          {user.status === "ACTIVE" ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                         </Button>
                         <Button
                           variant="ghost"
@@ -435,32 +424,34 @@ export default function UserManagement({ users, setUsers: reloadUsers }: { users
                 )}
                 <div>
                   <Label htmlFor="role">역할 *</Label>
-                  <select
-                    id="role"
+                  <Select
                     value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value as typeof formData.role })}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
+                    onValueChange={(value: "ADMIN" | "USER") => setFormData({ ...formData, role: value })}
                   >
-                    <option value="viewer">조회자</option>
-                    <option value="operator">운영자</option>
-                    <option value="manager">매니저</option>
-                    <option value="admin">관리자</option>
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="역할 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USER">일반 사용자</SelectItem>
+                      <SelectItem value="ADMIN">관리자</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="status">상태 *</Label>
-                  <select
-                    id="status"
+                  <Select
                     value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value as typeof formData.status })}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
+                    onValueChange={(value: "ACTIVE" | "INACTIVE" | "SUSPENDED") => setFormData({ ...formData, status: value })}
                   >
-                    <option value="active">활성</option>
-                    <option value="inactive">비활성</option>
-                    <option value="suspended">정지</option>
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="상태 선택" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ACTIVE">활성</SelectItem>
+                      <SelectItem value="INACTIVE">비활성</SelectItem>
+                      <SelectItem value="SUSPENDED">정지</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex gap-2 pt-4">
                   <Button type="submit" className="flex-1">

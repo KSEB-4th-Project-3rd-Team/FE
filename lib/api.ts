@@ -5,10 +5,17 @@ import { Item } from '@/components/item/item-list';
 import { InOutRecord, InOutRequest, InventoryItem } from '@/components/utils';
 import { User } from '@/app/(main)/layout';
 import { Schedule } from '@/app/(main)/schedule/page';
+import { DashboardSummary } from '@/components/dashboard/unified-dashboard'; // Import DashboardSummary type
 import axios from 'axios';
 
+// --- Dashboard ---
+export async function fetchDashboardSummary(): Promise<DashboardSummary> {
+  const response = await apiClient.get('/api/dashboard/summary');
+  return handleResponse(response);
+}
+
 const apiClient = axios.create({
-  baseURL: 'https://smart-wms-be.onrender.com', // Use root path
+  baseURL: 'http://localhost:8080', // Use root path
   headers: {
     'Content-Type': 'application/json',
   },
@@ -52,12 +59,20 @@ export async function createCompany(companyData: Omit<Company, 'id'>): Promise<C
 }
 
 export async function updateCompany(id: string, companyData: Partial<Company>): Promise<Company> {
-  const response = await apiClient.put(`/api/companies/${Number(id)}`, companyData);
+  const numericId = Number(id);
+  if (isNaN(numericId)) {
+    throw new Error("Invalid company ID provided for update.");
+  }
+  const response = await apiClient.put(`/api/companies/${numericId}`, companyData);
   return handleResponse(response);
 }
 
 export async function deleteCompany(id: string): Promise<void> {
-  await apiClient.delete(`/api/companies/${Number(id)}`);
+  const numericId = Number(id);
+  if (isNaN(numericId)) {
+    throw new Error("Invalid company ID provided for delete.");
+  }
+  await apiClient.delete(`/api/companies/${numericId}`);
 }
 
 
@@ -73,12 +88,20 @@ export async function createItem(itemData: Omit<Item, 'id'>): Promise<Item> {
 }
 
 export async function updateItem(id: string, itemData: Partial<Item>): Promise<Item> {
-  const response = await apiClient.put(`/api/items/${Number(id)}`, itemData);
+  const numericId = Number(id);
+  if (isNaN(numericId)) {
+    throw new Error("Invalid item ID provided for update.");
+  }
+  const response = await apiClient.put(`/api/items/${numericId}`, itemData);
   return handleResponse(response);
 }
 
 export async function deleteItem(id: string): Promise<void> {
-  await apiClient.delete(`/api/items/${Number(id)}`);
+  const numericId = Number(id);
+  if (isNaN(numericId)) {
+    throw new Error("Invalid item ID provided for delete.");
+  }
+  await apiClient.delete(`/api/items/${numericId}`);
 }
 
 
@@ -104,7 +127,11 @@ export async function createOutboundOrder(orderData: Omit<InOutRequest, 'id' | '
 }
 
 export async function updateInOutRecord(id: string, recordData: Partial<InOutRecord>): Promise<InOutRecord> {
-  const response = await apiClient.put(`/api/inout/orders/${Number(id)}/status`, recordData);
+  const numericId = Number(id);
+  if (isNaN(numericId)) {
+    throw new Error("Invalid InOut record ID provided for update.");
+  }
+  const response = await apiClient.put(`/api/inout/orders/${numericId}/status`, recordData);
   return handleResponse(response);
 }
 
@@ -137,10 +164,18 @@ export async function createUser(userData: Omit<User, 'id'>): Promise<User> {
 }
 
 export async function updateUser(id: string, userData: Partial<User>): Promise<User> {
-  const response = await apiClient.put(`/api/users/${Number(id)}`, userData);
+  const numericId = Number(id);
+  if (isNaN(numericId)) {
+    throw new Error("Invalid user ID provided for update.");
+  }
+  const response = await apiClient.put(`/api/users/${numericId}`, userData);
   return handleResponse(response);
 }
 
 export async function deleteUser(id: string): Promise<void> {
-  await apiClient.delete(`/api/users/${Number(id)}`);
+  const numericId = Number(id);
+  if (isNaN(numericId)) {
+    throw new Error("Invalid user ID provided for delete.");
+  }
+  await apiClient.delete(`/api/users/${numericId}`);
 }
