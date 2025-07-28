@@ -1,16 +1,14 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, Trash2 } from "lucide-react"
 import { CustomPagination } from "@/components/ui/custom-pagination"
-
 import { createCompany, updateCompany, deleteCompany } from "@/lib/api"
 
 export type Company = {
@@ -21,10 +19,8 @@ export type Company = {
   contactPhone: string
   contactEmail: string
   address: string
-  type: "매입처" | "납품처"
+  type: string[] // ✅ 리스트로 변경
 }
-
-
 
 export default function CompanyList({ companies, setCompanies: reloadCompanies }: { companies: Company[], setCompanies: () => void }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -40,6 +36,7 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
   const [showSearchFilters, setShowSearchFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const companiesPerPage = 10
+
   const [formData, setFormData] = useState({
     companyCode: "",
     companyName: "",
@@ -47,28 +44,27 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
     contactPhone: "",
     contactEmail: "",
     address: "",
-    type: "납품처" as "매입처" | "납품처",
+    type: ["납품처"], // ✅ 배열 구조로 초기값 설정
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     try {
       if (editingCompany) {
-        await updateCompany(editingCompany.id, formData);
+        await updateCompany(editingCompany.id, formData)
       } else {
-        await createCompany(formData);
+        await createCompany(formData)
       }
-      reloadCompanies();
-      resetForm();
+      reloadCompanies()
+      resetForm()
     } catch (error) {
-      console.error("Failed to save company:", error);
-      // Optionally, show an error message to the user
+      console.error("Failed to save company:", error)
     }
   }
 
   const resetForm = () => {
     setFormData({
-      companyCode: "", companyName: "", contactPerson: "", contactPhone: "", contactEmail: "", address: "", type: "납품처",
+      companyCode: "", companyName: "", contactPerson: "", contactPhone: "", contactEmail: "", address: "", type: ["납품처"],
     })
     setEditingCompany(null)
     setIsModalOpen(false)
@@ -82,54 +78,49 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
       contactPhone: company.contactPhone,
       contactEmail: company.contactEmail,
       address: company.address,
-      type: company.type,
-    });
-    setEditingCompany(company);
-    setIsModalOpen(true);
-  };
+      type: company.type?.length ? company.type : ["납품처"], // ✅ fallback
+    })
+    setEditingCompany(company)
+    setIsModalOpen(true)
+  }
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation(); // 행 클릭 이벤트 전파 방지
+    e.stopPropagation()
     if (confirm("이 거래처를 삭제하시겠습니까?")) {
-      if (!id) {
-        console.error('삭제할 회사 ID가 없습니다.');
-        return;
-      }
       try {
-        await deleteCompany(id);
-        reloadCompanies();
+        await deleteCompany(id)
+        reloadCompanies()
       } catch (error) {
-        console.error("Failed to delete company:", error);
-        // Optionally, show an error message to the user
+        console.error("Failed to delete company:", error)
       }
     }
   }
 
   const filteredCompanies = companies.filter((company) => {
+    const type = company.type?.[0]?.toLowerCase() ?? ""
     return (
-      (company.companyCode || '').toLowerCase().includes(searchFilters.companyCode.toLowerCase()) &&
-      (company.companyName || '').toLowerCase().includes(searchFilters.companyName.toLowerCase()) &&
-      (company.contactPerson || '').toLowerCase().includes(searchFilters.contactPerson.toLowerCase()) &&
-      (company.contactPhone || '').toLowerCase().includes(searchFilters.contactPhone.toLowerCase()) &&
-      (company.contactEmail || '').toLowerCase().includes(searchFilters.contactEmail.toLowerCase()) &&
-      (searchFilters.type === "전체" || (company.type || '').toLowerCase() === searchFilters.type.toLowerCase())
+      company.companyCode.toLowerCase().includes(searchFilters.companyCode.toLowerCase()) &&
+      company.companyName.toLowerCase().includes(searchFilters.companyName.toLowerCase()) &&
+      company.contactPerson.toLowerCase().includes(searchFilters.contactPerson.toLowerCase()) &&
+      company.contactPhone.toLowerCase().includes(searchFilters.contactPhone.toLowerCase()) &&
+      company.contactEmail.toLowerCase().includes(searchFilters.contactEmail.toLowerCase()) &&
+      (searchFilters.type === "전체" || type === searchFilters.type.toLowerCase())
     )
   })
 
-  // 페이지네이션 로직
   const totalPages = Math.ceil(filteredCompanies.length / companiesPerPage)
-  const paginatedCompanies = filteredCompanies.slice(
-    (currentPage - 1) * companiesPerPage,
-    currentPage * companiesPerPage,
-  )
+  const paginatedCompanies = filteredCompanies.slice((currentPage - 1) * companiesPerPage, currentPage * companiesPerPage)
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">거래처 관리</h2>
-        <Button onClick={() => { setEditingCompany(null); setFormData({ companyCode: "", companyName: "", contactPerson: "", contactPhone: "", contactEmail: "", address: "", type: "납품처" }); setIsModalOpen(true); }} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          거래처 등록
+        <Button onClick={() => {
+          setEditingCompany(null)
+          setFormData({ companyCode: "", companyName: "", contactPerson: "", contactPhone: "", contactEmail: "", address: "", type: ["납품처"] })
+          setIsModalOpen(true)
+        }} className="flex items-center gap-2">
+          <Plus className="w-4 h-4" /> 거래처 등록
         </Button>
       </div>
 
@@ -138,8 +129,7 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
           <div className="flex items-center justify-between">
             <CardTitle>거래처 목록</CardTitle>
             <Button variant="outline" onClick={() => setShowSearchFilters(!showSearchFilters)} className="flex items-center gap-2">
-              <Search className="w-4 h-4" />
-              검색
+              <Search className="w-4 h-4" /> 검색
             </Button>
           </div>
         </CardHeader>
@@ -149,9 +139,7 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
               <Input placeholder="거래처코드" value={searchFilters.companyCode} onChange={(e) => setSearchFilters(prev => ({ ...prev, companyCode: e.target.value }))} />
               <Input placeholder="거래처명" value={searchFilters.companyName} onChange={(e) => setSearchFilters(prev => ({ ...prev, companyName: e.target.value }))} />
               <Select value={searchFilters.type} onValueChange={(value) => setSearchFilters(prev => ({ ...prev, type: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="거래처 구분" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="거래처 구분" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="전체">전체</SelectItem>
                   <SelectItem value="매입처">매입처</SelectItem>
@@ -163,6 +151,7 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
               <Input placeholder="Email" value={searchFilters.contactEmail} onChange={(e) => setSearchFilters(prev => ({ ...prev, contactEmail: e.target.value }))} />
             </div>
           )}
+
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -183,8 +172,8 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
                     <td className="p-3">{company.companyCode}</td>
                     <td className="p-3 font-medium">{company.companyName}</td>
                     <td className="p-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${company.type === "매입처" ? "bg-sky-100 text-sky-800" : "bg-orange-100 text-orange-800"}`}>
-                        {company.type}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${company.type?.[0] === "매입처" ? "bg-sky-100 text-sky-800" : "bg-orange-100 text-orange-800"}`}>
+                        {company.type?.[0] ?? "-"}
                       </span>
                     </td>
                     <td className="p-3">{company.contactPerson}</td>
@@ -200,32 +189,20 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
                 ))}
               </tbody>
             </table>
-            {filteredCompanies.length === 0 ? (
+
+            {filteredCompanies.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                {Object.values(searchFilters).some(val => val !== "" && val !== "전체") ? (
-                  <>
-                    <p>검색 결과가 없습니다.</p>
-                    <p className="text-sm mt-1">다른 검색어를 시도해보세요.</p>
-                  </>
-                ) : (
-                  <>
-                    <p>등록된 거래처가 없습니다.</p>
-                    <Button onClick={() => setIsModalOpen(true)} className="mt-4">
-                      <Plus className="w-4 h-4 mr-2" />
-                      첫 거래처 등록하기
-                    </Button>
-                  </>
-                )}
+                <p>검색 결과가 없습니다.</p>
+                <Button onClick={() => setIsModalOpen(true)} className="mt-4">
+                  <Plus className="w-4 h-4 mr-2" /> 거래처 등록
+                </Button>
               </div>
-            ) : null}
+            )}
           </div>
+
           {totalPages > 1 && (
             <div className="flex justify-center mt-4">
-              <CustomPagination
-                totalPages={totalPages}
-                currentPage={currentPage}
-                onPageChange={setCurrentPage}
-              />
+              <CustomPagination totalPages={totalPages} currentPage={currentPage} onPageChange={setCurrentPage} />
             </div>
           )}
         </CardContent>
@@ -242,21 +219,19 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                   <div className="space-y-1">
                     <Label htmlFor="companyCode">거래처코드 *</Label>
-                    <Input id="companyCode" name="companyCode" value={formData.companyCode} onChange={(e) => setFormData({...formData, companyCode: e.target.value})} required />
+                    <Input id="companyCode" value={formData.companyCode} onChange={(e) => setFormData({ ...formData, companyCode: e.target.value })} required />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="companyName">거래처명 *</Label>
-                    <Input id="companyName" name="companyName" value={formData.companyName} onChange={(e) => setFormData({...formData, companyName: e.target.value})} required />
+                    <Input id="companyName" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} required />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="type">거래처 구분 *</Label>
                     <Select
-                      value={formData.type}
-                      onValueChange={(value: "매입처" | "납품처") => setFormData({ ...formData, type: value })}
+                      value={formData.type[0] ?? ""}
+                      onValueChange={(value: "매입처" | "납품처") => setFormData({ ...formData, type: [value] })}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="구분을 선택하세요" />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="구분을 선택하세요" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="매입처">매입처</SelectItem>
                         <SelectItem value="납품처">납품처</SelectItem>
@@ -265,19 +240,19 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="contactPerson">대표자명</Label>
-                    <Input id="contactPerson" name="contactPerson" value={formData.contactPerson} onChange={(e) => setFormData({...formData, contactPerson: e.target.value})} />
+                    <Input id="contactPerson" value={formData.contactPerson} onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })} />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="contactPhone">전화번호</Label>
-                    <Input id="contactPhone" name="contactPhone" value={formData.contactPhone} onChange={(e) => setFormData({...formData, contactPhone: e.target.value})} />
+                    <Input id="contactPhone" value={formData.contactPhone} onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="contactEmail">Email</Label>
-                    <Input id="contactEmail" name="contactEmail" type="email" value={formData.contactEmail} onChange={(e) => setFormData({...formData, contactEmail: e.target.value})} />
+                    <Input id="contactEmail" value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} />
                   </div>
                   <div className="col-span-2 space-y-1">
                     <Label htmlFor="address">주소</Label>
-                    <Input id="address" name="address" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
+                    <Input id="address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
                   </div>
                 </div>
                 <div className="flex gap-2 pt-4">
