@@ -25,7 +25,10 @@ export type User = {
   email: string;
   fullName: string;
   role: "ADMIN" | "USER";
-};
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED"; // ✅ 추가
+  lastLogin: string; // ✅ 추가
+  createdAt: string; // ✅ 추가
+}
 
 type SidePanelType = "inout-status" | "amr-status" | null
 
