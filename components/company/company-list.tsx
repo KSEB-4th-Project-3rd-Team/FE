@@ -12,14 +12,14 @@ import { CustomPagination } from "@/components/ui/custom-pagination"
 import { createCompany, updateCompany, deleteCompany } from "@/lib/api"
 
 export type Company = {
-  id: string
+  companyId: number
   companyCode: string
   companyName: string
   contactPerson: string
   contactPhone: string
   contactEmail: string
   address: string
-  type: string[] // ✅ 리스트로 변경
+  type: string[]
 }
 
 export default function CompanyList({ companies, setCompanies: reloadCompanies }: { companies: Company[], setCompanies: () => void }) {
@@ -44,14 +44,14 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
     contactPhone: "",
     contactEmail: "",
     address: "",
-    type: ["납품처"], // ✅ 배열 구조로 초기값 설정
+    type: ["납품처"],
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       if (editingCompany) {
-        await updateCompany(editingCompany.id, formData)
+        await updateCompany(editingCompany.companyId.toString(), formData)
       } else {
         await createCompany(formData)
       }
@@ -78,17 +78,17 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
       contactPhone: company.contactPhone,
       contactEmail: company.contactEmail,
       address: company.address,
-      type: company.type?.length ? company.type : ["납품처"], // ✅ fallback
+      type: company.type?.length ? company.type : ["납품처"],
     })
     setEditingCompany(company)
     setIsModalOpen(true)
   }
 
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation()
     if (confirm("이 거래처를 삭제하시겠습니까?")) {
       try {
-        await deleteCompany(id)
+        await deleteCompany(id.toString())
         reloadCompanies()
       } catch (error) {
         console.error("Failed to delete company:", error)
@@ -97,7 +97,7 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
   }
 
   const filteredCompanies = companies.filter((company) => {
-    const type = company.type?.[0]?.toLowerCase() ?? ""
+    const type = (company.type?.[0] || "").toLowerCase()
     return (
       company.companyCode.toLowerCase().includes(searchFilters.companyCode.toLowerCase()) &&
       company.companyName.toLowerCase().includes(searchFilters.companyName.toLowerCase()) &&
@@ -168,12 +168,18 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
               </thead>
               <tbody>
                 {paginatedCompanies.map((company) => (
-                  <tr key={company.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(company)}>
+                  <tr key={company.companyId} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(company)}>
                     <td className="p-3">{company.companyCode}</td>
                     <td className="p-3 font-medium">{company.companyName}</td>
                     <td className="p-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${company.type?.[0] === "매입처" ? "bg-sky-100 text-sky-800" : "bg-orange-100 text-orange-800"}`}>
-                        {company.type?.[0] ?? "-"}
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        company.type?.[0] === "매입처"
+                          ? "bg-sky-100 text-sky-800"
+                          : company.type?.[0] === "납품처"
+                            ? "bg-orange-100 text-orange-800"
+                            : "bg-gray-100 text-gray-600"
+                      }`}>
+                        {company.type?.length ? company.type[0] : "거래처 구분없음"}
                       </span>
                     </td>
                     <td className="p-3">{company.contactPerson}</td>
@@ -181,7 +187,7 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
                     <td className="p-3">{company.contactEmail}</td>
                     <td className="p-3">{company.address}</td>
                     <td className="p-3 text-center">
-                      <Button variant="ghost" size="sm" onClick={(e) => handleDelete(e, company.id)} className="text-red-600 hover:text-red-700">
+                      <Button variant="ghost" size="sm" onClick={(e) => handleDelete(e, company.companyId)} className="text-red-600 hover:text-red-700">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </td>

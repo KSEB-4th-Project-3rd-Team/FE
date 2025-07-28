@@ -53,7 +53,7 @@ export async function fetchCompanies(): Promise<Company[]> {
   return handleResponse(response);
 }
 
-export async function createCompany(companyData: Omit<Company, 'id'>): Promise<Company> {
+export async function createCompany(companyData: Omit<Company, 'companyId'>): Promise<Company> {
   const response = await apiClient.post('/api/companies', companyData);
   return handleResponse(response);
 }

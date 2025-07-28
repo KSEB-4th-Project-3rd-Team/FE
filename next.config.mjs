@@ -13,7 +13,7 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "https://smart-wms-be.onrender.com/:path*", // Removed /api from the destination
+        destination: "http://localhost:8080/:path*", // Local backend server
       },
     ];
   },
