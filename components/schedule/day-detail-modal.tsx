@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { X, Calendar, MapPin, Clock, Trash2, Package, TruckIcon } from "lucide-react"
-import type { Schedule } from "@/app/(main)/schedule/page"
+import { Schedule, deleteSchedule } from "@/lib/api"
 import { type InOutRecord } from "@/components/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
@@ -26,8 +26,12 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
   useEffect(() => {
     if (isOpen && selectedDate) {
       setActiveTab("schedule") // Reset tab to default
-      const filteredSchedules = schedules.filter((s) => s.date === selectedDate)
+      const filteredSchedules = schedules.filter((s) => {
+        const scheduleDate = new Date(s.startTime).toISOString().split('T')[0]
+        return scheduleDate === selectedDate
+      })
       setDaySchedules(filteredSchedules)
+      console.log("Filtered schedules for date", selectedDate, ":", filteredSchedules)
 
       // Filter In/Out records for the selected date
       const dayInOutRecords = inOutData.filter((record) => record.date === selectedDate)
@@ -36,12 +40,16 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
     }
   }, [isOpen, selectedDate, schedules, inOutData])
 
-  const handleDeleteSchedule = (id: string) => {
+  const handleDeleteSchedule = async (id: number) => {
+    console.log("Attempting to delete schedule with ID:", id, "Type:", typeof id)
     if (confirm("이 일정을 삭제하시겠습니까?")) {
-      // This should ideally call a service to delete and then trigger a refresh via onScheduleDeleted
-      const updatedSchedules = daySchedules.filter((schedule) => schedule.id !== id)
-      setDaySchedules(updatedSchedules)
-      onScheduleDeleted() // Notify parent to refetch all schedules
+      try {
+        await deleteSchedule(id)
+        onScheduleDeleted() // Notify parent to refetch all schedules
+      } catch (error) {
+        console.error("Failed to delete schedule:", error)
+        alert(`일정 삭제 실패: ${error}`)
+      }
     }
   }
 
@@ -52,15 +60,15 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case "inbound":
+      case "INBOUND":
         return "bg-green-100 text-green-800"
-      case "outbound":
+      case "OUTBOUND":
         return "bg-red-100 text-red-800"
-      case "work":
+      case "INVENTORY_CHECK":
         return "bg-blue-100 text-blue-800"
-      case "meeting":
+      case "MEETING":
         return "bg-purple-100 text-purple-800"
-      case "other":
+      case "ETC":
         return "bg-gray-100 text-gray-800"
       default:
         return "bg-gray-100 text-gray-800"
@@ -69,15 +77,15 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
 
   const getTypeName = (type: string) => {
     switch (type) {
-      case "inbound":
+      case "INBOUND":
         return "입고"
-      case "outbound":
+      case "OUTBOUND":
         return "출고"
-      case "work":
-        return "작업"
-      case "meeting":
+      case "INVENTORY_CHECK":
+        return "재고점검"
+      case "MEETING":
         return "회의"
-      case "other":
+      case "ETC":
         return "기타"
       default:
         return "기타"
@@ -185,7 +193,7 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
                 </div>
               ) : (
                 daySchedules.map((schedule) => (
-                  <div key={schedule.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                  <div key={schedule.scheduleId} className="border rounded-lg p-4 hover:bg-gray-50">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
@@ -196,27 +204,20 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
                         </div>
 
                         <div className="space-y-1 text-sm text-gray-600">
-                          {schedule.location && (
-                            <div className="flex items-center gap-2">
-                              <MapPin className="w-4 h-4" />
-                              <span>{schedule.location}</span>
-                            </div>
-                          )}
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4" />
-                            <span>{schedule.time}</span>
+                            <span>
+                              {new Date(schedule.startTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} - 
+                              {new Date(schedule.endTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
                           </div>
                         </div>
-
-                        {schedule.details && (
-                          <div className="mt-3 p-3 bg-gray-50 rounded text-sm">{schedule.details}</div>
-                        )}
                       </div>
 
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteSchedule(schedule.id)}
+                        onClick={() => handleDeleteSchedule(schedule.scheduleId)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="w-4 h-4" />

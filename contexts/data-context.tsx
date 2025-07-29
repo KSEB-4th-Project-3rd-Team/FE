@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, FC, useCallb
 import { Company } from '@/components/company/company-list';
 import { Item } from '@/components/item/item-list';
 import { InOutRecord, InOutRequest, InventoryItem } from '@/components/utils';
-import { Schedule } from '@/app/(main)/schedule/page';
+import { Schedule } from '@/lib/api';
 import { User } from '@/app/(main)/layout';
 import { 
   fetchCompanies, fetchItems, fetchInOutData, fetchInOutRequests, 

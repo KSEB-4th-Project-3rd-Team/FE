@@ -9,24 +9,22 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { X, Calendar, MapPin, Clock } from "lucide-react"
-// import { scheduleService, type Schedule } from "@/lib/schedule" // Removed for Spring backend integration
-import type { Schedule } from "@/app/(main)/schedule/page"
+import { createSchedule, type Schedule, type CreateScheduleRequest } from "@/lib/api"
 
 interface ScheduleModalProps {
   isOpen: boolean
   onClose: () => void
-  onScheduleAdded: (schedule: Schedule) => void
+  onScheduleAdded: () => void
   selectedDate?: string
 }
 
 export default function ScheduleModal({ isOpen, onClose, onScheduleAdded, selectedDate }: ScheduleModalProps) {
   const [formData, setFormData] = useState({
     title: "",
-    location: "",
     date: selectedDate || new Date().toISOString().split("T")[0],
-    time: "09:00",
-    details: "",
-    type: "work" as const,
+    startTime: "09:00",
+    endTime: "10:00",
+    type: "MEETING" as const,
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -36,33 +34,39 @@ export default function ScheduleModal({ isOpen, onClose, onScheduleAdded, select
     })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.title || !formData.date || !formData.time) {
-      alert("제목, 날짜, 시간을 입력해주세요.")
+    if (!formData.title || !formData.date || !formData.startTime || !formData.endTime) {
+      alert("제목, 날짜, 시작시간, 종료시간을 입력해주세요.")
       return
     }
 
-    // const newSchedule = scheduleService.addSchedule(formData) // Removed for Spring backend integration
-    const newSchedule: Schedule = {
-      id: new Date().toISOString(),
-      ...formData,
-      details: formData.details,
+    try {
+      const scheduleRequest: CreateScheduleRequest = {
+        title: formData.title,
+        startTime: `${formData.date}T${formData.startTime}:00`,
+        endTime: `${formData.date}T${formData.endTime}:00`,
+        type: formData.type,
+      }
+
+      await createSchedule(scheduleRequest)
+      onScheduleAdded()
+
+      // 폼 초기화
+      setFormData({
+        title: "",
+        date: selectedDate || new Date().toISOString().split("T")[0],
+        startTime: "09:00",
+        endTime: "10:00",
+        type: "MEETING",
+      })
+
+      onClose()
+    } catch (error) {
+      console.error("Failed to create schedule:", error)
+      alert(`일정 등록 실패: ${error}`)
     }
-    onScheduleAdded(newSchedule)
-
-    // 폼 초기화
-    setFormData({
-      title: "",
-      location: "",
-      date: selectedDate || new Date().toISOString().split("T")[0],
-      time: "09:00",
-      details: "",
-      type: "work",
-    })
-
-    onClose()
   }
 
   if (!isOpen) return null
@@ -96,34 +100,35 @@ export default function ScheduleModal({ isOpen, onClose, onScheduleAdded, select
             </div>
 
             <div>
-              <Label htmlFor="location">장소</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  id="location"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  placeholder="장소를 입력하세요 (선택사항)"
-                  className="pl-10"
-                />
-              </div>
+              <Label htmlFor="date">날짜 *</Label>
+              <Input id="date" name="date" type="date" value={formData.date} onChange={handleInputChange} required />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="date">날짜 *</Label>
-                <Input id="date" name="date" type="date" value={formData.date} onChange={handleInputChange} required />
-              </div>
-              <div>
-                <Label htmlFor="time">시간 *</Label>
+                <Label htmlFor="startTime">시작 시간 *</Label>
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
-                    id="time"
-                    name="time"
+                    id="startTime"
+                    name="startTime"
                     type="time"
-                    value={formData.time}
+                    value={formData.startTime}
+                    onChange={handleInputChange}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="endTime">종료 시간 *</Label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    id="endTime"
+                    name="endTime"
+                    type="time"
+                    value={formData.endTime}
                     onChange={handleInputChange}
                     className="pl-10"
                     required
@@ -141,24 +146,12 @@ export default function ScheduleModal({ isOpen, onClose, onScheduleAdded, select
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="inbound">입고</option>
-                <option value="outbound">출고</option>
-                <option value="work">작업</option>
-                <option value="meeting">회의</option>
-                <option value="other">기타</option>
+                <option value="INBOUND">입고</option>
+                <option value="OUTBOUND">출고</option>
+                <option value="INVENTORY_CHECK">재고점검</option>
+                <option value="MEETING">회의</option>
+                <option value="ETC">기타</option>
               </select>
-            </div>
-
-            <div>
-              <Label htmlFor="details">세부내용</Label>
-              <Textarea
-                id="details"
-                name="details"
-                value={formData.details}
-                onChange={handleInputChange}
-                placeholder="세부 내용을 입력하세요"
-                rows={4}
-              />
             </div>
 
             <div className="flex gap-2 pt-4">

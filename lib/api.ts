@@ -143,6 +143,21 @@ export async function fetchInventoryData(): Promise<InventoryItem[]> {
 }
 
 // --- Schedules ---
+export interface Schedule {
+  scheduleId: number;
+  title: string;
+  startTime: string; // ISO 8601 format
+  endTime: string; // ISO 8601 format
+  type: "INBOUND" | "OUTBOUND" | "INVENTORY_CHECK" | "MEETING" | "ETC";
+}
+
+export interface CreateScheduleRequest {
+  title: string;
+  startTime: string; // ISO 8601 format
+  endTime: string; // ISO 8601 format
+  type: "INBOUND" | "OUTBOUND" | "INVENTORY_CHECK" | "MEETING" | "ETC";
+}
+
 export async function fetchSchedules(startDate?: string, endDate?: string): Promise<Schedule[]> {
   const params: { start_date?: string; end_date?: string } = {};
   if (startDate) params.start_date = startDate;
@@ -150,6 +165,19 @@ export async function fetchSchedules(startDate?: string, endDate?: string): Prom
 
   const response = await apiClient.get('/api/schedules', { params });
   return handleResponse(response);
+}
+
+export async function createSchedule(scheduleData: CreateScheduleRequest): Promise<Schedule> {
+  const response = await apiClient.post('/api/schedules', scheduleData);
+  return handleResponse(response);
+}
+
+export async function deleteSchedule(id: string | number): Promise<void> {
+  const numericId = Number(id);
+  if (isNaN(numericId) || numericId <= 0) {
+    throw new Error(`Invalid schedule ID provided for delete: ${id}`);
+  }
+  await apiClient.delete(`/api/schedules/${numericId}`);
 }
 
 // --- Users ---
@@ -179,3 +207,4 @@ export async function deleteUser(id: string): Promise<void> {
   }
   await apiClient.delete(`/api/users/${numericId}`);
 }
+

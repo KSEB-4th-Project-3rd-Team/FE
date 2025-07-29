@@ -11,16 +11,8 @@ import { useData } from "@/contexts/data-context"
 import SchedulePageSkeleton from "@/components/schedule/schedule-page-skeleton"
 import ErrorMessage from "@/components/ui/error-message"
 
-// Temporary Schedule type until API is connected
-export type Schedule = {
-  id: string
-  title: string
-  date: string
-  time: string
-  location: string
-  details: string // Changed from description to details
-  type: "inbound" | "outbound" | "work" | "meeting" | "other" // Added type property
-}
+// Import Schedule type from API
+import type { Schedule } from "@/lib/api"
 
 // 날짜를 YYYY-MM-DD 형식으로 변환하는 함수 (시간대 문제 해결)
 const formatDateToString = (date: Date): string => {
@@ -37,8 +29,8 @@ export default function SchedulePage() {
   const [isDayDetailModalOpen, setIsDayDetailModalOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string>("")
   const handleScheduleAdded = () => {
-    reloadData("schedules")
-}
+    reloadData()
+  }
 
   const handleDayClick = (day: number) => {
     const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
@@ -59,7 +51,10 @@ export default function SchedulePage() {
   const getSchedulesForDate = (day: number) => {
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
     const dateString = formatDateToString(date)
-    return schedules.filter((schedule) => schedule.date === dateString)
+    return schedules.filter((schedule) => {
+      const scheduleDate = new Date(schedule.startTime).toISOString().split('T')[0]
+      return scheduleDate === dateString
+    })
   }
 
   const renderCalendar = () => {
@@ -150,17 +145,26 @@ export default function SchedulePage() {
             <CardContent>
               <div className="space-y-3">
                 {schedules
-                  .filter((schedule) => schedule.date === formatDateToString(new Date()))
+                  .filter((schedule) => {
+                    const scheduleDate = new Date(schedule.startTime).toISOString().split('T')[0]
+                    return scheduleDate === formatDateToString(new Date())
+                  })
                   .map((schedule) => (
-                    <div key={schedule.id} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                    <div key={schedule.scheduleId} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
                       <div>
                         <span className="font-medium">{schedule.title}</span>
-                        <p className="text-sm text-gray-600">{schedule.location}</p>
+                        <p className="text-sm text-gray-600">{schedule.type}</p>
                       </div>
-                      <span className="text-sm text-gray-600">{schedule.time}</span>
+                      <span className="text-sm text-gray-600">
+                        {new Date(schedule.startTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })} - 
+                        {new Date(schedule.endTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
                     </div>
                   ))}
-                {schedules.filter((schedule) => schedule.date === formatDateToString(new Date())).length === 0 && (
+                {schedules.filter((schedule) => {
+                  const scheduleDate = new Date(schedule.startTime).toISOString().split('T')[0]
+                  return scheduleDate === formatDateToString(new Date())
+                }).length === 0 && (
                   <div className="text-center py-4 text-gray-500">오늘 등록된 일정이 없습니다.</div>
                 )}
               </div>
