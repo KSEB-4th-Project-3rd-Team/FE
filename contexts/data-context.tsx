@@ -58,13 +58,14 @@ export const DataProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setLoading(true);
       setError(null);
       const [
-        companies, items, inOutData, inOutRequests, 
+        companies, items, inOutData, inOutRequests, inventoryData,
         schedules, users, dashboardSummary
       ] = await Promise.all([
         fetchCompanies(),
         fetchItems(),
         fetchInOutData(),
         fetchInOutRequests(),
+        fetchInventoryData(),
         (() => {
           const today = new Date();
           const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -77,7 +78,7 @@ export const DataProvider: FC<{ children: ReactNode }> = ({ children }) => {
         fetchUsers(),
         fetchDashboardSummary(),
       ]);
-      setData({ companies, items, inOutData, inOutRequests, inventoryData: [], schedules, users, dashboardSummary });
+      setData({ companies, items, inOutData, inOutRequests, inventoryData, schedules, users, dashboardSummary });
     } catch (err) {
       console.error(err);
       if (err instanceof Error) {

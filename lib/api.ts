@@ -122,25 +122,25 @@ export async function fetchInOutData(): Promise<InOutRecord[]> {
   // console.log('Filtered completed data:', completedData);
   
   // Transform data to match InOutRecord interface
-  const transformedData = completedData.map(record => {
-    const company = companies.find(c => c.companyName === record.companyName);
-    return {
-      id: record.orderId,
+  const transformedData = completedData.flatMap(record => {
+    // Handle multiple items in one order by creating separate records
+    return record.items.map((item, itemIndex) => ({
+      id: `${record.orderId}-${itemIndex}`,
       type: record.type?.toLowerCase() || 'inbound',
-      productName: 'N/A', // Will be filled by backend later
-      sku: 'N/A',
-      individualCode: `ORDER-${record.orderId}`,
-      specification: 'N/A',
-      quantity: 0, // Will be filled by backend later
-      location: 'N/A',
+      productName: item.itemName || 'N/A',
+      sku: item.itemCode || 'N/A',
+      individualCode: `ORDER-${record.orderId}-${item.itemId}`,
+      specification: item.specification || 'N/A',
+      quantity: item.requestedQuantity || 0,
+      location: 'A-01', // Default location
       company: record.companyName || 'N/A',
-      companyCode: company?.companyCode || 'N/A',
+      companyCode: record.companyCode || 'N/A',
       status: record.status === 'COMPLETED' ? '완료' : '진행 중',
       destination: 'N/A',
       date: record.expectedDate || new Date().toISOString().split('T')[0],
       time: '00:00:00',
       notes: 'N/A'
-    };
+    }));
   });
   
   return transformedData;
@@ -234,9 +234,75 @@ export async function updateInOutRecord(id: string, recordData: Partial<InOutRec
 
 
 // --- Inventory ---
+export interface BackendInventoryResponse {
+  itemId: number;
+  itemName: string;
+  locationCode: string;
+  quantity: number;
+  lastUpdated: string;
+}
+
 export async function fetchInventoryData(): Promise<InventoryItem[]> {
   const response = await apiClient.get('/api/inventory');
-  return handleResponse(response);
+  const backendData: BackendInventoryResponse[] = await handleResponse(response);
+  
+  // If no inventory data exists, return empty array
+  if (!backendData || backendData.length === 0) {
+    console.log('No inventory data found in backend');
+    return [];
+  }
+  
+  // Get additional data for mapping
+  const [items, inoutData, pendingRequests] = await Promise.all([
+    fetchItems(),
+    fetchInOutData(),
+    fetchInOutRequests()
+  ]);
+  
+  // Transform backend data to frontend InventoryItem format
+  const transformedData: InventoryItem[] = backendData.map((backendItem, index) => {
+    const item = items.find(i => i.itemId === backendItem.itemId);
+    
+    // Calculate scheduled inbound/outbound from pending requests
+    const inboundScheduled = pendingRequests
+      .filter(request => 
+        request.type === 'inbound' && 
+        request.itemName === backendItem.itemName &&
+        request.status === 'pending'
+      )
+      .reduce((sum, request) => sum + request.quantity, 0);
+    
+    const outboundScheduled = pendingRequests
+      .filter(request => 
+        request.type === 'outbound' && 
+        request.itemName === backendItem.itemName &&
+        request.status === 'pending'
+      )
+      .reduce((sum, request) => sum + request.quantity, 0);
+    
+    // Determine status based on quantity
+    let status = '정상';
+    if (backendItem.quantity <= 0) {
+      status = '위험';
+    } else if (backendItem.quantity <= 10) {
+      status = '부족';
+    }
+    
+    return {
+      id: index + 1,
+      name: backendItem.itemName,
+      sku: item?.itemCode || `SKU-${backendItem.itemId}`,
+      specification: item?.specification || 'N/A',
+      quantity: backendItem.quantity,
+      inboundScheduled: inboundScheduled,
+      outboundScheduled: outboundScheduled,
+      location: backendItem.locationCode,
+      status: status,
+      lastUpdate: new Date(backendItem.lastUpdated).toLocaleString('ko-KR')
+    };
+  });
+  
+  return transformedData;
 }
 
 // --- Schedules ---
