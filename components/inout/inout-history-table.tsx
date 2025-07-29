@@ -46,12 +46,17 @@ export default function InOutHistoryTable({ historyType, data, setData: reloadDa
   const itemsPerPage = 10
   const SET_QUANTITY = 14
 
-  const historyData: InOutRecord[] = useMemo(() => 
-    data.filter(item => {
-      const typeMatch = historyType === 'all' || item.type === historyType;
-      if (!typeMatch) return false;
-      return true;
-    }), [data, historyType]);
+  const historyData: InOutRecord[] = useMemo(() => {
+    const filtered = data.filter(item => {
+      const typeMatch = historyType === 'all' || 
+        item.type === historyType || 
+        (historyType === 'inbound' && item.type === 'INBOUND') ||
+        (historyType === 'outbound' && item.type === 'OUTBOUND');
+      return typeMatch;
+    });
+    
+    return filtered;
+  }, [data, historyType]);
 
   const handleFilterChange = (field: string, value: string) => {
     setFilters((prev) => ({ ...prev, [field]: value, }))
@@ -97,12 +102,12 @@ export default function InOutHistoryTable({ historyType, data, setData: reloadDa
     const statusMatch = filters.status.length === 0 || filters.status.includes(item.status);
     return (
       (filters.type === "all" || item.type === filters.type) &&
-      item.productName.toLowerCase().includes(filters.productName.toLowerCase()) &&
-      item.specification.toLowerCase().includes(filters.specification.toLowerCase()) &&
-      item.location.toLowerCase().includes(filters.location.toLowerCase()) &&
-      item.company.toLowerCase().includes(filters.company.toLowerCase()) &&
+      (item.productName || '').toLowerCase().includes(filters.productName.toLowerCase()) &&
+      (item.specification || '').toLowerCase().includes(filters.specification.toLowerCase()) &&
+      (item.location || '').toLowerCase().includes(filters.location.toLowerCase()) &&
+      (item.company || '').toLowerCase().includes(filters.company.toLowerCase()) &&
       statusMatch &&
-      item.destination.toLowerCase().includes(filters.destination.toLowerCase()) &&
+      (item.destination || '').toLowerCase().includes(filters.destination.toLowerCase()) &&
       (filters.date === "" || item.date === filters.date)
     )
   }).sort((a, b) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime()), [filters, historyData]);
@@ -216,8 +221,8 @@ export default function InOutHistoryTable({ historyType, data, setData: reloadDa
                 </tr>
               </thead>
               <tbody>
-                {currentItems.map((item) => (
-                  <tr key={item.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(item)}>
+                {currentItems.map((item, index) => (
+                  <tr key={item.id || `history-item-${index}`} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(item)}>
                     <td className="p-2 md:p-3"><span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${item.type === "inbound" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"}`}>{item.type === "inbound" ? "입고" : "출고"}</span></td>
                     <td className="p-2 md:p-3 text-left truncate"><p className="font-medium">{item.productName}</p><p className="text-xs text-gray-500">SKU: {item.sku}</p></td>
                     <td className="p-2 md:p-3 text-left truncate">{item.individualCode}</td>

@@ -42,6 +42,17 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    // Basic validation
+    if (!formData.itemId) {
+      alert("품목을 선택해주세요.");
+      return;
+    }
+    
+    if (!formData.quantity || formData.quantity <= 0) {
+      alert("입고 수량을 올바르게 입력해주세요.");
+      return;
+    }
+    
     onSubmit(formData)
     setFormData({
       itemId: null,
@@ -71,11 +82,15 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="itemId">상품명 *</Label>
+        <Label htmlFor="item-select">상품명 *</Label>
         <ItemAutocomplete
+          id="item-select"
           items={propsItems}
-          value={formData.itemId || ""}
-          onValueChange={(value) => handleValueChange("itemId", value as number)}
+          value={formData.itemId}
+          onValueChange={(value) => {
+            console.log("InboundForm received itemId:", value, "(type:", typeof value, ")");
+            handleValueChange("itemId", value);
+          }}
         />
       </div>
 
@@ -94,19 +109,24 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
       </div>
 
       <div>
-        <Label htmlFor="companyId">거래처</Label>
+        <Label htmlFor="company-select">거래처</Label>
         <CompanyAutocomplete
+          id="company-select"
           companies={companies}
-          value={formData.companyId || ""}
-          onValueChange={(value) => handleValueChange("companyId", value as number)}
+          value={formData.companyId}
+          onValueChange={(value) => {
+            console.log("InboundForm received companyId:", value, "(type:", typeof value, ")");
+            handleValueChange("companyId", value);
+          }}
         />
       </div>
 
       <div>
-        <Label htmlFor="expectedDate">예정일 *</Label>
+        <Label htmlFor="expected-date">예정일 *</Label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
+              id="expected-date"
               variant={"outline"}
               className={cn(
                 "w-full justify-start text-left font-normal",
@@ -117,11 +137,12 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
               {date ? format(date, "yyyy-MM-dd") : <span>날짜 선택</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
+          <PopoverContent className="w-auto p-0 z-[9999]" align="start">
             <Calendar
               mode="single"
               selected={date}
               onSelect={(selectedDate) => {
+                console.log("Calendar onSelect triggered! selectedDate:", selectedDate);
                 setDate(selectedDate);
                 if (selectedDate) {
                   handleValueChange("expectedDate", format(selectedDate, "yyyy-MM-dd"));

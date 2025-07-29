@@ -108,12 +108,49 @@ export async function deleteItem(id: string | number): Promise<void> {
 // --- InOut ---
 export async function fetchInOutData(): Promise<InOutRecord[]> {
   const response = await apiClient.get('/api/inout/orders');
-  return handleResponse(response);
+  const allData = await handleResponse(response);
+  // console.log('Raw InOut API data:', allData);
+  
+  // Get additional data for mapping
+  const [items, companies] = await Promise.all([
+    fetchItems(),
+    fetchCompanies()
+  ]);
+  
+  // Filter for completed records only
+  const completedData = allData.filter(record => record.status === 'COMPLETED');
+  // console.log('Filtered completed data:', completedData);
+  
+  // Transform data to match InOutRecord interface
+  const transformedData = completedData.map(record => {
+    const company = companies.find(c => c.companyName === record.companyName);
+    return {
+      id: record.orderId,
+      type: record.type?.toLowerCase() || 'inbound',
+      productName: 'N/A', // Will be filled by backend later
+      sku: 'N/A',
+      individualCode: `ORDER-${record.orderId}`,
+      specification: 'N/A',
+      quantity: 0, // Will be filled by backend later
+      location: 'N/A',
+      company: record.companyName || 'N/A',
+      companyCode: company?.companyCode || 'N/A',
+      status: record.status === 'COMPLETED' ? '완료' : '진행 중',
+      destination: 'N/A',
+      date: record.expectedDate || new Date().toISOString().split('T')[0],
+      time: '00:00:00',
+      notes: 'N/A'
+    };
+  });
+  
+  return transformedData;
 }
 
 export async function fetchInOutRequests(): Promise<InOutRequest[]> {
   const response = await apiClient.get('/api/inout/orders');
-  return handleResponse(response);
+  const allData = await handleResponse(response);
+  // Filter for pending requests only
+  return allData.filter(record => record.status === 'PENDING');
 }
 
 export interface InOutOrderItem {
@@ -139,8 +176,22 @@ export async function createInboundOrder(orderData: { itemId: number; quantity: 
     }]
   };
   
+  // Create the order
   const response = await apiClient.post('/api/inout/orders', requestData);
-  return handleResponse(response);
+  const result = await handleResponse(response);
+  
+  // Immediately approve the order to move it to completed status
+  if (result.orderId) {
+    try {
+      await apiClient.put(`/api/inout/orders/${result.orderId}/status`, {
+        status: 'COMPLETED'
+      });
+    } catch (error) {
+      console.warn('Failed to auto-approve inbound order:', error);
+    }
+  }
+  
+  return result;
 }
 
 export async function createOutboundOrder(orderData: { itemId: number; quantity: number; companyId?: number; expectedDate?: string; notes?: string }): Promise<any> {
@@ -154,8 +205,22 @@ export async function createOutboundOrder(orderData: { itemId: number; quantity:
     }]
   };
   
+  // Create the order
   const response = await apiClient.post('/api/inout/orders', requestData);
-  return handleResponse(response);
+  const result = await handleResponse(response);
+  
+  // Immediately approve the order to move it to completed status
+  if (result.orderId) {
+    try {
+      await apiClient.put(`/api/inout/orders/${result.orderId}/status`, {
+        status: 'COMPLETED'
+      });
+    } catch (error) {
+      console.warn('Failed to auto-approve outbound order:', error);
+    }
+  }
+  
+  return result;
 }
 
 export async function updateInOutRecord(id: string, recordData: Partial<InOutRecord>): Promise<InOutRecord> {

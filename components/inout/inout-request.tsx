@@ -57,7 +57,11 @@ export default function InOutRequestPage({ requests, setRequests: reloadRequests
     .sort((a, b) => new Date(b.scheduledDateTime).getTime() - new Date(a.scheduledDateTime).getTime());
 
   const formatDateTime = (dateTimeString: string) => {
+    if (!dateTimeString) return '-';
+    
     const date = new Date(dateTimeString);
+    if (isNaN(date.getTime())) return '-';
+    
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
@@ -136,23 +140,23 @@ export default function InOutRequestPage({ requests, setRequests: reloadRequests
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedList.map((request) => (
-                      <tr key={request.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(request)}>
+                    {paginatedList.map((request, index) => (
+                      <tr key={request.id || `request-${index}`} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(request)}>
                         <td className="p-3">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${ request.type === "inbound" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800" }`}>
                             {request.type === "inbound" ? "입고" : "출고"}
                           </span>
                         </td>
                         <td className="p-3 text-left truncate">
-                          <p className="font-medium">{request.itemName}</p>
-                          <p className="text-xs text-gray-500">SKU: {request.itemCode}</p>
+                          <p className="font-medium">{request.itemName || '-'}</p>
+                          <p className="text-xs text-gray-500">SKU: {request.itemCode || '-'}</p>
                         </td>
-                        <td className="p-3 text-left truncate">{request.specification}</td>
+                        <td className="p-3 text-left truncate">{request.specification || '-'}</td>
                         <td className="p-3">{request.quantity}</td>
                         <td className="p-3">{getDisplayQuantity(request.quantity)}</td>
                         <td className="p-3 text-left truncate">
-                          <p className="font-medium">{request.companyName}</p>
-                          <p className="text-xs text-gray-500">코드: {request.companyCode}</p>
+                          <p className="font-medium">{request.companyName || '-'}</p>
+                          <p className="text-xs text-gray-500">코드: {request.companyCode || '-'}</p>
                         </td>
                         <td className="p-3">{formatDateTime(request.scheduledDateTime)}</td>
                         <td className="p-3">
@@ -224,13 +228,13 @@ export default function InOutRequestPage({ requests, setRequests: reloadRequests
               <DialogTitle>요청 상세 정보</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              <p className="text-gray-500">요청 ID</p><p>{selectedRequest.id}</p>
+              <p className="text-gray-500">요청 ID</p><p>{selectedRequest.id || '-'}</p>
               <p className="text-gray-500">유형</p><p>{selectedRequest.type === 'inbound' ? '입고' : '출고'}</p>
-              <p className="text-gray-500">상품명</p><p>{selectedRequest.itemName}</p>
-              <p className="text-gray-500">SKU</p><p>{selectedRequest.itemCode}</p>
-              <p className="text-gray-500">규격</p><p>{selectedRequest.specification}</p>
-              <p className="text-gray-500">수량</p><p>{selectedRequest.quantity}</p>
-              <p className="text-gray-500">거래처</p><p>{selectedRequest.companyName} ({selectedRequest.companyCode})</p>
+              <p className="text-gray-500">상품명</p><p>{selectedRequest.itemName || '-'}</p>
+              <p className="text-gray-500">SKU</p><p>{selectedRequest.itemCode || '-'}</p>
+              <p className="text-gray-500">규격</p><p>{selectedRequest.specification || '-'}</p>
+              <p className="text-gray-500">수량</p><p>{selectedRequest.quantity || 0}</p>
+              <p className="text-gray-500">거래챘</p><p>{selectedRequest.companyName || '-'} ({selectedRequest.companyCode || '-'})</p>
               <p className="text-gray-500">예정일시</p><p>{formatDateTime(selectedRequest.scheduledDateTime)}</p>
               <p className="text-gray-500">상태</p><p>{selectedRequest.status}</p>
               <p className="text-gray-500 col-span-2">비고</p>

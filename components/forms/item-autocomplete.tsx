@@ -11,6 +11,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command"
 import {
   Popover,
@@ -20,26 +21,42 @@ import {
 import { Item } from "@/components/item/item-list"
 
 interface ItemAutocompleteProps {
+  id?: string;
   items: Item[];
-  value: string | number; // Allow string (name) or number (id)
-  onValueChange: (value: string | number) => void;
+  value: string | number | null; // Allow string (name) or number (id) or null
+  onValueChange: (value: string | number | null) => void;
 }
 
-export function ItemAutocomplete({ items, value, onValueChange }: ItemAutocompleteProps) {
+export function ItemAutocomplete({ id, items, value, onValueChange }: ItemAutocompleteProps) {
   const [open, setOpen] = React.useState(false)
+  
+  // console.log("ItemAutocomplete rendered:");
+  // console.log("- value:", value, "(type:", typeof value, ")");
+  // console.log("- items count:", items.length);
+  // console.log("- first item:", items[0]);
 
-  const itemOptions = items.map(item => ({
+  const itemOptions = React.useMemo(() => items.map(item => ({
     id: item.itemId,
     value: item.itemName ? item.itemName.toLowerCase() : '',
     label: item.itemName || '',
-  }));
+  })), [items]);
 
-  const selectedItem = itemOptions.find((item) => item.id === value || item.value === (value as string)?.toLowerCase());
+  const selectedItem = React.useMemo(() => itemOptions.find((item) => {
+    if (typeof value === 'number') {
+      return item.id === value;
+    } else if (typeof value === 'string') {
+      return item.value === value.toLowerCase();
+    }
+    return false;
+  }), [itemOptions, value]);
+
+  // console.log("ItemAutocomplete render - open:", open, "value:", value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
+          id={id}
           variant="outline"
           role="combobox"
           aria-expanded={open}
@@ -51,19 +68,33 @@ export function ItemAutocomplete({ items, value, onValueChange }: ItemAutocomple
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 z-[9999]" align="start">
         <Command>
           <CommandInput placeholder="품목 검색..." />
-          <CommandEmpty>해당 품목이 없습니다.</CommandEmpty>
-          <CommandGroup>
+          <CommandList>
+            <CommandEmpty>해당 품목이 없습니다.</CommandEmpty>
+            <CommandGroup>
             {itemOptions.map((item, index) => (
               <CommandItem
                 key={item.id || `item-${index}`}
-                value={item.value}
-                onSelect={(currentValue) => {
-                  onValueChange(item.id === value ? "" : item.id) // Return ID
+                value={String(item.id)}
+                // onMouseEnter={() => console.log("Item onMouseEnter:", item.id)}
+                onClick={() => {
+                  console.log("Item onClick triggered! itemId:", item.id, "prevValue:", value);
+                  const newValue = item.id === value ? null : item.id;
+                  console.log("Calling onValueChange with:", newValue, "(type:", typeof newValue, ")");
+                  onValueChange(newValue);
                   setOpen(false)
                 }}
+                onSelect={(selectedValue) => {
+                  console.log("Item onSelect triggered! selectedValue:", selectedValue, "itemId:", item.id, "prevValue:", value);
+                  const newValue = item.id === value ? null : item.id;
+                  console.log("Calling onValueChange with:", newValue, "(type:", typeof newValue, ")");
+                  onValueChange(newValue);
+                  setOpen(false)
+                }}
+                className="cursor-pointer hover:bg-accent hover:text-accent-foreground"
+                style={{pointerEvents: 'auto'}}
               >
                 <Check
                   className={cn(
@@ -74,7 +105,8 @@ export function ItemAutocomplete({ items, value, onValueChange }: ItemAutocomple
                 {item.label}
               </CommandItem>
             ))}
-          </CommandGroup>
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
