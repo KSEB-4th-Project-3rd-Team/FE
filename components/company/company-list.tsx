@@ -50,15 +50,20 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
+      console.log("Submitting company data:", { editingCompany, formData })
       if (editingCompany) {
-        await updateCompany(editingCompany.companyId.toString(), formData)
+        console.log("Updating company ID:", editingCompany.companyId)
+        const result = await updateCompany(editingCompany.companyId.toString(), formData)
+        console.log("Update result:", result)
       } else {
-        await createCompany(formData)
+        const result = await createCompany(formData)
+        console.log("Create result:", result)
       }
       reloadCompanies()
       resetForm()
     } catch (error) {
       console.error("Failed to save company:", error)
+      alert(`회사 저장 실패: ${error}`)
     }
   }
 
@@ -86,12 +91,14 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
 
   const handleDelete = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation()
+    console.log("Deleting company with ID:", id, "Type:", typeof id)
     if (confirm("이 거래처를 삭제하시겠습니까?")) {
       try {
         await deleteCompany(id.toString())
         reloadCompanies()
       } catch (error) {
         console.error("Failed to delete company:", error)
+        alert(`거래처 삭제 실패: ${error}`)
       }
     }
   }
@@ -234,6 +241,7 @@ export default function CompanyList({ companies, setCompanies: reloadCompanies }
                   <div className="space-y-1">
                     <Label htmlFor="type">거래처 구분 *</Label>
                     <Select
+                      key={editingCompany ? `edit-${editingCompany.companyId}` : 'new'}
                       value={formData.type[0] ?? ""}
                       onValueChange={(value: "매입처" | "납품처") => setFormData({ ...formData, type: [value] })}
                     >

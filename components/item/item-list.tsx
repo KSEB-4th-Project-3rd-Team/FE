@@ -10,9 +10,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, Trash2 } from "lucide-react"
 
 import { createItem, updateItem, deleteItem } from "@/lib/api"
+import { CustomPagination } from "@/components/ui/custom-pagination"
 
 export type Item = {
-  id: number;
+  itemId: number;
   itemCode: string;
   itemName: string;
   itemGroup: string;
@@ -36,23 +37,27 @@ export default function ItemList({ items, setItems: reloadItems }: ItemListProps
   const [showSearchFilters, setShowSearchFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
-  const [formData, setFormData] = useState<Omit<Item, 'id'> & { id?: number }> ({
+  const [formData, setFormData] = useState<Omit<Item, 'itemId'> & { itemId?: number }> ({
     itemCode: "", itemName: "", itemGroup: "", spec: "", unit: "", unitPriceIn: 0, unitPriceOut: 0,
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
+      console.log("Submitting item data:", { editingItem, formData })
       if (editingItem) {
-        await updateItem(editingItem.id, formData);
+        console.log("Updating item ID:", editingItem.itemId)
+        const result = await updateItem(editingItem.itemId.toString(), formData);
+        console.log("Update result:", result)
       } else {
-        await createItem(formData);
+        const result = await createItem(formData);
+        console.log("Create result:", result)
       }
       reloadItems();
       resetForm();
     } catch (error) {
       console.error("Failed to save item:", error);
-      // Optionally, show an error message to the user
+      alert(`품목 저장 실패: ${error}`)
     }
   }
 
@@ -70,13 +75,14 @@ export default function ItemList({ items, setItems: reloadItems }: ItemListProps
 
   const handleDelete = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
+    console.log("Deleting item with ID:", id, "Type:", typeof id);
     if (confirm("이 품목을 삭제하시겠습니까?")) {
       try {
-        await deleteItem(id);
+        await deleteItem(id.toString());
         reloadItems();
       } catch (error) {
         console.error("Failed to delete item:", error);
-        // Optionally, show an error message to the user
+        alert(`품목 삭제 실패: ${error}`)
       }
     }
   }
@@ -141,8 +147,8 @@ export default function ItemList({ items, setItems: reloadItems }: ItemListProps
                 </tr>
               </thead>
               <tbody>
-                {paginatedItems.map((item) => (
-                  <tr key={item.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(item)}>
+                {paginatedItems.map((item, index) => (
+                  <tr key={item.itemId || `item-${index}`} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(item)}>
                     <td className="p-3">{item.itemCode}</td>
                     <td className="p-3 font-medium">{item.itemName}</td>
                     <td className="p-3">{item.itemGroup}</td>
@@ -151,7 +157,7 @@ export default function ItemList({ items, setItems: reloadItems }: ItemListProps
                     <td className="p-3 text-right">{(item.unitPriceIn || 0).toLocaleString()}원</td>
                     <td className="p-3 text-right">{(item.unitPriceOut || 0).toLocaleString()}원</td>
                     <td className="p-3 text-center">
-                      <Button variant="ghost" size="sm" onClick={(e) => handleDelete(e, item.id)} className="text-red-600 hover:text-red-700">
+                      <Button variant="ghost" size="sm" onClick={(e) => handleDelete(e, item.itemId)} className="text-red-600 hover:text-red-700">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </td>

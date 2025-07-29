@@ -82,7 +82,7 @@ export async function fetchItems(): Promise<Item[]> {
   return handleResponse(response);
 }
 
-export async function createItem(itemData: Omit<Item, 'id'>): Promise<Item> {
+export async function createItem(itemData: Omit<Item, 'itemId'>): Promise<Item> {
   const response = await apiClient.post('/api/items', itemData);
   return handleResponse(response);
 }
@@ -96,10 +96,10 @@ export async function updateItem(id: string, itemData: Partial<Item>): Promise<I
   return handleResponse(response);
 }
 
-export async function deleteItem(id: string): Promise<void> {
+export async function deleteItem(id: string | number): Promise<void> {
   const numericId = Number(id);
-  if (isNaN(numericId)) {
-    throw new Error("Invalid item ID provided for delete.");
+  if (isNaN(numericId) || numericId <= 0) {
+    throw new Error(`Invalid item ID provided for delete: ${id}`);
   }
   await apiClient.delete(`/api/items/${numericId}`);
 }
