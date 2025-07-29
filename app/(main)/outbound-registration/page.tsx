@@ -14,26 +14,31 @@ import ErrorMessage from "@/components/ui/error-message"
 
 export default function OutboundRegistrationPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const { inOutData, inventoryData, loading, error, reloadData } = useData()
+  const { inOutData, items, companies, loading, error, reloadData } = useData()
 
   if (loading) return <InOutHistoryTableSkeleton />
   if (error) return <ErrorMessage message={error} onRetry={reloadData} />
 
   const handleFormSubmit = async (formData: any) => {
     try {
-      const selectedItem = inventoryData.find(item => item.name === formData.productName);
+      console.log("Submitting outbound order:", formData);
+      
+      const selectedItem = items.find(item => item.itemId === formData.itemId);
+      const selectedCompany = companies.find(company => company.companyId === formData.companyId);
+      
       if (!selectedItem) {
-        throw new Error("Selected product not found in inventory.");
+        throw new Error("Selected item not found.");
       }
 
       const orderData = {
-        type: 'OUTBOUND' as const,
-        itemId: selectedItem.id,
+        itemId: formData.itemId,
         quantity: Number(formData.quantity),
-        companyName: formData.client, // In outbound, it's 'client'
+        companyId: formData.companyId,
+        expectedDate: formData.expectedDate,
         notes: formData.notes,
       };
       
+      console.log("Order data to be sent:", orderData);
       await createOutboundOrder(orderData);
       toast.success("신규 출고가 성공적으로 등록되었습니다.");
       reloadData();
@@ -62,7 +67,7 @@ export default function OutboundRegistrationPage() {
             <OutboundForm 
               onSubmit={handleFormSubmit} 
               onClose={() => setIsModalOpen(false)}
-              items={inventoryData}
+              items={items}
             />
           </DialogContent>
         </Dialog>

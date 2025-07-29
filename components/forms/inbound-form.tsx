@@ -26,10 +26,11 @@ interface InboundFormData {
 interface InboundFormProps {
   onSubmit: (data: InboundFormData) => void;
   onClose: () => void;
+  items: any[]; // Will be replaced with proper Item type
 }
 
-export default function InboundForm({ onSubmit, onClose }: InboundFormProps) {
-  const { items, companies } = useData();
+export default function InboundForm({ onSubmit, onClose, items: propsItems }: InboundFormProps) {
+  const { companies } = useData();
   const [formData, setFormData] = useState<InboundFormData>({
     itemId: null,
     quantity: 0,
@@ -72,7 +73,7 @@ export default function InboundForm({ onSubmit, onClose }: InboundFormProps) {
       <div>
         <Label htmlFor="itemId">상품명 *</Label>
         <ItemAutocomplete
-          items={items}
+          items={propsItems}
           value={formData.itemId || ""}
           onValueChange={(value) => handleValueChange("itemId", value as number)}
         />

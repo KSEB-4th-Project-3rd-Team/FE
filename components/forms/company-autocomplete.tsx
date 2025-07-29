@@ -29,9 +29,9 @@ export function CompanyAutocomplete({ value, onValueChange, companies }: Company
   const [open, setOpen] = React.useState(false)
 
   const companyOptions = Array.isArray(companies) ? companies.map(company => ({
-    id: company.id,
-    value: typeof company.name === 'string' ? company.name.toLowerCase() : '',
-    label: company.name,
+    id: company.companyId,
+    value: company.companyName ? company.companyName.toLowerCase() : '',
+    label: company.companyName || '',
   })) : [];
 
   const selectedCompany = companyOptions.find((company) => company.id === value || (typeof value === 'string' && company.value === value.toLowerCase()));
@@ -56,9 +56,9 @@ export function CompanyAutocomplete({ value, onValueChange, companies }: Company
           <CommandInput placeholder="거래처 검색..." />
           <CommandEmpty>해당 거래처가 없습니다.</CommandEmpty>
           <CommandGroup>
-            {companyOptions.map((company) => (
+            {companyOptions.map((company, index) => (
               <CommandItem
-                key={company.id}
+                key={company.id || `company-${index}`}
                 value={company.value}
                 onSelect={(currentValue) => {
                   onValueChange(company.id === value ? "" : company.id)

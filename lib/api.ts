@@ -116,13 +116,45 @@ export async function fetchInOutRequests(): Promise<InOutRequest[]> {
   return handleResponse(response);
 }
 
-export async function createInboundOrder(orderData: Omit<InOutRequest, 'id' | 'status' | 'createdAt'>): Promise<InOutRequest> {
-  const response = await apiClient.post('/api/inout/orders', { ...orderData, type: 'INBOUND' });
+export interface InOutOrderItem {
+  itemId: number;
+  quantity: number;
+}
+
+export interface InOutOrderRequest {
+  type: 'INBOUND' | 'OUTBOUND';
+  companyId: number;
+  expectedDate: string; // ISO format YYYY-MM-DD
+  items: InOutOrderItem[];
+}
+
+export async function createInboundOrder(orderData: { itemId: number; quantity: number; companyId?: number; expectedDate?: string; notes?: string }): Promise<any> {
+  const requestData: InOutOrderRequest = {
+    type: 'INBOUND',
+    companyId: orderData.companyId || 1, // Default company if not provided
+    expectedDate: orderData.expectedDate || new Date().toISOString().split('T')[0],
+    items: [{
+      itemId: orderData.itemId,
+      quantity: orderData.quantity
+    }]
+  };
+  
+  const response = await apiClient.post('/api/inout/orders', requestData);
   return handleResponse(response);
 }
 
-export async function createOutboundOrder(orderData: Omit<InOutRequest, 'id' | 'status' | 'createdAt'>): Promise<InOutRequest> {
-  const response = await apiClient.post('/api/inout/orders', { ...orderData, type: 'OUTBOUND' });
+export async function createOutboundOrder(orderData: { itemId: number; quantity: number; companyId?: number; expectedDate?: string; notes?: string }): Promise<any> {
+  const requestData: InOutOrderRequest = {
+    type: 'OUTBOUND',
+    companyId: orderData.companyId || 1, // Default company if not provided
+    expectedDate: orderData.expectedDate || new Date().toISOString().split('T')[0],
+    items: [{
+      itemId: orderData.itemId,
+      quantity: orderData.quantity
+    }]
+  };
+  
+  const response = await apiClient.post('/api/inout/orders', requestData);
   return handleResponse(response);
 }
 

@@ -17,10 +17,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { InventoryItem } from "@/components/utils"
+import { Item } from "@/components/item/item-list"
 
 interface ItemAutocompleteProps {
-  items: InventoryItem[];
+  items: Item[];
   value: string | number; // Allow string (name) or number (id)
   onValueChange: (value: string | number) => void;
 }
@@ -29,9 +29,9 @@ export function ItemAutocomplete({ items, value, onValueChange }: ItemAutocomple
   const [open, setOpen] = React.useState(false)
 
   const itemOptions = items.map(item => ({
-    id: item.id,
-    value: item.name ? item.name.toLowerCase() : '',
-    label: item.name || '',
+    id: item.itemId,
+    value: item.itemName ? item.itemName.toLowerCase() : '',
+    label: item.itemName || '',
   }));
 
   const selectedItem = itemOptions.find((item) => item.id === value || item.value === (value as string)?.toLowerCase());
@@ -56,9 +56,9 @@ export function ItemAutocomplete({ items, value, onValueChange }: ItemAutocomple
           <CommandInput placeholder="품목 검색..." />
           <CommandEmpty>해당 품목이 없습니다.</CommandEmpty>
           <CommandGroup>
-            {itemOptions.map((item) => (
+            {itemOptions.map((item, index) => (
               <CommandItem
-                key={item.id}
+                key={item.id || `item-${index}`}
                 value={item.value}
                 onSelect={(currentValue) => {
                   onValueChange(item.id === value ? "" : item.id) // Return ID

@@ -27,10 +27,11 @@ interface OutboundFormData {
 interface OutboundFormProps {
   onSubmit: (data: OutboundFormData) => void;
   onClose: () => void;
+  items: any[];
 }
 
-export default function OutboundForm({ onSubmit, onClose }: OutboundFormProps) {
-  const { items, companies } = useData();
+export default function OutboundForm({ onSubmit, onClose, items: propsItems }: OutboundFormProps) {
+  const { companies } = useData();
   const [formData, setFormData] = useState<OutboundFormData>({
     itemId: null,
     quantity: 0,
@@ -75,7 +76,7 @@ export default function OutboundForm({ onSubmit, onClose }: OutboundFormProps) {
       <div>
         <Label htmlFor="itemId">상품명 *</Label>
         <ItemAutocomplete
-          items={items}
+          items={propsItems}
           value={formData.itemId || ""}
           onValueChange={(value) => handleValueChange("itemId", value as number)}
         />
