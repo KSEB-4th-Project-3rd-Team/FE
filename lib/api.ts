@@ -124,23 +124,30 @@ export async function fetchInOutData(): Promise<InOutRecord[]> {
   // Transform data to match InOutRecord interface
   const transformedData = completedData.flatMap(record => {
     // Handle multiple items in one order by creating separate records
-    return record.items.map((item, itemIndex) => ({
-      id: `${record.orderId}-${itemIndex}`,
-      type: record.type?.toLowerCase() || 'inbound',
-      productName: item.itemName || 'N/A',
-      sku: item.itemCode || 'N/A',
-      individualCode: `ORDER-${record.orderId}-${item.itemId}`,
-      specification: item.specification || 'N/A',
-      quantity: item.requestedQuantity || 0,
-      location: 'A-01', // Default location
-      company: record.companyName || 'N/A',
-      companyCode: record.companyCode || 'N/A',
-      status: record.status === 'COMPLETED' ? '완료' : '진행 중',
-      destination: 'N/A',
-      date: record.expectedDate || new Date().toISOString().split('T')[0],
-      time: '00:00:00',
-      notes: 'N/A'
-    }));
+    return record.items.map((item, itemIndex) => {
+      // createdAt이나 updatedAt에서 날짜와 시간 추출
+      const dateTime = record.createdAt || record.updatedAt || new Date().toISOString();
+      const date = dateTime.split('T')[0];
+      const time = dateTime.split('T')[1]?.substring(0, 8) || '00:00:00';
+      
+      return {
+        id: `${record.orderId}-${itemIndex}`,
+        type: record.type?.toLowerCase() || 'inbound',
+        productName: item.itemName || 'N/A',
+        sku: item.itemCode || 'N/A',
+        individualCode: `ORDER-${record.orderId}-${item.itemId}`,
+        specification: item.specification || 'N/A',
+        quantity: item.requestedQuantity || 0,
+        location: 'A-01', // Default location
+        company: record.companyName || 'N/A',
+        companyCode: record.companyCode || 'N/A',
+        status: record.status === 'COMPLETED' ? '완료' : '진행 중',
+        destination: 'N/A',
+        date: date,
+        time: time,
+        notes: 'N/A'
+      };
+    });
   });
   
   return transformedData;
