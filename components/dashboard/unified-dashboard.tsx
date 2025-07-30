@@ -14,8 +14,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Line, XAxis, YAxis, CartesianGrid, LineChart, Pie, PieChart, Cell, Sector } from 'recharts';
 import { Package, CheckCircle, AlertTriangle, XCircle, Archive, Truck, Clock, CalendarCheck, TrendingUp, TrendingDown, Percent, CalendarIcon, Bot, Activity, AlertCircle, Building, DollarSign, ShoppingCart } from 'lucide-react';
 import { CustomPagination } from '@/components/ui/custom-pagination';
-import { useData } from '@/contexts/data-context';
-import { InOutRecord, InventoryItem } from '../utils';
+import { InOutRecord, InventoryItem, Item } from '../utils';
+
+interface UnifiedDashboardProps {
+  initialInventoryData: InventoryItem[];
+  initialInOutData: InOutRecord[];
+  initialItems: Item[];
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const AnyPie = Pie as any;
@@ -58,8 +63,17 @@ interface ActiveShapeProps {
   value: number;
 }
 
-export function UnifiedDashboard() {
-  const { inventoryData, inOutData, items, loading, error } = useData();
+export function UnifiedDashboard({ 
+  initialInventoryData, 
+  initialInOutData, 
+  initialItems 
+}: UnifiedDashboardProps) {
+  const [inventoryData, setInventoryData] = useState(initialInventoryData);
+  const [inOutData, setInOutData] = useState(initialInOutData);
+  const [items, setItems] = useState(initialItems);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  // const { inventoryData, inOutData, items, loading, error } = useData();
 
   const [selectedCompany, setSelectedCompany] = React.useState<string | null>(null)
   const [activeInventoryDetail, setActiveInventoryDetail] = useState<string | null>(null);

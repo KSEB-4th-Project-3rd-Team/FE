@@ -11,6 +11,8 @@ import { Plus, Search, Trash2 } from "lucide-react"
 import { CustomPagination } from "@/components/ui/custom-pagination"
 import { createCompany, updateCompany, deleteCompany } from "@/lib/api"
 
+import { useRouter } from "next/navigation"
+
 export type Company = {
   companyId: number
   companyCode: string
@@ -22,7 +24,13 @@ export type Company = {
   type: string[]
 }
 
-export default function CompanyList({ companies, setCompanies: reloadCompanies }: { companies: Company[], setCompanies: () => void }) {
+export default function CompanyList({ initialCompanies }: { initialCompanies: Company[] }) {
+  const [companies, setCompanies] = useState(initialCompanies);
+  const router = useRouter();
+
+  const reloadCompanies = () => {
+    router.refresh();
+  };
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCompany, setEditingCompany] = useState<Company | null>(null)
   const [searchFilters, setSearchFilters] = useState({

@@ -1,15 +1,8 @@
-"use client"
-
 import InventoryManagement from "@/components/inventory/inventory-management"
-import { useData } from "@/contexts/data-context"
-import InventoryManagementSkeleton from "@/components/inventory/inventory-management-skeleton"
-import ErrorMessage from "@/components/ui/error-message"
+import { fetchInventoryData } from "@/lib/api"
 
-export default function InventoryPage() {
-  const { inventoryData, loading, error, reloadData } = useData()
+export default async function InventoryPage() {
+  const inventoryData = await fetchInventoryData();
 
-  if (loading) return <InventoryManagementSkeleton />
-  if (error) return <ErrorMessage message={error} onRetry={() => reloadData("inventoryData")} />
-
-  return <InventoryManagement data={inventoryData} />
+  return <InventoryManagement initialData={inventoryData} />
 }

@@ -14,16 +14,23 @@ import { InOutRecord } from "@/components/utils"
 import { Separator } from "@/components/ui/separator"
 import { updateInOutRecord } from "@/lib/api"
 
+import { useRouter } from "next/navigation"
+
 type DisplayUnit = "개수" | "set"
 type InOutStatus = "완료" | "진행 중" | "예약";
 
 type InOutHistoryTableProps = {
   historyType: "inbound" | "outbound" | "all";
-  data: InOutRecord[];
-  setData: () => void;
+  initialData: InOutRecord[];
 }
 
-export default function InOutHistoryTable({ historyType, data, setData: reloadData }: InOutHistoryTableProps) {
+export default function InOutHistoryTable({ historyType, initialData }: InOutHistoryTableProps) {
+  const [data, setData] = useState(initialData);
+  const router = useRouter();
+
+  const reloadData = () => {
+    router.refresh();
+  };
   
   const initialFilters = useMemo(() => ({
     type: historyType === 'all' ? 'all' : historyType,
@@ -47,7 +54,7 @@ export default function InOutHistoryTable({ historyType, data, setData: reloadDa
   const SET_QUANTITY = 14
 
   const historyData: InOutRecord[] = useMemo(() => {
-    const filtered = data.filter(item => {
+    const filtered = (data || []).filter(item => {
       const typeMatch = historyType === 'all' || 
         item.type === historyType || 
         (historyType === 'inbound' && item.type === 'INBOUND') ||

@@ -1,15 +1,8 @@
-"use client"
-
 import InOutHistoryTable from "@/components/inout/inout-history-table"
-import { useData } from "@/contexts/data-context"
-import InOutHistoryTableSkeleton from "@/components/inout/inout-history-table-skeleton"
-import ErrorMessage from "@/components/ui/error-message"
+import { fetchInOutData } from "@/lib/api"
 
-export default function InOutHistoryPage() {
-  const { inOutData, loading, error, reloadData } = useData()
-
-  if (loading) return <InOutHistoryTableSkeleton />
-  if (error) return <ErrorMessage message={error} onRetry={() => reloadData("inOutData")} />
+export default async function InOutHistoryPage() {
+  const inOutData = await fetchInOutData();
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -19,8 +12,7 @@ export default function InOutHistoryPage() {
       </div>
       <InOutHistoryTable 
         historyType="all" 
-        data={inOutData}
-        setData={() => reloadData("inOutData")}
+        initialData={inOutData}
       />
     </div>
   )

@@ -10,9 +10,17 @@ import { Package, Search, Filter, BarChart3, TrendingUp, TrendingDown } from "lu
 import { CustomPagination } from "@/components/ui/custom-pagination"
 import { InventoryItem } from "@/components/utils"
 
+import { useRouter } from "next/navigation"
+
 type DisplayUnit = "개수" | "set"
 
-export default function InventoryManagement({ data }: { data: InventoryItem[] }) {
+export default function InventoryManagement({ initialData }: { initialData: InventoryItem[] }) {
+  const [data, setData] = useState(initialData);
+  const router = useRouter();
+
+  const reloadData = () => {
+    router.refresh();
+  };
   const [searchFilters, setSearchFilters] = useState({
     name: "",
     specification: "",

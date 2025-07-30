@@ -1,15 +1,12 @@
-"use client"
-
 import CompanyList from "@/components/company/company-list"
-import { useData } from "@/contexts/data-context"
-import CompanyListSkeleton from "@/components/company/company-list-skeleton"
-import ErrorMessage from "@/components/ui/error-message"
+import { fetchCompanies } from "@/lib/api"
 
-export default function CompanyListPage() {
-  const { companies, loading, error, reloadData } = useData()
+export default async function CompanyListPage() {
+  // 서버에서 직접 데이터 페칭
+  const companies = await fetchCompanies();
 
-  if (loading) return <CompanyListSkeleton />
-  if (error) return <ErrorMessage message={error} onRetry={() => reloadData("companies")} />
+  // 데이터 페칭 실패 시 에러 페이지를 보여줄 수 있습니다. (Next.js 기본 기능)
+  // 로딩은 Suspense를 통해 처리할 수 있습니다. (현재는 기본 로딩 UI 사용)
 
-  return <CompanyList companies={companies} setCompanies={() => reloadData("companies")} />
+  return <CompanyList initialCompanies={companies} />
 }

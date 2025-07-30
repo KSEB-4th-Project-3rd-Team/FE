@@ -37,9 +37,14 @@ interface DataStates {
   dashboardSummary: DashboardSummary | null;
 }
 
+import { useRouter } from 'next/navigation';
+
+// ... (imports and interface definitions remain the same)
+
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: FC<{ children: ReactNode }> = ({ children }) => {
+  const router = useRouter();
   const [data, setData] = useState<DataStates>({
     companies: [],
     items: [],
@@ -50,59 +55,29 @@ export const DataProvider: FC<{ children: ReactNode }> = ({ children }) => {
     users: [],
     dashboardSummary: null,
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Set initial loading to false
   const [error, setError] = useState<string | null>(null);
 
+  // loadAllData is no longer needed for initial load, pages handle their own data.
   const loadAllData = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const [
-        companies, items, inOutData, inOutRequests, inventoryData,
-        schedules, users, dashboardSummary
-      ] = await Promise.all([
-        fetchCompanies(),
-        fetchItems(),
-        fetchInOutData(),
-        fetchInOutRequests(),
-        fetchInventoryData(),
-        (() => {
-          const today = new Date();
-          const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-          const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-          const formatDateTime = (date: Date) => {
-            return date.toISOString();
-          };
-          return fetchSchedules(startDate.toISOString(), new Date(today.getFullYear(), today.getMonth() + 1, 1).toISOString());
-        })(),
-        fetchUsers(),
-        fetchDashboardSummary(),
-      ]);
-      setData({ companies, items, inOutData, inOutRequests, inventoryData, schedules, users, dashboardSummary });
-    } catch (err) {
-      console.error(err);
-      if (err instanceof Error) {
-        setError(`Failed to load initial data: ${err.message}. Is the backend server running?`);
-      } else {
-        setError("Failed to load initial data. An unknown error occurred. Is the backend server running?");
-      }
-    } finally {
-      setLoading(false);
-    }
+    // This function is now empty as pages fetch their own data.
+    // We keep it to avoid breaking dependencies, but it does nothing.
+    setLoading(false);
+    return Promise.resolve();
   }, []);
 
   useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
+    // No initial data load needed from context
+    setLoading(false);
+  }, []);
 
-  const reloadData = useCallback(async (dataType?: keyof DataStates) => {
-    // For now, we'll just reload all data.
-    // This can be optimized later to refetch only specific data types.
-    await loadAllData();
-  }, [loadAllData]);
+  const reloadData = useCallback(() => {
+    // Use router.refresh() to re-run Server Component data fetching
+    router.refresh();
+  }, [router]);
 
   return (
-    <DataContext.Provider value={{ ...data, loading, error, reloadData }}>
+    <DataContext.Provider value={{ ...data, loading, error, reloadData: reloadData as any }}>
       {children}
     </DataContext.Provider>
   );

@@ -9,9 +9,17 @@ import { Check, X } from "lucide-react"
 import { InOutRequest } from "@/components/utils"
 import { CustomPagination } from "@/components/ui/custom-pagination"
 
+import { useRouter } from "next/navigation"
+
 type DisplayUnit = "개수" | "set"
 
-export default function InOutRequestPage({ requests, setRequests: reloadRequests }: { requests: InOutRequest[], setRequests: () => void }) {
+export default function InOutRequestPage({ initialRequests }: { initialRequests: InOutRequest[] }) {
+  const [requests, setRequests] = useState(initialRequests);
+  const router = useRouter();
+
+  const reloadRequests = () => {
+    router.refresh();
+  };
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null)
   const [displayUnit, setDisplayUnit] = useState<DisplayUnit>('set')
   const [selectedRequest, setSelectedRequest] = useState<InOutRequest | null>(null)

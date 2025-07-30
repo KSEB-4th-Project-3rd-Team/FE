@@ -1,15 +1,8 @@
-"use client"
-
 import InOutRequestPage from "@/components/inout/inout-request"
-import { useData } from "@/contexts/data-context"
-import InOutRequestPageSkeleton from "@/components/inout/inout-request-page-skeleton"
-import ErrorMessage from "@/components/ui/error-message"
+import { fetchInOutRequests } from "@/lib/api"
 
-export default function InOutRequest() {
-  const { inOutRequests, loading, error, reloadData } = useData()
+export default async function InOutRequest() {
+  const inOutRequests = await fetchInOutRequests();
 
-  if (loading) return <InOutRequestPageSkeleton />
-  if (error) return <ErrorMessage message={error} onRetry={() => reloadData("inOutRequests")} />
-
-  return <InOutRequestPage requests={inOutRequests} setRequests={() => reloadData("inOutRequests")} />
+  return <InOutRequestPage initialRequests={inOutRequests} />
 }

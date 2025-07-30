@@ -10,12 +10,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CustomPagination } from "@/components/ui/custom-pagination"
 import { User } from "@/app/(main)/layout"
 
+import { useRouter } from "next/navigation"
+
 interface UserManagementProps {
-  users: User[];
-  setUsers: () => void;
+  initialUsers: User[];
 }
 
-export default function UserManagement({ users, setUsers: reloadUsers }: UserManagementProps) {
+export default function UserManagement({ initialUsers }: UserManagementProps) {
+  const [users, setUsers] = useState(initialUsers);
+  const router = useRouter();
+
+  const reloadUsers = () => {
+    router.refresh();
+  };
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState<"ADMIN" | "USER" | undefined>(undefined)
   const [statusFilter, setStatusFilter] = useState<"ACTIVE" | "INACTIVE" | "SUSPENDED" | undefined>(undefined)

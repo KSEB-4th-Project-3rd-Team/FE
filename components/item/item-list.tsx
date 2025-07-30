@@ -12,6 +12,8 @@ import { Plus, Search, Trash2 } from "lucide-react"
 import { createItem, updateItem, deleteItem } from "@/lib/api"
 import { CustomPagination } from "@/components/ui/custom-pagination"
 
+import { useRouter } from "next/navigation"
+
 export type Item = {
   itemId: number;
   itemCode: string;
@@ -24,11 +26,16 @@ export type Item = {
 };
 
 interface ItemListProps {
-  items: Item[];
-  setItems: () => void;
+  initialItems: Item[];
 }
 
-export default function ItemList({ items, setItems: reloadItems }: ItemListProps) {
+export default function ItemList({ initialItems }: ItemListProps) {
+  const [items, setItems] = useState(initialItems);
+  const router = useRouter();
+
+  const reloadItems = () => {
+    router.refresh();
+  };
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<Item | null>(null)
   const [searchFilters, setSearchFilters] = useState({

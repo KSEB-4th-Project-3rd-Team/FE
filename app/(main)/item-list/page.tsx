@@ -1,15 +1,8 @@
-"use client"
-
 import ItemList from "@/components/item/item-list"
-import { useData } from "@/contexts/data-context"
-import ItemListSkeleton from "@/components/item/item-list-skeleton"
-import ErrorMessage from "@/components/ui/error-message"
+import { fetchItems } from "@/lib/api"
 
-export default function ItemListPage() {
-  const { items, loading, error, reloadData } = useData()
+export default async function ItemListPage() {
+  const items = await fetchItems();
 
-  if (loading) return <ItemListSkeleton />
-  if (error) return <ErrorMessage message={error} onRetry={() => reloadData("items")} />
-
-  return <ItemList items={items} setItems={() => reloadData("items")} />
+  return <ItemList initialItems={items} />
 }
