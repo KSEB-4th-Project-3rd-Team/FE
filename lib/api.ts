@@ -15,7 +15,7 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
 }
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8080', // Use root path
+  baseURL: 'https://smart-wms-be.onrender.com', // Use root path
   headers: {
     'Content-Type': 'application/json',
   },
