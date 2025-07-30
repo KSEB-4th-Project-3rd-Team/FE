@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Trash2, Users, Shield, UserCheck, UserX } from "lucide-react"
+import { Search, Users, Shield, UserCheck, UserX } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CustomPagination } from "@/components/ui/custom-pagination"
-import { updateUser, deleteUser } from "@/lib/api"
 import { User } from "@/app/(main)/layout"
 
 interface UserManagementProps {
@@ -23,37 +22,11 @@ export default function UserManagement({ users, setUsers: reloadUsers }: UserMan
   const [currentPage, setCurrentPage] = useState(1)
   const usersPerPage = 10
 
-  const handleDelete = async (id: number) => {
-    if (confirm("이 사용자를 삭제하시겠습니까?")) {
-      try {
-        await deleteUser(id.toString());
-        reloadUsers();
-      } catch (error) {
-        console.error("Failed to delete user:", error);
-      }
-    }
-  }
-
-  const toggleUserStatus = async (id: number) => {
-    const user = users.find(u => u.id === id);
-    if (!user) return;
-
-    const newStatus = user.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
-    if (confirm(`이 사용자를 ${newStatus === 'ACTIVE' ? '활성' : '비활성'} 상태로 변경하시겠습니까?`)) {
-      try {
-        await updateUser(id.toString(), { status: newStatus });
-        reloadUsers();
-      } catch (error) {
-        console.error("Failed to toggle user status:", error);
-      }
-    }
-  }
 
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      user.username.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesRole = !roleFilter || user.role === roleFilter
     const matchesStatus = !statusFilter || user.status === statusFilter
 
@@ -199,7 +172,6 @@ export default function UserManagement({ users, setUsers: reloadUsers }: UserMan
                   <th className="text-center p-3 font-semibold">상태</th>
                   <th className="text-left p-3 font-semibold">마지막 접속</th>
                   <th className="text-left p-3 font-semibold">가입일</th>
-                  <th className="text-center p-3 font-semibold">관리</th>
                 </tr>
               </thead>
               <tbody>
@@ -209,7 +181,6 @@ export default function UserManagement({ users, setUsers: reloadUsers }: UserMan
                       <div>
                         <p className="font-medium">{user.fullName}</p>
                         <p className="text-xs text-gray-500">@{user.username}</p>
-                        <p className="text-xs text-gray-500">{user.email}</p>
                       </div>
                     </td>
                     <td className="p-3">
@@ -227,30 +198,6 @@ export default function UserManagement({ users, setUsers: reloadUsers }: UserMan
                     </td>
                     <td className="p-3 text-sm text-gray-600">{user.lastLogin}</td>
                     <td className="p-3 text-sm text-gray-600">{user.createdAt}</td>
-                    <td className="p-3 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleUserStatus(user.id)}
-                          className={
-                            user.status === "ACTIVE"
-                              ? "text-gray-600 hover:text-gray-700"
-                              : "text-green-600 hover:text-green-700"
-                          }
-                        >
-                          {user.status === "ACTIVE" ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(user.id)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>

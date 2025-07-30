@@ -52,7 +52,7 @@ export async function login(username: string, password: string): Promise<{ user:
       role: backendData.user.role,
       status: 'ACTIVE',
       lastLogin: new Date().toLocaleString('ko-KR'),
-      createdAt: new Date().toLocaleDateString('ko-KR')
+      createdAt: backendData.user.joinedAt ? new Date(backendData.user.joinedAt).toLocaleDateString('ko-KR') : new Date().toLocaleDateString('ko-KR')
     }
   };
 }
@@ -74,8 +74,14 @@ export async function signup(userData: { username: string; password: string; ful
     fullName: backendUser.fullName,
     role: backendUser.role,
     status: backendUser.status,
-    lastLogin: backendUser.lastLogin ? new Date(backendUser.lastLogin).toLocaleString('ko-KR') : '접속 기록 없음',
-    createdAt: new Date().toLocaleDateString('ko-KR')
+    lastLogin: backendUser.lastLogin ? new Date(backendUser.lastLogin).toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }) : '접속 기록 없음',
+    createdAt: backendUser.joinedAt ? new Date(backendUser.joinedAt).toLocaleDateString('ko-KR') : new Date().toLocaleDateString('ko-KR')
   };
 }
 
@@ -92,7 +98,7 @@ export async function checkSession(): Promise<{ user: User }> {
       role: backendData.role,
       status: 'ACTIVE',
       lastLogin: new Date().toLocaleString('ko-KR'),
-      createdAt: new Date().toLocaleDateString('ko-KR')
+      createdAt: backendData.joinedAt ? new Date(backendData.joinedAt).toLocaleDateString('ko-KR') : new Date().toLocaleDateString('ko-KR')
     }
   };
 }
@@ -415,9 +421,15 @@ export async function fetchUsers(): Promise<User[]> {
         email: user.email,
         fullName: user.fullName,
         role: user.role,
-        status: user.isActive ? 'ACTIVE' : 'INACTIVE',
-        lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleString('ko-KR') : '접속 기록 없음',
-        createdAt: new Date().toLocaleDateString('ko-KR')
+        status: user.status,
+        lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleString('ko-KR', {
+          year: 'numeric',
+          month: '2-digit', 
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : '접속 기록 없음',
+        createdAt: user.joinedAt ? new Date(user.joinedAt).toLocaleDateString('ko-KR') : new Date().toLocaleDateString('ko-KR')
     }));
 }
 
@@ -438,8 +450,14 @@ export async function createUser(userData: Omit<User, 'id'>): Promise<User> {
     fullName: backendUser.fullName,
     role: backendUser.role,
     status: backendUser.status,
-    lastLogin: backendUser.lastLogin ? new Date(backendUser.lastLogin).toLocaleString('ko-KR') : '접속 기록 없음',
-    createdAt: new Date().toLocaleDateString('ko-KR')
+    lastLogin: backendUser.lastLogin ? new Date(backendUser.lastLogin).toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }) : '접속 기록 없음',
+    createdAt: backendUser.joinedAt ? new Date(backendUser.joinedAt).toLocaleDateString('ko-KR') : new Date().toLocaleDateString('ko-KR')
   };
 }
 
@@ -466,8 +484,14 @@ export async function updateUser(id: string, userData: Partial<User>): Promise<U
     fullName: backendUser.fullName,
     role: backendUser.role,
     status: backendUser.status,
-    lastLogin: backendUser.lastLogin ? new Date(backendUser.lastLogin).toLocaleString('ko-KR') : '접속 기록 없음',
-    createdAt: new Date().toLocaleDateString('ko-KR')
+    lastLogin: backendUser.lastLogin ? new Date(backendUser.lastLogin).toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit', 
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }) : '접속 기록 없음',
+    createdAt: backendUser.joinedAt ? new Date(backendUser.joinedAt).toLocaleDateString('ko-KR') : new Date().toLocaleDateString('ko-KR')
   };
 }
 

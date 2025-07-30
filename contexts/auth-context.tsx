@@ -48,9 +48,11 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const signup = async (userData: { username: string; password: string; fullName: string; email: string }) => {
     try {
       await apiSignup(userData);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Signup failed:", error);
-      throw new Error("회원가입에 실패했습니다. 입력된 정보를 확인해주세요.");
+      console.error("Error response:", error.response?.data);
+      const errorMessage = error.response?.data?.message || "회원가입에 실패했습니다. 입력된 정보를 확인해주세요.";
+      throw new Error(errorMessage);
     }
   };
 
