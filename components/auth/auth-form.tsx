@@ -10,7 +10,7 @@ import { Warehouse, Eye, EyeOff, Loader2 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 
 export default function AuthForm() {
-  const { login } = useAuth();
+  const { login, signup } = useAuth();
   const [isLogin, setIsLogin] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -60,14 +60,18 @@ export default function AuthForm() {
       if (isLogin) {
         await login(formData.username, formData.password);
       } else {
-        // TODO: Implement registration logic via API
-        // await register(formData.username, formData.password, formData.fullName);
+        await signup({
+          username: formData.username,
+          password: formData.password,
+          fullName: formData.fullName,
+          email: `${formData.username}@example.com`
+        });
         alert("회원가입이 완료되었습니다. 로그인해주세요.")
         setIsLogin(true)
         setFormData({ ...formData, password: "", fullName: "", confirmPassword: "" })
       }
     } catch (err) {
-      setError((err as Error).message || "아이디 또는 비밀번호가 올바르지 않습니다.")
+      setError((err as Error).message || "오류가 발생했습니다.")
     } finally {
       setIsLoading(false)
     }

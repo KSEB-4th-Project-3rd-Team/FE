@@ -2,12 +2,13 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode, FC } from 'react';
 import { User } from '@/app/(main)/layout';
-import { login as apiLogin } from '@/lib/api';
+import { login as apiLogin, signup as apiSignup, checkSession as apiCheckSession, logout as apiLogout } from '@/lib/api';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (username: string, password: string) => Promise<void>;
+  signup: (userData: { username: string; password: string; fullName: string; email: string }) => Promise<void>;
   logout: () => void;
 }
 
@@ -18,15 +19,15 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const initializeAuth = () => {
+    const initializeAuth = async () => {
       try {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+        const response = await apiCheckSession();
+        if (response.user) {
+          setUser(response.user);
         }
       } catch (error) {
-        console.error("Failed to parse user from localStorage", error);
-        localStorage.removeItem("user");
+        console.log("No active session found");
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
@@ -35,31 +36,36 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   }, []);
 
   const login = async (username: string, password: string) => {
-    // For now, we'll use a mock login until the real API is ready
-    const mockUser: User = { id: "1", username, fullName: "Test User", role: "Admin" };
-    localStorage.setItem("user", JSON.stringify(mockUser));
-    setUser(mockUser);
-    
-    // Real API call (can be enabled later)
-    /*
     try {
-      const loggedInUser = await apiLogin(username, password);
-      localStorage.setItem("user", JSON.stringify(loggedInUser));
-      setUser(loggedInUser);
+      const response = await apiLogin(username, password);
+      setUser(response.user);
     } catch (error) {
       console.error("Login failed:", error);
-      throw error;
+      throw new Error("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
     }
-    */
   };
 
-  const logout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
+  const signup = async (userData: { username: string; password: string; fullName: string; email: string }) => {
+    try {
+      await apiSignup(userData);
+    } catch (error) {
+      console.error("Signup failed:", error);
+      throw new Error("회원가입에 실패했습니다. 입력된 정보를 확인해주세요.");
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await apiLogout();
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setUser(null);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

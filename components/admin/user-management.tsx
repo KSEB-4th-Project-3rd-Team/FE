@@ -142,10 +142,10 @@ export default function UserManagement({ users, setUsers: reloadUsers }: UserMan
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">관리자</p>
-                <p className="text-2xl font-bold text-red-600">{roleStats.ADMIN}</p>
+                <p className="text-sm text-gray-600">일반 사용자</p>
+                <p className="text-2xl font-bold text-blue-600">{roleStats.USER}</p>
               </div>
-              <Shield className="w-8 h-8 text-red-500" />
+              <Shield className="w-8 h-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>

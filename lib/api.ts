@@ -40,7 +40,61 @@ async function handleResponse<T>(response: { data: T }): Promise<T> {
 // --- Auth ---
 export async function login(username: string, password: string): Promise<{ user: User; message: string }> {
   const response = await apiClient.post('/api/auth/login', { username, password });
-  return response.data;
+  const backendData = response.data;
+  
+  return {
+    message: backendData.message,
+    user: {
+      id: backendData.user.user_id,
+      username: backendData.user.username,
+      email: backendData.user.email,
+      fullName: backendData.user.full_name,
+      role: backendData.user.role,
+      status: 'ACTIVE',
+      lastLogin: new Date().toLocaleString('ko-KR'),
+      createdAt: new Date().toLocaleDateString('ko-KR')
+    }
+  };
+}
+
+export async function signup(userData: { username: string; password: string; fullName: string; email: string }): Promise<User> {
+  const response = await apiClient.post('/api/users', {
+    username: userData.username,
+    password: userData.password,
+    fullName: userData.fullName,
+    email: userData.email,
+    role: 'USER'
+  });
+  const backendUser = await handleResponse(response);
+  
+  return {
+    id: backendUser.userId,
+    username: backendUser.username,
+    email: backendUser.email,
+    fullName: backendUser.fullName,
+    role: backendUser.role,
+    status: backendUser.status,
+    lastLogin: backendUser.lastLogin ? new Date(backendUser.lastLogin).toLocaleString('ko-KR') : '접속 기록 없음',
+    createdAt: new Date().toLocaleDateString('ko-KR')
+  };
+}
+
+export async function checkSession(): Promise<{ user: User }> {
+  const response = await apiClient.get('/api/auth/me');
+  const backendData = response.data;
+  
+  return {
+    user: {
+      id: backendData.user_id,
+      username: backendData.username,
+      email: backendData.email,
+      fullName: backendData.full_name,
+      role: backendData.role,
+      status: 'ACTIVE',
+      lastLogin: new Date().toLocaleString('ko-KR'),
+      createdAt: new Date().toLocaleDateString('ko-KR')
+    }
+  };
 }
 
 export async function logout() {
@@ -353,12 +407,40 @@ export async function deleteSchedule(id: string | number): Promise<void> {
 // --- Users ---
 export async function fetchUsers(): Promise<User[]> {
     const response = await apiClient.get('/api/users');
-    return handleResponse(response);
+    const backendUsers = await handleResponse(response);
+    
+    return backendUsers.map((user: any) => ({
+        id: user.userId,
+        username: user.username,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        status: user.isActive ? 'ACTIVE' : 'INACTIVE',
+        lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleString('ko-KR') : '접속 기록 없음',
+        createdAt: new Date().toLocaleDateString('ko-KR')
+    }));
 }
 
 export async function createUser(userData: Omit<User, 'id'>): Promise<User> {
-  const response = await apiClient.post('/api/users', userData);
-  return handleResponse(response);
+  const response = await apiClient.post('/api/users', {
+    username: userData.username,
+    email: userData.email,
+    fullName: userData.fullName,
+    password: 'defaultPassword123',
+    role: userData.role
+  });
+  const backendUser = await handleResponse(response);
+  
+  return {
+    id: backendUser.userId,
+    username: backendUser.username,
+    email: backendUser.email,
+    fullName: backendUser.fullName,
+    role: backendUser.role,
+    status: backendUser.status,
+    lastLogin: backendUser.lastLogin ? new Date(backendUser.lastLogin).toLocaleString('ko-KR') : '접속 기록 없음',
+    createdAt: new Date().toLocaleDateString('ko-KR')
+  };
 }
 
 export async function updateUser(id: string, userData: Partial<User>): Promise<User> {
@@ -366,8 +448,27 @@ export async function updateUser(id: string, userData: Partial<User>): Promise<U
   if (isNaN(numericId)) {
     throw new Error("Invalid user ID provided for update.");
   }
-  const response = await apiClient.put(`/api/users/${numericId}`, userData);
-  return handleResponse(response);
+  
+  const updateData: any = {};
+  if (userData.username) updateData.username = userData.username;
+  if (userData.email) updateData.email = userData.email;
+  if (userData.fullName) updateData.fullName = userData.fullName;
+  if (userData.role) updateData.role = userData.role;
+  if (userData.status) updateData.status = userData.status;
+  
+  const response = await apiClient.put(`/api/users/${numericId}`, updateData);
+  const backendUser = await handleResponse(response);
+  
+  return {
+    id: backendUser.userId,
+    username: backendUser.username,
+    email: backendUser.email,
+    fullName: backendUser.fullName,
+    role: backendUser.role,
+    status: backendUser.status,
+    lastLogin: backendUser.lastLogin ? new Date(backendUser.lastLogin).toLocaleString('ko-KR') : '접속 기록 없음',
+    createdAt: new Date().toLocaleDateString('ko-KR')
+  };
 }
 
 export async function deleteUser(id: string): Promise<void> {
