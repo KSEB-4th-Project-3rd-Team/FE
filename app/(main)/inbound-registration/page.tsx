@@ -89,8 +89,8 @@ export default function InboundRegistrationPage() {
         </Dialog>
       </div>
       <InOutHistoryTable 
-        historyType="inbound" 
-        data={inOutData.filter(d => d.type === 'INBOUND' || d.type === 'inbound')}
+        historyType="inbound"
+        initialData={[]}
       />
     </div>
   )

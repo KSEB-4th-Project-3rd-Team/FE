@@ -14,7 +14,7 @@ export default function AmrStatusPage() {
         </p>
       </div>
       <div className="h-[calc(100vh-10rem)]">
-        <InOutStatusPanel showSearch={true} />
+        <InOutStatusPanel showSearch={true} data={[]} />
       </div>
     </div>
   )

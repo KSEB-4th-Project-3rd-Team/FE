@@ -142,7 +142,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
               )}
             />
             <button className={cn(buttonVariants())} disabled={isLoading}>
-              {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading && <Icons.Spinner className="mr-2 h-4 w-4 animate-spin" />}
               Sign Up
             </button>
           </div>

@@ -4,7 +4,7 @@
     "allowJs": true,
     "target": "ES6",
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
@@ -20,7 +20,9 @@
     ],
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]

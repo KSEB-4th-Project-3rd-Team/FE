@@ -14,7 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Line, XAxis, YAxis, CartesianGrid, LineChart, Pie, PieChart, Cell, Sector } from 'recharts';
 import { Package, CheckCircle, AlertTriangle, XCircle, Archive, Truck, Clock, CalendarCheck, TrendingUp, TrendingDown, Percent, CalendarIcon, Bot, Activity, AlertCircle, Building, DollarSign, ShoppingCart } from 'lucide-react';
 import { CustomPagination } from '@/components/ui/custom-pagination';
-import { InOutRecord, InventoryItem, Item } from '../utils';
+import { InOutRecord, InventoryItem } from '../utils';
+import { Item } from '../item/item-list';
 
 interface UnifiedDashboardProps {
   initialInventoryData: InventoryItem[];

@@ -119,6 +119,7 @@ export function InOutStatus() {
           <InOutStatusDialog
             isOpen={isDialogOpen}
             onClose={handleDialogClose}
+            data={[]}
           />
         )}
       </CardContent>

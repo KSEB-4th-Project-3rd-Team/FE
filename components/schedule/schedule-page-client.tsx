@@ -8,7 +8,8 @@ import { Calendar, Plus } from "lucide-react"
 import ScheduleModal from "@/components/schedule/schedule-modal"
 import DayDetailModal from "@/components/schedule/day-detail-modal"
 import CalendarHeader from "@/components/schedule/calendar-header"
-import { Schedule, InOutRecord } from "@/lib/api"
+import { Schedule } from "@/lib/api"
+import { InOutRecord } from "@/components/utils"
 
 // 날짜를 YYYY-MM-DD 형식으로 변환하는 함수 (시간대 문제 해결)
 const formatDateToString = (date: Date): string => {

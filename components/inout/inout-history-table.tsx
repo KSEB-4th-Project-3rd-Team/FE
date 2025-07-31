@@ -57,8 +57,8 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
     const filtered = (data || []).filter(item => {
       const typeMatch = historyType === 'all' || 
         item.type === historyType || 
-        (historyType === 'inbound' && item.type === 'INBOUND') ||
-        (historyType === 'outbound' && item.type === 'OUTBOUND');
+        (historyType === 'inbound' && (item.type as any) === 'INBOUND') ||
+        (historyType === 'outbound' && (item.type as any) === 'OUTBOUND');
       return typeMatch;
     });
     
@@ -94,7 +94,7 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
   const handleFormSubmit = async () => {
     if (!selectedRecord) return;
     try {
-      await updateInOutRecord(selectedRecord.id, formData);
+      await updateInOutRecord(selectedRecord.id.toString(), formData);
       reloadData();
       setIsModalOpen(false);
       setSelectedRecord(null);

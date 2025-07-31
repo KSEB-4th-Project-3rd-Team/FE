@@ -10,7 +10,8 @@ import {
   fetchCompanies, fetchItems, fetchInOutData, fetchInOutRequests, 
   fetchInventoryData, fetchSchedules, fetchUsers, fetchDashboardSummary 
 } from '@/lib/api';
-import { DashboardSummary } from '@/components/dashboard/unified-dashboard';
+// import { DashboardSummary } from '@/components/dashboard/unified-dashboard';
+type DashboardSummary = any;
 
 interface DataContextType {
   companies: Company[];

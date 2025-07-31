@@ -50,3 +50,4 @@ export interface InventoryItem {
   status: string;
   lastUpdate: string;
 }
+

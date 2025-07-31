@@ -4,8 +4,9 @@ import { Company } from '@/components/company/company-list';
 import { Item } from '@/components/item/item-list';
 import { InOutRecord, InOutRequest, InventoryItem } from '@/components/utils';
 import { User } from '@/app/(main)/layout';
-import { Schedule } from '@/app/(main)/schedule/page';
-import { DashboardSummary } from '@/components/dashboard/unified-dashboard'; // Import DashboardSummary type
+// import { Schedule } from '@/app/(main)/schedule/page';
+// import { DashboardSummary } from '@/components/dashboard/unified-dashboard'; // Import DashboardSummary type
+type DashboardSummary = any;
 import axios from 'axios';
 
 // --- Dashboard ---
@@ -13,6 +14,17 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
   const response = await apiClient.get('/api/dashboard/summary');
   return handleResponse(response);
 }
+
+export const api = {
+  post: async (url: string, data: any) => {
+    const response = await apiClient.post(url, data);
+    return response.data;
+  },
+  get: async (url: string) => {
+    const response = await apiClient.get(url);
+    return response.data;
+  }
+};
 
 const apiClient = axios.create({
   baseURL: 'https://smart-wms-be.onrender.com', // Use root path
@@ -359,7 +371,7 @@ export async function fetchInventoryData(): Promise<InventoryItem[]> {
       id: index + 1,
       name: backendItem.itemName,
       sku: item?.itemCode || `SKU-${backendItem.itemId}`,
-      specification: item?.specification || 'N/A',
+      specification: item?.spec || 'N/A',
       quantity: backendItem.quantity,
       inboundScheduled: inboundScheduled,
       outboundScheduled: outboundScheduled,

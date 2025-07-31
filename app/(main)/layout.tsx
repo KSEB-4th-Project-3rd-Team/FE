@@ -10,14 +10,30 @@ import {
   Building2, Box, BarChart3, Settings, Search,
 } from "lucide-react"
 import AuthForm from "@/components/auth/auth-form"
-import GlobalSearch from "@/components/search/global-search"
-import InOutStatusPanel from "@/components/inout/inout-status-panel"
-import AmrStatusPanel, { type Amr } from "@/components/simulation/amr-status-panel"
-import NotificationPopover from "@/components/notifications/notification-popover"
-import { NotificationProvider } from "@/hooks/use-notifications"
+import dynamic from "next/dynamic"
 import { InOutRecord } from "@/components/utils"
 import { AuthProvider, useAuth } from "@/contexts/auth-context"
 import { DataProvider, useData } from "@/contexts/data-context"
+
+const InOutStatusPanel = dynamic(() => import("@/components/inout/inout-status-panel"), {
+  loading: () => <div className="animate-pulse bg-gray-200 rounded h-32" />
+})
+
+const AmrStatusPanel = dynamic(() => import("@/components/simulation/amr-status-panel"), {
+  loading: () => <div className="animate-pulse bg-gray-200 rounded h-32" />
+})
+
+const NotificationPopover = dynamic(() => import("@/components/notifications/notification-popover"), {
+  loading: () => null
+})
+
+const NotificationProvider = dynamic(() => import("@/hooks/use-notifications").then(mod => ({ default: mod.NotificationProvider })), {
+  loading: () => <div />
+})
+
+const GlobalSearch = dynamic(() => import("@/components/search/global-search"), {
+  loading: () => null
+})
 
 export type User = {
   id: number;
@@ -34,7 +50,8 @@ type SidePanelType = "inout-status" | "amr-status" | null
 
 function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, isLoading, logout } = useAuth();
-  const { inOutData, amrData } = useData();
+  const { inOutData } = useData();
+  const amrData: any[] = [];
   const [sidePanel, setSidePanel] = useState<SidePanelType>(null)
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)

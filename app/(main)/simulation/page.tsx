@@ -9,10 +9,7 @@ export default async function SimulationPage() {
 
   return (
     <div className="flex-1 h-screen bg-white">
-      <WarehouseSimulation 
-        initialInventoryData={inventoryData}
-        initialInOutData={inOutData}
-      />
+      <WarehouseSimulation />
     </div>
   )
 }
