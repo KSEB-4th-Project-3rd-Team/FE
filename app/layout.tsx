@@ -24,6 +24,10 @@ export const metadata: Metadata = {
   },
 }
 
+// Disable static generation and caching for dynamic content
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default function RootLayout({
   children,
 }: Readonly<{

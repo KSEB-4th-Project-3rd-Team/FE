@@ -90,7 +90,7 @@ export default function InboundRegistrationPage() {
       </div>
       <InOutHistoryTable 
         historyType="inbound"
-        initialData={[]}
+        initialData={inOutData}
       />
     </div>
   )

@@ -30,16 +30,27 @@ const apiClient = axios.create({
   baseURL: 'https://smart-wms-be.onrender.com', // Use root path
   headers: {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
   },
   withCredentials: true,
 });
 
-// Add a request interceptor to include the token
+// Add a request interceptor to include the token and prevent caching
 apiClient.interceptors.request.use((config) => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  // Add timestamp to prevent caching
+  if (config.params) {
+    config.params._t = Date.now();
+  } else {
+    config.params = { _t: Date.now() };
+  }
+  
   return config;
 });
 

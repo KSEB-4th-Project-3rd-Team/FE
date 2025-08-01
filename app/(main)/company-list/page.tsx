@@ -1,6 +1,10 @@
 import CompanyList from "@/components/company/company-list"
 import { fetchCompanies } from "@/lib/api"
 
+// Disable static generation and caching for dynamic content
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export default async function CompanyListPage() {
   // 서버에서 직접 데이터 페칭
   const companies = await fetchCompanies();

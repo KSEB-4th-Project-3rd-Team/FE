@@ -56,26 +56,62 @@ export const DataProvider: FC<{ children: ReactNode }> = ({ children }) => {
     users: [],
     dashboardSummary: null,
   });
-  const [loading, setLoading] = useState(false); // Set initial loading to false
+  const [loading, setLoading] = useState(true); // Set initial loading to true
   const [error, setError] = useState<string | null>(null);
 
-  // loadAllData is no longer needed for initial load, pages handle their own data.
   const loadAllData = useCallback(async () => {
-    // This function is now empty as pages fetch their own data.
-    // We keep it to avoid breaking dependencies, but it does nothing.
-    setLoading(false);
-    return Promise.resolve();
+    setLoading(true);
+    setError(null);
+    try {
+      const [
+        companiesData,
+        itemsData,
+        inOutDataResult,
+        inOutRequestsData,
+        inventoryDataResult,
+        schedulesData,
+        usersData,
+        dashboardSummaryData
+      ] = await Promise.all([
+        fetchCompanies().catch(() => []),
+        fetchItems().catch(() => []),
+        fetchInOutData().catch(() => []),
+        fetchInOutRequests().catch(() => []),
+        fetchInventoryData().catch(() => []),
+        fetchSchedules().catch(() => []),
+        fetchUsers().catch(() => []),
+        fetchDashboardSummary().catch(() => null)
+      ]);
+
+      setData({
+        companies: companiesData,
+        items: itemsData,
+        inOutData: inOutDataResult,
+        inOutRequests: inOutRequestsData,
+        inventoryData: inventoryDataResult,
+        schedules: schedulesData,
+        users: usersData,
+        dashboardSummary: dashboardSummaryData,
+      });
+    } catch (err) {
+      console.error('Failed to load data:', err);
+      setError('데이터를 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    // No initial data load needed from context
-    setLoading(false);
-  }, []);
+    loadAllData();
+  }, [loadAllData]);
 
-  const reloadData = useCallback(() => {
-    // Use router.refresh() to re-run Server Component data fetching
+  const reloadData = useCallback(async (dataType?: keyof DataStates) => {
+    // Force reload by calling loadAllData
+    await loadAllData();
+    
+    // Also force router refresh to ensure SSR data is updated
     router.refresh();
-  }, [router]);
+  }, [loadAllData, router]);
 
   return (
     <DataContext.Provider value={{ ...data, loading, error, reloadData: reloadData as any }}>

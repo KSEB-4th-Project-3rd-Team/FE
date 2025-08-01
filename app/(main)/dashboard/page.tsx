@@ -1,6 +1,10 @@
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 
-const UnifiedDashboard = dynamic(() => import("@/components/dashboard/unified-dashboard"), {
+// Disable static generation and caching for dynamic content
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+const UnifiedDashboard = dynamicImport(() => import("@/components/dashboard/unified-dashboard"), {
   loading: () => (
     <div className="p-6 space-y-6">
       <div className="animate-pulse">

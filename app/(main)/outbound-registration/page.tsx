@@ -91,7 +91,7 @@ export default function OutboundRegistrationPage() {
       </div>
       <InOutHistoryTable 
         historyType="outbound"
-        initialData={[]}
+        initialData={inOutData}
       />
     </div>
   )
