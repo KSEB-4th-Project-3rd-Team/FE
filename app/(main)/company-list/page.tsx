@@ -1,16 +1,35 @@
+"use client"
+
 import CompanyList from "@/components/company/company-list"
-import { fetchCompanies } from "@/lib/api"
+import { useQueryCompanies } from "@/contexts/query-data-context"
 
-// Disable static generation and caching for dynamic content
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export default function CompanyListPage() {
+  const { data: companies, isLoading, error } = useQueryCompanies();
 
-export default async function CompanyListPage() {
-  // 서버에서 직접 데이터 페칭
-  const companies = await fetchCompanies();
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-16 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  // 데이터 페칭 실패 시 에러 페이지를 보여줄 수 있습니다. (Next.js 기본 기능)
-  // 로딩은 Suspense를 통해 처리할 수 있습니다. (현재는 기본 로딩 UI 사용)
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="text-center text-red-600">
+          데이터 로딩 중 오류가 발생했습니다.
+        </div>
+      </div>
+    );
+  }
 
-  return <CompanyList initialCompanies={companies} />
+  return <CompanyList initialCompanies={companies || []} />
 }

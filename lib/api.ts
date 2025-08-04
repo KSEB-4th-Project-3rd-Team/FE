@@ -30,9 +30,6 @@ const apiClient = axios.create({
   baseURL: 'https://smart-wms-be.onrender.com', // Use root path
   headers: {
     'Content-Type': 'application/json',
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    'Pragma': 'no-cache',
-    'Expires': '0'
   },
   withCredentials: true,
 });
@@ -189,26 +186,23 @@ export async function deleteItem(id: string | number): Promise<void> {
 
 
 // --- InOut ---
-export async function fetchInOutData(): Promise<InOutRecord[]> {
+// 원시 API 데이터만 반환 (중복 호출 제거)
+export async function fetchRawInOutData(): Promise<any[]> {
   const response = await apiClient.get('/api/inout/orders');
-  const allData = await handleResponse(response);
-  // console.log('Raw InOut API data:', allData);
-  
-  // Get additional data for mapping
-  const [items, companies] = await Promise.all([
-    fetchItems(),
-    fetchCompanies()
-  ]);
+  return handleResponse(response);
+}
+
+// 기존 함수는 호환성 유지를 위해 유지하되, 단순화
+export async function fetchInOutData(): Promise<InOutRecord[]> {
+  // 원시 데이터만 가져오기 (중복 호출 제거!)
+  const allData = await fetchRawInOutData();
   
   // Filter for completed records only
   const completedData = allData.filter(record => record.status === 'COMPLETED');
-  // console.log('Filtered completed data:', completedData);
   
-  // Transform data to match InOutRecord interface
+  // Transform data to match InOutRecord interface (프론트에서 조합)
   const transformedData = completedData.flatMap(record => {
-    // Handle multiple items in one order by creating separate records
     return record.items.map((item, itemIndex) => {
-      // createdAt이나 updatedAt에서 날짜와 시간 추출
       const dateTime = record.createdAt || record.updatedAt || new Date().toISOString();
       const date = dateTime.split('T')[0];
       const time = dateTime.split('T')[1]?.substring(0, 8) || '00:00:00';
@@ -221,7 +215,7 @@ export async function fetchInOutData(): Promise<InOutRecord[]> {
         individualCode: `ORDER-${record.orderId}-${item.itemId}`,
         specification: item.specification || 'N/A',
         quantity: item.requestedQuantity || 0,
-        location: 'A-01', // Default location
+        location: 'A-01',
         company: record.companyName || 'N/A',
         companyCode: record.companyCode || 'N/A',
         status: record.status === 'COMPLETED' ? '완료' : '진행 중',
@@ -237,8 +231,8 @@ export async function fetchInOutData(): Promise<InOutRecord[]> {
 }
 
 export async function fetchInOutRequests(): Promise<InOutRequest[]> {
-  const response = await apiClient.get('/api/inout/orders');
-  const allData = await handleResponse(response);
+  // 원시 데이터 재사용 (중복 호출 제거!)
+  const allData = await fetchRawInOutData();
   // Filter for pending requests only
   return allData.filter(record => record.status === 'PENDING');
 }
@@ -332,9 +326,15 @@ export interface BackendInventoryResponse {
   lastUpdated: string;
 }
 
-export async function fetchInventoryData(): Promise<InventoryItem[]> {
+// 원시 재고 데이터만 반환 (중복 호출 제거)
+export async function fetchRawInventoryData(): Promise<BackendInventoryResponse[]> {
   const response = await apiClient.get('/api/inventory');
-  const backendData: BackendInventoryResponse[] = await handleResponse(response);
+  return handleResponse(response);
+}
+
+// 기존 함수는 호환성 유지하되 중복 호출 제거
+export async function fetchInventoryData(): Promise<InventoryItem[]> {
+  const backendData = await fetchRawInventoryData();
   
   // If no inventory data exists, return empty array
   if (!backendData || backendData.length === 0) {
@@ -342,34 +342,8 @@ export async function fetchInventoryData(): Promise<InventoryItem[]> {
     return [];
   }
   
-  // Get additional data for mapping
-  const [items, inoutData, pendingRequests] = await Promise.all([
-    fetchItems(),
-    fetchInOutData(),
-    fetchInOutRequests()
-  ]);
-  
-  // Transform backend data to frontend InventoryItem format
+  // 기본 변환만 수행 (상세 정보는 React Query에서 조합)
   const transformedData: InventoryItem[] = backendData.map((backendItem, index) => {
-    const item = items.find(i => i.itemId === backendItem.itemId);
-    
-    // Calculate scheduled inbound/outbound from pending requests
-    const inboundScheduled = pendingRequests
-      .filter(request => 
-        request.type === 'inbound' && 
-        request.itemName === backendItem.itemName &&
-        request.status === 'pending'
-      )
-      .reduce((sum, request) => sum + request.quantity, 0);
-    
-    const outboundScheduled = pendingRequests
-      .filter(request => 
-        request.type === 'outbound' && 
-        request.itemName === backendItem.itemName &&
-        request.status === 'pending'
-      )
-      .reduce((sum, request) => sum + request.quantity, 0);
-    
     // Determine status based on quantity
     let status = '정상';
     if (backendItem.quantity <= 0) {
@@ -381,11 +355,11 @@ export async function fetchInventoryData(): Promise<InventoryItem[]> {
     return {
       id: index + 1,
       name: backendItem.itemName,
-      sku: item?.itemCode || `SKU-${backendItem.itemId}`,
-      specification: item?.spec || 'N/A',
+      sku: `SKU-${backendItem.itemId}`, // 기본값만 사용
+      specification: 'N/A', // 기본값, React Query에서 조합
       quantity: backendItem.quantity,
-      inboundScheduled: inboundScheduled,
-      outboundScheduled: outboundScheduled,
+      inboundScheduled: 0, // React Query에서 계산
+      outboundScheduled: 0, // React Query에서 계산
       location: backendItem.locationCode,
       status: status,
       lastUpdate: new Date(backendItem.lastUpdated).toLocaleString('ko-KR')

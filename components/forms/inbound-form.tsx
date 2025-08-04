@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import { cn } from "@/components/utils"
-import { useData } from "@/contexts/data-context"
+import { useQueryData } from "@/contexts/query-data-context"
 
 interface InboundFormData {
   itemId: number | null;
@@ -30,7 +30,7 @@ interface InboundFormProps {
 }
 
 export default function InboundForm({ onSubmit, onClose, items: propsItems }: InboundFormProps) {
-  const { companies } = useData();
+  const { companies } = useQueryData();
   const [formData, setFormData] = useState<InboundFormData>({
     itemId: null,
     quantity: 0,
@@ -112,7 +112,7 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
         <Label htmlFor="company-select">거래처</Label>
         <CompanyAutocomplete
           id="company-select"
-          companies={companies}
+          companies={companies.data || []}
           value={formData.companyId}
           onValueChange={(value) => {
             console.log("InboundForm received companyId:", value, "(type:", typeof value, ")");

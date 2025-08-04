@@ -13,7 +13,10 @@ import AuthForm from "@/components/auth/auth-form"
 import dynamic from "next/dynamic"
 import { InOutRecord } from "@/components/utils"
 import { AuthProvider, useAuth } from "@/contexts/auth-context"
-import { DataProvider, useData } from "@/contexts/data-context"
+import { DataProvider } from "@/contexts/data-context"
+import { QueryDataProvider, useQueryData } from "@/contexts/query-data-context"
+import QueryProvider from "@/components/providers/query-provider"
+import { prefetchStrategies, prefetchDashboardData, startBackgroundSync, optimizeCache } from "@/lib/prefetch"
 
 const InOutStatusPanel = dynamic(() => import("@/components/inout/inout-status-panel"), {
   loading: () => <div className="animate-pulse bg-gray-200 rounded h-32" />
@@ -50,7 +53,7 @@ type SidePanelType = "inout-status" | "amr-status" | null
 
 function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, isLoading, logout } = useAuth();
-  const { inOutData } = useData();
+  const { inOutData } = useQueryData();
   const amrData: any[] = [];
   const [sidePanel, setSidePanel] = useState<SidePanelType>(null)
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(true)
@@ -84,6 +87,34 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, searchParams])
 
+  // 성능 최적화: 페이지별 prefetching
+  useEffect(() => {
+    if (!user) return;
+
+    // 페이지별 전략적 prefetching
+    if (pathname === "/dashboard") {
+      prefetchDashboardData();
+    } else if (pathname === "/inbound-registration") {
+      prefetchStrategies.inboundRegistration();
+    } else if (pathname === "/outbound-registration") {
+      prefetchStrategies.outboundRegistration();
+    } else if (pathname === "/inventory") {
+      prefetchStrategies.inventory();
+    }
+  }, [pathname, user])
+
+  // 백그라운드 동기화 시작 (한 번만)
+  useEffect(() => {
+    if (!user) return;
+
+    startBackgroundSync();
+    optimizeCache();
+    
+    return () => {
+      // cleanup이 필요하면 여기서 처리
+    };
+  }, [user])
+
   const toggleMenu = (menu: keyof typeof expandedMenus) => {
     setExpandedMenus((prev) => ({ ...prev, [menu]: !prev[menu] }))
   }
@@ -96,7 +127,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     let panelTitle = ""
     switch (sidePanel) {
       case "inout-status":
-        panelContent = <InOutStatusPanel showSearch={false} data={inOutData} />
+        panelContent = <InOutStatusPanel showSearch={false} data={inOutData.data || []} />
         panelTitle = "실시간 작업 현황"
         break
       case "amr-status":
@@ -255,10 +286,12 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider>
-      <DataProvider>
-        <MainLayoutContent>{children}</MainLayoutContent>
-      </DataProvider>
-    </AuthProvider>
+    <QueryProvider>
+      <AuthProvider>
+        <QueryDataProvider>
+          <MainLayoutContent>{children}</MainLayoutContent>
+        </QueryDataProvider>
+      </AuthProvider>
+    </QueryProvider>
   )
 }

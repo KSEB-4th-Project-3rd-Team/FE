@@ -6,60 +6,57 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import InboundForm from "@/components/forms/inbound-form"
 import InOutHistoryTable from "@/components/inout/inout-history-table"
 import { Plus } from "lucide-react"
-import { useData } from "@/contexts/data-context"
-import { createInboundOrder } from "@/lib/api"
+import { useQueryData } from "@/contexts/query-data-context"
+import { useCreateInboundOrder } from "@/lib/queries"
 import { toast } from "sonner"
 import InOutHistoryTableSkeleton from "@/components/inout/inout-history-table-skeleton"
 import ErrorMessage from "@/components/ui/error-message"
 
 export default function InboundRegistrationPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const { inOutData, items, companies, loading, error, reloadData } = useData()
+  const { inOutData, items, companies, isLoading: loading, hasError: error } = useQueryData()
+  const { mutate: createInbound, isPending: isCreating } = useCreateInboundOrder()
 
   if (loading) return <InOutHistoryTableSkeleton />
-  if (error) return <ErrorMessage message={error} onRetry={reloadData} />
+  if (error) return <ErrorMessage message="데이터 로딩 오류" onRetry={() => window.location.reload()} />
 
-  const handleFormSubmit = async (formData: any) => {
-    try {
-      console.log("Submitting inbound order:", formData);
-      console.log("Available items:", items.map(item => ({ itemId: item.itemId, itemName: item.itemName })));
-      console.log("Looking for itemId:", formData.itemId, "Type:", typeof formData.itemId);
-      
-      // Validate that required fields are provided
-      if (!formData.itemId) {
-        throw new Error("품목을 선택해주세요.");
-      }
-      
-      if (!formData.companyId) {
-        throw new Error("거래처를 선택해주세요.");
-      }
-      
-      const selectedItem = items.find(item => item.itemId === formData.itemId);
-      const selectedCompany = companies.find(company => company.companyId === formData.companyId);
-      
-      console.log("Found item:", selectedItem);
-      console.log("Found company:", selectedCompany);
-      
-      if (!selectedItem) {
-        throw new Error(`선택한 품목을 찾을 수 없습니다. (ID: ${formData.itemId})`);
-      }
-
-      const orderData = {
-        itemId: formData.itemId,
-        quantity: Number(formData.quantity),
-        companyId: formData.companyId,
-        expectedDate: formData.expectedDate,
-        notes: formData.notes,
-      };
-      
-      await createInboundOrder(orderData);
-      toast.success("신규 입고가 성공적으로 등록되었습니다.");
-      await reloadData(); // Reload all data to reflect changes
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error("Failed to submit inbound order:", error);
-      toast.error("입고 등록에 실패했습니다.");
+  const handleFormSubmit = (formData: any) => {
+    // Validate that required fields are provided
+    if (!formData.itemId) {
+      toast.error("품목을 선택해주세요.");
+      return;
     }
+    
+    if (!formData.companyId) {
+      toast.error("거래처를 선택해주세요.");
+      return;
+    }
+    
+    const selectedItem = items.data?.find(item => item.itemId === formData.itemId);
+    if (!selectedItem) {
+      toast.error(`선택한 품목을 찾을 수 없습니다. (ID: ${formData.itemId})`);
+      return;
+    }
+
+    const orderData = {
+      itemId: formData.itemId,
+      quantity: Number(formData.quantity),
+      companyId: formData.companyId,
+      expectedDate: formData.expectedDate,
+      notes: formData.notes,
+    };
+    
+    // React Query Mutation 사용 (자동 캐시 무효화 + 에러 처리)
+    createInbound(orderData, {
+      onSuccess: () => {
+        toast.success("신규 입고가 성공적으로 등록되었습니다.");
+        setIsModalOpen(false);
+      },
+      onError: (error: any) => {
+        console.error("Failed to submit inbound order:", error);
+        toast.error("입고 등록에 실패했습니다.");
+      }
+    });
   }
 
   return (
@@ -83,14 +80,14 @@ export default function InboundRegistrationPage() {
             <InboundForm 
               onSubmit={handleFormSubmit} 
               onClose={() => setIsModalOpen(false)}
-              items={items}
+              items={items.data || []}
             />
           </DialogContent>
         </Dialog>
       </div>
       <InOutHistoryTable 
         historyType="inbound"
-        initialData={inOutData}
+        initialData={inOutData.data || []}
       />
     </div>
   )
