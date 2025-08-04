@@ -47,7 +47,7 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
     return (
       (filters.type === "all" || item.type === filters.type) &&
       (filters.status === "all" || item.status === filters.status) &&
-      item.productName.toLowerCase().includes(filters.productName.toLowerCase()) &&
+      (item.productName || '').toLowerCase().includes(filters.productName.toLowerCase()) &&
       (filters.date === "" || item.date === filters.date)
     )
   }).sort((a, b) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime()), [statusData, filters]);

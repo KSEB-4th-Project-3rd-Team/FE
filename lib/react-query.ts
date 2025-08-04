@@ -25,9 +25,8 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       refetchOnMount: true,
       refetchOnReconnect: 'always',
-      // 백그라운드 업데이트 간격 (5분)
-      refetchInterval: 5 * 60 * 1000,
-      // 탭이 비활성화되면 백그라운드 업데이트 중지
+      // 백그라운드 자동 업데이트 비활성화 (성능 최적화)
+      refetchInterval: false,
       refetchIntervalInBackground: false,
     },
     mutations: {

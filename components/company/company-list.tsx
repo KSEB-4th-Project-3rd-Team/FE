@@ -85,12 +85,12 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
 
   const handleRowClick = (company: Company) => {
     setFormData({
-      companyCode: company.companyCode,
-      companyName: company.companyName,
-      contactPerson: company.contactPerson,
-      contactPhone: company.contactPhone,
-      contactEmail: company.contactEmail,
-      address: company.address,
+      companyCode: company.companyCode || "",
+      companyName: company.companyName || "",
+      contactPerson: company.contactPerson || "",
+      contactPhone: company.contactPhone || "",
+      contactEmail: company.contactEmail || "",
+      address: company.address || "",
       type: company.type?.length ? company.type : ["납품처"],
     })
     setEditingCompany(company)
@@ -114,11 +114,11 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
   const filteredCompanies = companies.filter((company) => {
     const type = (company.type?.[0] || "").toLowerCase()
     return (
-      company.companyCode.toLowerCase().includes(searchFilters.companyCode.toLowerCase()) &&
-      company.companyName.toLowerCase().includes(searchFilters.companyName.toLowerCase()) &&
-      company.contactPerson.toLowerCase().includes(searchFilters.contactPerson.toLowerCase()) &&
-      company.contactPhone.toLowerCase().includes(searchFilters.contactPhone.toLowerCase()) &&
-      company.contactEmail.toLowerCase().includes(searchFilters.contactEmail.toLowerCase()) &&
+      (company.companyCode || '').toLowerCase().includes(searchFilters.companyCode.toLowerCase()) &&
+      (company.companyName || '').toLowerCase().includes(searchFilters.companyName.toLowerCase()) &&
+      (company.contactPerson || '').toLowerCase().includes(searchFilters.contactPerson.toLowerCase()) &&
+      (company.contactPhone || '').toLowerCase().includes(searchFilters.contactPhone.toLowerCase()) &&
+      (company.contactEmail || '').toLowerCase().includes(searchFilters.contactEmail.toLowerCase()) &&
       (searchFilters.type === "전체" || type === searchFilters.type.toLowerCase())
     )
   })
@@ -183,30 +183,30 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
               </thead>
               <tbody>
                 {paginatedCompanies.map((company) => (
-                  <tr key={company.companyId} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(company)}>
-                    <td className="p-3">{company.companyCode}</td>
-                    <td className="p-3 font-medium">{company.companyName}</td>
-                    <td className="p-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        company.type?.[0] === "매입처"
-                          ? "bg-sky-100 text-sky-800"
-                          : company.type?.[0] === "납품처"
-                            ? "bg-orange-100 text-orange-800"
-                            : "bg-gray-100 text-gray-600"
-                      }`}>
-                        {company.type?.length ? company.type[0] : "거래처 구분없음"}
-                      </span>
-                    </td>
-                    <td className="p-3">{company.contactPerson}</td>
-                    <td className="p-3">{company.contactPhone}</td>
-                    <td className="p-3">{company.contactEmail}</td>
-                    <td className="p-3">{company.address}</td>
-                    <td className="p-3 text-center">
-                      <Button variant="ghost" size="sm" onClick={(e) => handleDelete(e, company.companyId)} className="text-red-600 hover:text-red-700">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </tr>
+                    <tr key={company.companyId} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(company)}>
+                      <td className="p-3">{company.companyCode}</td>
+                      <td className="p-3 font-medium">{company.companyName}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          company.type?.[0] === "매입처"
+                            ? "bg-sky-100 text-sky-800"
+                            : company.type?.[0] === "납품처"
+                              ? "bg-orange-100 text-orange-800"
+                              : "bg-gray-100 text-gray-600"
+                        }`}>
+                          {company.type?.length ? company.type[0] : "거래처 구분없음"}
+                        </span>
+                      </td>
+                      <td className="p-3">{company.contactPerson}</td>
+                      <td className="p-3">{company.contactPhone}</td>
+                      <td className="p-3">{company.contactEmail}</td>
+                      <td className="p-3">{company.address}</td>
+                      <td className="p-3 text-center">
+                        <Button variant="ghost" size="sm" onClick={(e) => handleDelete(e, company.companyId)} className="text-red-600 hover:text-red-700">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
                 ))}
               </tbody>
             </table>

@@ -10,6 +10,7 @@ import DayDetailModal from "@/components/schedule/day-detail-modal"
 import CalendarHeader from "@/components/schedule/calendar-header"
 import { Schedule } from "@/lib/api"
 import { InOutRecord } from "@/components/utils"
+import { useSchedules, useInOutData } from "@/lib/queries"
 
 // 날짜를 YYYY-MM-DD 형식으로 변환하는 함수 (시간대 문제 해결)
 const formatDateToString = (date: Date): string => {
@@ -19,14 +20,17 @@ const formatDateToString = (date: Date): string => {
   return `${year}-${month}-${day}`
 }
 
-interface SchedulePageClientProps {
-  initialSchedules: Schedule[];
-  initialInOutData: InOutRecord[];
-}
-
-export default function SchedulePageClient({ initialSchedules, initialInOutData }: SchedulePageClientProps) {
-  const [schedules, setSchedules] = useState(initialSchedules);
-  const [inOutData, setInOutData] = useState(initialInOutData);
+export default function SchedulePageClient() {
+  const today = new Date();
+  const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+  const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+  
+  const { data: schedules = [], isLoading: schedulesLoading } = useSchedules({ 
+    startDate: startDate.toISOString(), 
+    endDate: endDate.toISOString() 
+  });
+  const { data: inOutData = [], isLoading: inOutLoading } = useInOutData();
+  
   const router = useRouter();
 
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -122,6 +126,16 @@ export default function SchedulePageClient({ initialSchedules, initialInOutData 
         <div className="grid grid-cols-7 gap-0 border border-gray-200">{days}</div>
       </div>
     )
+  }
+
+  if (schedulesLoading || inOutLoading) {
+    return (
+      <div className="p-6 bg-gray-100 min-h-screen">
+        <div className="flex items-center justify-center h-64">
+          <p>스케줄 데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

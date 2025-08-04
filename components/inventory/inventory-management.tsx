@@ -46,10 +46,10 @@ const inventoryData: InventoryItem[] = data;
 
   // 검색 필터링 로직
   const filteredInventory = inventoryData.filter((item) => {
-    const nameMatch = item.name.toLowerCase().includes(searchFilters.name.toLowerCase())
-    const specificationMatch = item.specification.toLowerCase().includes(searchFilters.specification.toLowerCase())
-    const locationMatch = item.location.toLowerCase().includes(searchFilters.location.toLowerCase())
-    const statusMatch = item.status.toLowerCase().includes(searchFilters.status.toLowerCase())
+    const nameMatch = (item.name || '').toLowerCase().includes(searchFilters.name.toLowerCase())
+    const specificationMatch = (item.specification || '').toLowerCase().includes(searchFilters.specification.toLowerCase())
+    const locationMatch = (item.location || '').toLowerCase().includes(searchFilters.location.toLowerCase())
+    const statusMatch = (item.status || '').toLowerCase().includes(searchFilters.status.toLowerCase())
 
     return nameMatch && specificationMatch && locationMatch && statusMatch
   })

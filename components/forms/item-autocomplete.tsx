@@ -44,7 +44,7 @@ export function ItemAutocomplete({ id, items, value, onValueChange }: ItemAutoco
   const selectedItem = React.useMemo(() => itemOptions.find((item) => {
     if (typeof value === 'number') {
       return item.id === value;
-    } else if (typeof value === 'string') {
+    } else if (typeof value === 'string' && value !== null) {
       return item.value === value.toLowerCase();
     }
     return false;

@@ -21,10 +21,10 @@ export default function InOutStatusDialog({ isOpen, onClose, data }: InOutStatus
 
   const filteredStatus = data.filter((item) => {
     const typeMatch = statusFilters.type === "" || item.type === statusFilters.type
-    const productNameMatch = item.productName.toLowerCase().includes(statusFilters.productName.toLowerCase())
-    const locationMatch = item.location.toLowerCase().includes(statusFilters.location.toLowerCase())
+    const productNameMatch = (item.productName || '').toLowerCase().includes(statusFilters.productName.toLowerCase())
+    const locationMatch = (item.location || '').toLowerCase().includes(statusFilters.location.toLowerCase())
     const statusMatch = statusFilters.status === "" || item.status === statusFilters.status
-    const companyMatch = item.company.toLowerCase().includes(statusFilters.company.toLowerCase())
+    const companyMatch = (item.company || '').toLowerCase().includes(statusFilters.company.toLowerCase())
     const dateMatch = statusFilters.date === "" || item.date === statusFilters.date
 
     return typeMatch && productNameMatch && locationMatch && statusMatch && companyMatch && dateMatch

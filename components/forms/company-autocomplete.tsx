@@ -44,7 +44,7 @@ export function CompanyAutocomplete({ id, value, onValueChange, companies }: Com
   const selectedCompany = React.useMemo(() => companyOptions.find((company) => {
     if (typeof value === 'number') {
       return company.id === value;
-    } else if (typeof value === 'string') {
+    } else if (typeof value === 'string' && value !== null) {
       return company.value === value.toLowerCase();
     }
     return false;

@@ -8,13 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Check, X } from "lucide-react"
 import { InOutRequest } from "@/components/utils"
 import { CustomPagination } from "@/components/ui/custom-pagination"
+import { useInOutRequests } from "@/lib/queries"
 
 import { useRouter } from "next/navigation"
 
 type DisplayUnit = "개수" | "set"
 
-export default function InOutRequestPage({ initialRequests }: { initialRequests: InOutRequest[] }) {
-  const [requests, setRequests] = useState(initialRequests);
+export default function InOutRequestPage() {
+  const { data: requests = [], isLoading, error } = useInOutRequests();
   const router = useRouter();
 
   const reloadRequests = () => {
@@ -205,6 +206,26 @@ export default function InOutRequestPage({ initialRequests }: { initialRequests:
         </CardContent>
       </Card>
     )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-6 bg-gray-100 min-h-screen">
+        <div className="flex items-center justify-center h-64">
+          <p>입출고 요청 데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-gray-100 min-h-screen">
+        <div className="flex items-center justify-center h-64">
+          <p>입출고 요청 데이터를 불러오는데 실패했습니다.</p>
+        </div>
+      </div>
+    );
   }
 
   return (

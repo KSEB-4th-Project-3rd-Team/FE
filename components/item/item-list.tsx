@@ -75,7 +75,14 @@ export default function ItemList({ initialItems }: ItemListProps) {
   }
 
   const handleRowClick = (item: Item) => {
-    setFormData({ ...item });
+    setFormData({ 
+      ...item,
+      itemCode: item.itemCode || "",
+      itemName: item.itemName || "",
+      itemGroup: item.itemGroup || "",
+      spec: item.spec || "",
+      unit: item.unit || "",
+    });
     setEditingItem(item);
     setIsModalOpen(true);
   };

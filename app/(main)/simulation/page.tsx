@@ -1,12 +1,8 @@
+"use client"
+
 import WarehouseSimulation from "@/components/simulation/warehouse-simulation"
-import { fetchInventoryData, fetchInOutData } from "@/lib/api"
 
-export default async function SimulationPage() {
-  const [inventoryData, inOutData] = await Promise.all([
-    fetchInventoryData(),
-    fetchInOutData()
-  ]);
-
+export default function SimulationPage() {
   return (
     <div className="flex-1 h-screen bg-white">
       <WarehouseSimulation />

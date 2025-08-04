@@ -68,7 +68,7 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === "quantity" ? (value === "" ? "" : Number(value)) : value,
+      [name]: name === "quantity" ? (value === "" ? 0 : Number(value)) : value,
     }));
   };
 
@@ -101,7 +101,7 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
           name="quantity"
           type="number"
           min="1"
-          value={formData.quantity}
+          value={formData.quantity.toString()}
           onChange={handleInputChange}
           placeholder="입고 수량을 입력하세요"
           required

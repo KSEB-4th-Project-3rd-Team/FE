@@ -66,12 +66,12 @@ export default function InOutHistory({ data }: { data: InOutRecord[] }) {
   const filteredHistory = historyData.filter((item) => {
     return (
       (filters.type === "all" || item.type === filters.type) &&
-      item.productName.toLowerCase().includes(filters.productName.toLowerCase()) &&
-      item.specification.toLowerCase().includes(filters.specification.toLowerCase()) &&
-      item.location.toLowerCase().includes(filters.location.toLowerCase()) &&
-      item.company.toLowerCase().includes(filters.company.toLowerCase()) &&
+      (item.productName || '').toLowerCase().includes(filters.productName.toLowerCase()) &&
+      (item.specification || '').toLowerCase().includes(filters.specification.toLowerCase()) &&
+      (item.location || '').toLowerCase().includes(filters.location.toLowerCase()) &&
+      (item.company || '').toLowerCase().includes(filters.company.toLowerCase()) &&
       (filters.status === "all" || item.status === filters.status) &&
-      item.destination.toLowerCase().includes(filters.destination.toLowerCase()) &&
+      (item.destination || '').toLowerCase().includes(filters.destination.toLowerCase()) &&
       (filters.date === "" || item.date === filters.date)
     )
   }).sort((a, b) => {

@@ -9,15 +9,12 @@ import { Search, Users, Shield, UserCheck, UserX } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CustomPagination } from "@/components/ui/custom-pagination"
 import { User } from "@/app/(main)/layout"
+import { useUsers } from "@/lib/queries"
 
 import { useRouter } from "next/navigation"
 
-interface UserManagementProps {
-  initialUsers: User[];
-}
-
-export default function UserManagement({ initialUsers }: UserManagementProps) {
-  const [users, setUsers] = useState(initialUsers);
+export default function UserManagement() {
+  const { data: users = [], isLoading, error } = useUsers();
   const router = useRouter();
 
   const reloadUsers = () => {
@@ -76,6 +73,26 @@ export default function UserManagement({ initialUsers }: UserManagementProps) {
     ACTIVE: users.filter((u) => u.status === "ACTIVE").length,
     INACTIVE: users.filter((u) => u.status === "INACTIVE").length,
     SUSPENDED: users.filter((u) => u.status === "SUSPENDED").length,
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-6 bg-gray-100 min-h-screen">
+        <div className="flex items-center justify-center h-64">
+          <p>사용자 데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-gray-100 min-h-screen">
+        <div className="flex items-center justify-center h-64">
+          <p>사용자 데이터를 불러오는데 실패했습니다.</p>
+        </div>
+      </div>
+    );
   }
 
   return (

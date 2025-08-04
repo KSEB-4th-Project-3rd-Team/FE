@@ -87,7 +87,18 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
   
   const handleRowClick = (record: InOutRecord) => {
     setSelectedRecord(record);
-    setFormData(record);
+    setFormData({
+      ...record,
+      productName: record.productName || "",
+      sku: record.sku || "",
+      individualCode: record.individualCode || "",
+      specification: record.specification || "",
+      location: record.location || "",
+      company: record.company || "",
+      companyCode: record.companyCode || "",
+      destination: record.destination || "",
+      notes: record.notes || "",
+    });
     setIsModalOpen(true);
   }
 
