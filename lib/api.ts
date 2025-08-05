@@ -100,10 +100,12 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
   return handleResponse(response);
 }
 
+/*
 export async function fetchDashboardAll(): Promise<DashboardData> {
   const response = await apiClient.get('/api/dashboard/all');
   return handleResponse(response);
 }
+*/
 
 export const api = {
   post: async (url: string, data: any) => {
