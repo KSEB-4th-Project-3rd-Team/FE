@@ -10,6 +10,7 @@ import {
   fetchSchedules,
   fetchUsers,
   fetchDashboardSummary,
+  fetchDashboardAll, // 새로 추가된 함수
   createCompany,
   createItem,
   createInboundOrder,
@@ -23,6 +24,16 @@ import { useMemo } from 'react';
 import type { Company } from '@/components/company/company-list';
 import type { Item } from '@/components/item/item-list';
 import type { InOutRecord, InOutRequest, InventoryItem } from '@/components/utils';
+
+// ===== 대시보드 통합 Query 훅 =====
+export function useDashboardAll() {
+  return useQuery({
+    queryKey: queryKeys.dashboard, // 기존 대시보드 키 재사용 또는 새 키 정의
+    queryFn: fetchDashboardAll,
+    staleTime: 30 * 1000, // 30초 캐시
+    // 필요한 경우 여기에 추가 옵션 (e.g., onSucess, onError) 설정
+  });
+}
 
 // ===== 기본 데이터 Query 훅들 =====
 

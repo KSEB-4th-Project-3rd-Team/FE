@@ -4,6 +4,91 @@ import { Company } from '@/components/company/company-list';
 import { Item } from '@/components/item/item-list';
 import { InOutRecord, InOutRequest, InventoryItem } from '@/components/utils';
 import { User } from '@/app/(main)/layout';
+
+// --- Types ---
+// 타입을 한 곳에서 관리하여 재사용성을 높입니다.
+
+// Response-specific types
+export interface ItemResponse {
+  itemId: number;
+  itemName: string;
+  itemCode: string;
+  itemGroup: string;
+  spec: string;
+  unit: string;
+  unitPriceIn: number;
+  unitPriceOut: number;
+  createdAt: string;
+}
+
+export interface UserResponse {
+  userId: number;
+  username: string;
+  email: string;
+  fullName: string;
+  role: string;
+  status: string;
+  lastLogin: string;
+  joinedAt: string;
+}
+
+export interface InOutOrderItemResponse {
+  itemId: number;
+  itemCode: string;
+  itemName: string;
+  specification: string;
+  requestedQuantity: number;
+  actualQuantity: number | null;
+}
+
+export interface InOutOrderResponse {
+  orderId: number;
+  type: 'INBOUND' | 'OUTBOUND';
+  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  companyId: number;
+  companyCode: string;
+  companyName: string;
+  items: InOutOrderItemResponse[];
+  expectedDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InventoryResponse {
+  itemId: number;
+  itemName: string;
+  locationCode: string;
+  quantity: number;
+  lastUpdated: string;
+}
+
+export interface ScheduleResponse {
+  scheduleId: number;
+  title: string;
+  startTime: string;
+  endTime: string;
+  type: "INBOUND" | "OUTBOUND" | "INVENTORY_CHECK" | "MEETING" | "ETC";
+}
+
+export interface DashboardSummaryResponse {
+  totalItems: number;
+  totalInventory: number;
+  inboundPending: number;
+  outboundPending: number;
+}
+
+// The main dashboard data structure
+export interface DashboardData {
+  items: ItemResponse[];
+  users: UserResponse[];
+  orders: InOutOrderResponse[];
+  inventory: InventoryResponse[];
+  schedules: ScheduleResponse[];
+  summary: DashboardSummaryResponse;
+  totalLoadTime: number;
+}
+
+
 // import { Schedule } from '@/app/(main)/schedule/page';
 // import { DashboardSummary } from '@/components/dashboard/unified-dashboard'; // Import DashboardSummary type
 type DashboardSummary = any;
@@ -12,6 +97,11 @@ import axios from 'axios';
 // --- Dashboard ---
 export async function fetchDashboardSummary(): Promise<DashboardSummary> {
   const response = await apiClient.get('/api/dashboard/summary');
+  return handleResponse(response);
+}
+
+export async function fetchDashboardAll(): Promise<DashboardData> {
+  const response = await apiClient.get('/api/dashboard/all');
   return handleResponse(response);
 }
 

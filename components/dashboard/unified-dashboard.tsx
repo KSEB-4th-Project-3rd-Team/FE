@@ -1,50 +1,87 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
-import { subYears } from 'date-fns';
-import { DateRange } from 'react-day-picker';
+import React from 'react';
 import DashboardMetrics from './dashboard-metrics';
 import InventoryChart from './inventory-chart';
 import InOutChart from './inout-chart';
 import AmrStatus from './amr-status';
 import RecentActivities from './recent-activities';
-import { InOutRecord, InventoryItem } from '../utils';
+import { DashboardData } from '@/lib/api'; // 통합 데이터 타입 import
+import { InOutRecord, InventoryItem } from '../utils'; // 변환된 데이터 타입
+import { useMemo } from 'react';
 import { Item } from '../item/item-list';
 
 interface UnifiedDashboardProps {
-  initialInventoryData: InventoryItem[];
-  initialInOutData?: InOutRecord[];
-  initialItems?: Item[];
+  dashboardData: DashboardData;
 }
 
-export const UnifiedDashboard = React.memo(function UnifiedDashboard({ 
-  initialInventoryData, 
-  initialInOutData = [], 
-  initialItems = [] 
-}: UnifiedDashboardProps) {
-  const [inventoryData, setInventoryData] = useState(initialInventoryData);
-  const [inOutData, setInOutData] = useState(initialInOutData);
-  const [items, setItems] = useState(initialItems);
+// 백엔드 API 응답을 프론트엔드 컴포넌트 타입으로 변환하는 로직
+const transformInventoryData = (data: DashboardData): InventoryItem[] => {
+  if (!data.inventory || !data.items) return [];
+  return data.inventory.map((inv, index) => {
+    const itemInfo = data.items.find(i => i.itemId === inv.itemId);
+    return {
+      id: index + 1,
+      name: inv.itemName,
+      sku: itemInfo?.itemCode || `SKU-${inv.itemId}`,
+      specification: itemInfo?.spec || 'N/A',
+      quantity: inv.quantity,
+      inboundScheduled: 0, // 필요 시 계산 로직 추가
+      outboundScheduled: 0, // 필요 시 계산 로직 추가
+      location: inv.locationCode,
+      status: inv.quantity > 10 ? '정상' : (inv.quantity > 0 ? '부족' : '위험'),
+      lastUpdate: new Date(inv.lastUpdated).toLocaleString('ko-KR'),
+    };
+  });
+};
 
-  // 기본 날짜 범위 설정 (기존과 동일)
-  useEffect(() => {
-    const today = new Date();
-    const oneYearAgo = subYears(today, 1);
-    // 필요한 초기 설정이 있다면 여기서 처리
-  }, []);
+const transformInOutData = (data: DashboardData): InOutRecord[] => {
+  if (!data.orders) return [];
+  return data.orders
+    .filter(order => order.status === 'COMPLETED')
+    .flatMap(order => 
+      order.items.map((item, itemIndex) => ({
+        id: `${order.orderId}-${itemIndex}`,
+        type: order.type.toLowerCase() as 'inbound' | 'outbound',
+        productName: item.itemName,
+        sku: item.itemCode,
+        individualCode: `ORDER-${order.orderId}-${item.itemId}`,
+        specification: item.specification,
+        quantity: item.requestedQuantity,
+        location: 'A-01', // 예시 위치
+        company: order.companyName,
+        companyCode: order.companyCode,
+        status: '완료',
+        destination: 'N/A',
+        date: order.updatedAt.split('T')[0],
+        time: order.updatedAt.split('T')[1]?.substring(0, 8) || '00:00:00',
+        notes: 'N/A',
+      }))
+    );
+};
 
-  // Props 변경 시 상태 업데이트
-  useEffect(() => {
-    setInventoryData(initialInventoryData);
-  }, [initialInventoryData]);
+const transformItems = (data: DashboardData): Item[] => {
+    if (!data.items) return [];
+    return data.items.map(item => ({
+      itemId: item.itemId,
+      itemName: item.itemName,
+      itemCode: item.itemCode,
+      itemGroup: item.itemGroup,
+      spec: item.spec,
+      unit: item.unit,
+      unitPriceIn: item.unitPriceIn,
+      unitPriceOut: item.unitPriceOut,
+      createdAt: item.createdAt,
+    }));
+  };
 
-  useEffect(() => {
-    setInOutData(initialInOutData);
-  }, [initialInOutData]);
 
-  useEffect(() => {
-    setItems(initialItems);
-  }, [initialItems]);
+export const UnifiedDashboard = React.memo(function UnifiedDashboard({ dashboardData }: UnifiedDashboardProps) {
+  
+  // API 데이터를 프론트엔드 컴포넌트가 사용하는 형태로 변환
+  const inventoryData = useMemo(() => transformInventoryData(dashboardData), [dashboardData]);
+  const inOutData = useMemo(() => transformInOutData(dashboardData), [dashboardData]);
+  const items = useMemo(() => transformItems(dashboardData), [dashboardData]);
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -81,3 +118,5 @@ export const UnifiedDashboard = React.memo(function UnifiedDashboard({
     </div>
   );
 });
+
+UnifiedDashboard.displayName = 'UnifiedDashboard';

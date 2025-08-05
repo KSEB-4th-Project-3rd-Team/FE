@@ -23,6 +23,7 @@ export type Item = {
   unit: string;
   unitPriceIn: number;
   unitPriceOut: number;
+  createdAt?: string; // 선택적 필드로 추가
 };
 
 interface ItemListProps {

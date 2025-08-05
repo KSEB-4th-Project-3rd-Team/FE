@@ -1,7 +1,8 @@
 "use client"
 
 import dynamic from "next/dynamic";
-import { useQueryInventory, useQueryInOut, useQueryItems } from "@/contexts/query-data-context";
+import { useDashboardAll } from "@/lib/queries"; // 새로 만든 통합 훅 import
+import { useEffect } from "react";
 
 const UnifiedDashboard = dynamic(() => import("@/components/dashboard/unified-dashboard").then(mod => ({ default: mod.UnifiedDashboard })), {
   loading: () => (
@@ -24,13 +25,18 @@ const UnifiedDashboard = dynamic(() => import("@/components/dashboard/unified-da
 });
 
 export default function DashboardPage() {
-  // React Query를 통한 데이터 로딩
-  const { data: inventoryData, isLoading: inventoryLoading } = useQueryInventory();
-  const { data: inOutData, isLoading: inOutLoading } = useQueryInOut();
-  const { data: items, isLoading: itemsLoading } = useQueryItems();
+  // 새로운 통합 훅을 사용하여 모든 데이터를 한 번에 로딩
+  const { data: dashboardData, isLoading, isError, error } = useDashboardAll();
+
+  // 성능 측정 결과 콘솔에 출력
+  useEffect(() => {
+    if (dashboardData?.totalLoadTime) {
+      console.log(`Dashboard data loaded in: ${dashboardData.totalLoadTime}ms`);
+    }
+  }, [dashboardData]);
 
   // 로딩 중이면 스켈레톤 표시
-  if (inventoryLoading || inOutLoading || itemsLoading) {
+  if (isLoading) {
     return (
       <div className="p-6 space-y-6">
         <div className="animate-pulse">
@@ -45,9 +51,25 @@ export default function DashboardPage() {
     );
   }
 
-  return <UnifiedDashboard 
-    initialInventoryData={inventoryData || []}
-    initialInOutData={inOutData || []}
-    initialItems={items || []}
-  />
+  // 에러 발생 시 메시지 표시
+  if (isError) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        <h2>데이터를 불러오는 중 오류가 발생했습니다.</h2>
+        <p>{error?.message || '알 수 없는 오류'}</p>
+      </div>
+    );
+  }
+
+  // 데이터가 없을 경우 (정상적으로 로드되었지만 비어있는 경우)
+  if (!dashboardData) {
+    return (
+      <div className="p-6 text-center text-gray-500">
+        <h2>대시보드 데이터를 찾을 수 없습니다.</h2>
+      </div>
+    );
+  }
+
+  // UnifiedDashboard에 통합된 데이터 전달
+  return <UnifiedDashboard dashboardData={dashboardData} />
 }
