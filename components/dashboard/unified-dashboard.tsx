@@ -5,7 +5,7 @@ import DashboardMetrics from './dashboard-metrics';
 import InventoryChart from './inventory-chart';
 import InOutChart from './inout-chart';
 import AmrStatus from './amr-status';
-import RecentActivities from './recent-activities';
+
 import { DashboardData } from '@/lib/api'; // 통합 데이터 타입 import
 import { InOutRecord, InventoryItem } from '../utils'; // 변환된 데이터 타입
 import { useMemo } from 'react';
@@ -110,11 +110,6 @@ export const UnifiedDashboard = React.memo(function UnifiedDashboard({ dashboard
 
       {/* AMR 상태 모니터링 */}
       <AmrStatus />
-
-      {/* 최근 활동 테이블 */}
-      <RecentActivities 
-        inOutData={inOutData}
-      />
     </div>
   );
 });
