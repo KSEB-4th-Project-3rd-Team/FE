@@ -1,11 +1,6 @@
-"use client"
+"use client";
 
 import dynamic from "next/dynamic";
-"use client"
-
-import dynamic from "next/dynamic";
-// import { useDashboardAll } from "@/lib/queries"; // 새로 만든 통합 훅 import
-import { useEffect } from "react";
 import { DashboardData } from "@/lib/api";
 
 const UnifiedDashboard = dynamic(() => import("@/components/dashboard/unified-dashboard").then(mod => ({ default: mod.UnifiedDashboard })), {
@@ -44,11 +39,6 @@ export default function DashboardPage() {
     },
     totalLoadTime: 0,
   };
-
-  const isLoading = false;
-  const isError = false;
-  const error = null;
-
 
   // 데이터가 없을 경우 (정상적으로 로드되었지만 비어있는 경우)
   if (!dashboardData) {
