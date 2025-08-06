@@ -16,7 +16,7 @@ import { AuthProvider, useAuth } from "@/contexts/auth-context"
 import { DataProvider } from "@/contexts/data-context"
 import { QueryDataProvider, useQueryData } from "@/contexts/query-data-context"
 import QueryProvider from "@/components/providers/query-provider"
-import { prefetchStrategies, prefetchDashboardData, startBackgroundSync, optimizeCache } from "@/lib/prefetch"
+// prefetch 제거됨 - 통합 API로 최적화 완료
 
 const InOutStatusPanel = dynamic(() => import("@/components/inout/inout-status-panel"), {
   loading: () => <div className="animate-pulse bg-gray-200 rounded h-32" />
@@ -87,33 +87,8 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, searchParams])
 
-  // 성능 최적화: 페이지별 prefetching
-  useEffect(() => {
-    if (!user) return;
-
-    // 페이지별 전략적 prefetching
-    if (pathname === "/dashboard") {
-      prefetchDashboardData();
-    } else if (pathname === "/inbound-registration") {
-      prefetchStrategies.inboundRegistration();
-    } else if (pathname === "/outbound-registration") {
-      prefetchStrategies.outboundRegistration();
-    } else if (pathname === "/inventory") {
-      prefetchStrategies.inventory();
-    }
-  }, [pathname, user])
-
-  // 백그라운드 동기화 시작 (한 번만)
-  useEffect(() => {
-    if (!user) return;
-
-    startBackgroundSync();
-    optimizeCache();
-    
-    return () => {
-      // cleanup이 필요하면 여기서 처리
-    };
-  }, [user])
+  // 성능 최적화 완료: 통합 API로 대체됨
+  // 기존 prefetch 로직은 제거되고 React Query 캐싱으로 최적화
 
   const toggleMenu = (menu: keyof typeof expandedMenus) => {
     setExpandedMenus((prev) => ({ ...prev, [menu]: !prev[menu] }))

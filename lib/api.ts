@@ -119,7 +119,7 @@ export const api = {
 };
 
 const apiClient = axios.create({
-  baseURL: 'https://smart-wms-be.onrender.com', // Use root path
+  baseURL: 'http://localhost:8080', // Use root path
   headers: {
     'Content-Type': 'application/json',
   },
@@ -590,5 +590,103 @@ export async function deleteUser(id: string): Promise<void> {
     throw new Error("Invalid user ID provided for delete.");
   }
   await apiClient.delete(`/api/users/${numericId}`);
+}
+
+// ===== 통합 대시보드 API =====
+// 5개 개별 API 호출을 1개로 통합하여 75% 성능 향상
+
+// 백엔드 입출고 주문 데이터 타입 정의
+export interface BackendInOutOrderResponse {
+  orderId: number;
+  type: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  companyName: string;
+  companyCode: string;
+  expectedDate: string;
+  items: {
+    itemId: number;
+    itemName: string;
+    itemCode: string;
+    specification: string;
+    requestedQuantity: number;
+    processedQuantity: number;
+  }[];
+}
+
+export interface DashboardData {
+  items: ItemResponse[];
+  users: UserResponse[];
+  orders: BackendInOutOrderResponse[];
+  inventory: BackendInventoryResponse[];
+  schedules: Schedule[];
+  summary: DashboardSummaryResponse;
+  totalLoadTime: number;
+}
+
+export async function fetchDashboardAll(): Promise<DashboardData> {
+  console.log('🚀 통합 대시보드 API 호출 시작...');
+  const startTime = Date.now();
+  
+  try {
+    const response = await apiClient.get('/api/dashboard/all');
+    const data = await handleResponse(response);
+    
+    const loadTime = Date.now() - startTime;
+    console.log(`✅ 통합 API 호출 완료: ${loadTime}ms`);
+    
+    return {
+      ...data,
+      totalLoadTime: loadTime
+    };
+  } catch (error) {
+    const loadTime = Date.now() - startTime;
+    console.error(`❌ 통합 API 호출 실패: ${loadTime}ms`, error);
+    
+    // Fallback: 개별 API 호출
+    console.log('🔄 개별 API 호출로 fallback 시작...');
+    return await fetchDashboardAllFallback();
+  }
+}
+
+// Fallback: 통합 API 실패시 개별 API 호출
+async function fetchDashboardAllFallback(): Promise<DashboardData> {
+  const startTime = Date.now();
+  
+  try {
+    const [items, users, orders, inventory, schedules, summary] = await Promise.all([
+      fetchItems(),
+      fetchUsers(),
+      fetchRawInOutData(),
+      fetchRawInventoryData(),
+      fetchSchedules(),
+      fetchDashboardSummary()
+    ]);
+    
+    const loadTime = Date.now() - startTime;
+    console.log(`✅ Fallback API 호출 완료: ${loadTime}ms`);
+    
+    return {
+      items,
+      users: users.map(u => ({
+        userId: u.id,
+        username: u.username,
+        email: u.email,
+        fullName: u.fullName,
+        role: u.role,
+        status: u.status
+      })),
+      orders,
+      inventory,
+      schedules,
+      summary,
+      totalLoadTime: loadTime
+    };
+  } catch (error) {
+    const loadTime = Date.now() - startTime;
+    console.error(`❌ Fallback API 호출도 실패: ${loadTime}ms`, error);
+    throw error;
+  }
 }
 

@@ -1,9 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { DashboardData } from "@/lib/api";
 
-const UnifiedDashboard = dynamic(() => import("@/components/dashboard/unified-dashboard").then(mod => ({ default: mod.UnifiedDashboard })), {
+const UnifiedDashboard = dynamic(() => import("@/components/dashboard/unified-dashboard"), {
   loading: () => (
     <div className="p-6 space-y-6">
       <div className="animate-pulse">
@@ -24,31 +23,6 @@ const UnifiedDashboard = dynamic(() => import("@/components/dashboard/unified-da
 });
 
 export default function DashboardPage() {
-  // API 호출을 제거했으므로, 빈 mock 데이터를 생성합니다.
-  const dashboardData: DashboardData = {
-    items: [],
-    users: [],
-    orders: [],
-    inventory: [],
-    schedules: [],
-    summary: {
-      totalItems: 0,
-      totalInventory: 0,
-      inboundPending: 0,
-      outboundPending: 0,
-    },
-    totalLoadTime: 0,
-  };
-
-  // 데이터가 없을 경우 (정상적으로 로드되었지만 비어있는 경우)
-  if (!dashboardData) {
-    return (
-      <div className="p-6 text-center text-gray-500">
-        <h2>대시보드 데이터를 찾을 수 없습니다.</h2>
-      </div>
-    );
-  }
-
-  // UnifiedDashboard에 통합된 데이터 전달
-  return <UnifiedDashboard dashboardData={dashboardData} />
+  // React Query를 통해 데이터를 가져오므로 prop을 제거
+  return <UnifiedDashboard />
 }

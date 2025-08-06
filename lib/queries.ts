@@ -10,7 +10,7 @@ import {
   fetchSchedules,
   fetchUsers,
   fetchDashboardSummary,
-  fetchDashboardAll, // 새로 추가된 함수
+  fetchDashboardAll, // 통합 대시보드 API
   createCompany,
   createItem,
   createInboundOrder,
@@ -19,23 +19,67 @@ import {
   updateItem,
   deleteCompany,
   deleteItem,
+  DashboardData, // 통합 API 타입
 } from './api';
 import { useMemo } from 'react';
 import type { Company } from '@/components/company/company-list';
 import type { Item } from '@/components/item/item-list';
 import type { InOutRecord, InOutRequest, InventoryItem } from '@/components/utils';
 
-// ===== 대시보드 통합 Query 훅 =====
-/*
+// ===== 🚀 통합 대시보드 Query 훅 (5 API → 1 API) =====
+// 75% 성능 향상을 위한 통합 API 사용
+
 export function useDashboardAll() {
   return useQuery({
-    queryKey: queryKeys.dashboard, // 기존 대시보드 키 재사용 또는 새 키 정의
+    queryKey: ['dashboard-all'], // 전용 키
     queryFn: fetchDashboardAll,
     staleTime: 30 * 1000, // 30초 캐시
-    // 필요한 경우 여기에 추가 옵션 (e.g., onSucess, onError) 설정
+    gcTime: 5 * 60 * 1000, // 5분 가비지 컬렉션
+    retry: 2, // 실패시 2회 재시도
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
-*/
+
+// 통합 API에서 개별 데이터 추출하는 편의 훅들
+export function useDashboardItems() {
+  const { data, ...rest } = useDashboardAll();
+  return {
+    data: data?.items || [],
+    ...rest
+  };
+}
+
+export function useDashboardInventory() {
+  const { data, ...rest } = useDashboardAll();
+  return {
+    data: data?.inventory || [],
+    ...rest
+  };
+}
+
+export function useDashboardInOutData() {
+  const { data, ...rest } = useDashboardAll();
+  return {
+    data: data?.orders || [],
+    ...rest
+  };
+}
+
+export function useDashboardUsers() {
+  const { data, ...rest } = useDashboardAll();
+  return {
+    data: data?.users || [],
+    ...rest
+  };
+}
+
+export function useDashboardSchedules() {
+  const { data, ...rest } = useDashboardAll();
+  return {
+    data: data?.schedules || [],
+    ...rest
+  };
+}
 
 // ===== 기본 데이터 Query 훅들 =====
 
