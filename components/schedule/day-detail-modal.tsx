@@ -1,12 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { X, Calendar, MapPin, Clock, Trash2, Package, TruckIcon } from "lucide-react"
+import { X, Calendar, MapPin, Clock, Trash2, Package, TruckIcon, Loader2 } from "lucide-react"
 import { Schedule, deleteSchedule } from "@/lib/api"
 import { type InOutRecord } from "@/components/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { toast } from "sonner"
+import { queryKeys } from "@/lib/react-query"
 
 interface DayDetailModalProps {
   isOpen: boolean
@@ -18,6 +21,7 @@ interface DayDetailModalProps {
 }
 
 export default function DayDetailModal({ isOpen, onClose, selectedDate, onScheduleDeleted, schedules, inOutData }: DayDetailModalProps) {
+  const queryClient = useQueryClient();
   const [daySchedules, setDaySchedules] = useState<Schedule[]>([])
   const [inboundRecords, setInboundRecords] = useState<InOutRecord[]>([])
   const [outboundRecords, setOutboundRecords] = useState<InOutRecord[]>([])
@@ -31,7 +35,6 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
         return scheduleDate === selectedDate
       })
       setDaySchedules(filteredSchedules)
-      console.log("Filtered schedules for date", selectedDate, ":", filteredSchedules)
 
       // Filter In/Out records for the selected date
       const dayInOutRecords = inOutData.filter((record) => record.date === selectedDate)
@@ -40,16 +43,22 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
     }
   }, [isOpen, selectedDate, schedules, inOutData])
 
-  const handleDeleteSchedule = async (id: number) => {
-    console.log("Attempting to delete schedule with ID:", id, "Type:", typeof id)
+  const { mutate: remove, isPending } = useMutation({
+    mutationFn: deleteSchedule,
+    onSuccess: () => {
+      toast.success("일정이 성공적으로 삭제되었습니다.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.schedules() });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      onScheduleDeleted();
+    },
+    onError: (error) => {
+      toast.error(`일정 삭제 실패: ${error.message}`);
+    }
+  });
+
+  const handleDeleteSchedule = (id: number) => {
     if (confirm("이 일정을 삭제하시겠습니까?")) {
-      try {
-        await deleteSchedule(id)
-        onScheduleDeleted() // Notify parent to refetch all schedules
-      } catch (error) {
-        console.error("Failed to delete schedule:", error)
-        alert(`일정 삭제 실패: ${error}`)
-      }
+      remove(id.toString());
     }
   }
 
@@ -219,8 +228,9 @@ export default function DayDetailModal({ isOpen, onClose, selectedDate, onSchedu
                         size="sm"
                         onClick={() => handleDeleteSchedule(schedule.scheduleId)}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        disabled={isPending}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                       </Button>
                     </div>
                   </div>

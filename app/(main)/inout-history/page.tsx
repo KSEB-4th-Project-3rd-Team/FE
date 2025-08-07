@@ -19,7 +19,7 @@ export default function InOutHistoryPage() {
       ) : (
         <InOutHistoryTable 
           historyType="all" 
-          initialData={inOutData || []}
+          data={inOutData || []}
         />
       )}
     </div>

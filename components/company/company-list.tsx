@@ -39,6 +39,8 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
     onSuccess: () => {
       toast.success("거래처가 성공적으로 등록되었습니다.");
       queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
       resetForm();
     },
     onError: (error) => {
@@ -51,6 +53,8 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
     onSuccess: () => {
       toast.success("거래처가 성공적으로 수정되었습니다.");
       queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
       resetForm();
     },
     onError: (error) => {
@@ -63,6 +67,8 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
     onSuccess: () => {
       toast.success("거래처가 성공적으로 삭제되었습니다.");
       queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
     onError: (error) => {
       toast.error(`거래처 삭제 실패: ${error.message}`);

@@ -169,7 +169,7 @@ export function UnifiedDashboard() {
       map[item.itemCode] = item.unitPriceOut;
       return map;
     }, {} as Record<string, number>);
-  }, [items]);
+  }, [items, dashboardData]);
 
   const onPieEnter = (_: unknown, index: number) => {
     setActivePieIndex(index);
@@ -310,7 +310,7 @@ export function UnifiedDashboard() {
     }, {} as Record<string, { date: string; amount: number; count: number }>);
     const getSortableDate = (dateString: string) => dateString.includes('/') ? new Date(`20${dateString}`) : new Date(dateString);
     return { totalSalesAmount, totalSalesCount, companyPieChartData, allCompanies: Object.values(byCompany).sort((a, b) => b.amount - a.amount), salesTrend: Object.values(salesTrend).sort((a, b) => getSortableDate(a.date).getTime() - getSortableDate(b.date).getTime()), companyDetails: selectedCompany ? byCompany[selectedCompany]?.items || [] : [] };
-  }, [inOutData, salesDateRange, salesFilterType, selectedCompany, itemPriceMap]);
+  }, [inOutData, salesDateRange, salesFilterType, selectedCompany, itemPriceMap, dashboardData]);
 
   const handleFilterClick = (type: 'daily' | 'weekly' | 'monthly', setDate: (range: DateRange | undefined) => void, setType: (type: 'daily' | 'weekly' | 'monthly' | 'custom') => void) => {
     setType(type);

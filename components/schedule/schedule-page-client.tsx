@@ -25,7 +25,7 @@ export default function SchedulePageClient() {
   const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
   const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
   
-  const { data: schedules = [], isLoading: schedulesLoading } = useSchedules({ 
+  const { data: schedules = [], isLoading: schedulesLoading, refetch: refetchSchedules } = useSchedules({ 
     startDate: startDate.toISOString(), 
     endDate: endDate.toISOString() 
   });
@@ -39,7 +39,7 @@ export default function SchedulePageClient() {
   const [selectedDate, setSelectedDate] = useState<string>("")
   
   const reloadData = () => {
-    router.refresh();
+    refetchSchedules();
   }
 
   const handleScheduleAdded = () => {
@@ -92,14 +92,13 @@ export default function SchedulePageClient() {
       days.push(
         <div
           key={day}
-          className={`h-24 border border-gray-200 p-1 cursor-pointer transition-colors relative ${
-            isToday ? "bg-blue-100 border-blue-300 hover:bg-blue-150" : "hover:bg-blue-50"
-          }`}
+          className={`h-24 border border-gray-200 p-1 cursor-pointer transition-colors relative hover:bg-gray-50`}
           onClick={() => handleDayClick(day)}
         >
-          <div className={`font-semibold text-sm ${isToday ? "text-blue-700" : ""}`}>
-            {day}
-            {isToday && <div className="absolute top-1 right-1 w-2 h-2 bg-blue-500 rounded-full"></div>}
+          <div className="flex justify-start">
+            <div className={`font-semibold text-sm w-6 h-6 flex items-center justify-center rounded-full ${isToday ? "bg-blue-200 text-blue-800" : ""}`}>
+              {day}
+            </div>
           </div>
           <div className="mt-1 space-y-1">
             {daySchedules.slice(0, 2).map((schedule, index) => (

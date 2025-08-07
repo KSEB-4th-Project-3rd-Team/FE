@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -20,16 +20,11 @@ type InOutStatus = "완료" | "진행 중" | "예약";
 
 type InOutHistoryTableProps = {
   historyType: "inbound" | "outbound" | "all";
-  initialData: InOutRecord[];
+  data: InOutRecord[];
 }
 
-export default function InOutHistoryTable({ historyType, initialData }: InOutHistoryTableProps) {
-  const [data, setData] = useState(initialData);
+export default function InOutHistoryTable({ historyType, data }: InOutHistoryTableProps) {
   const router = useRouter();
-
-  const reloadData = () => {
-    router.refresh();
-  };
   
   const initialFilters = useMemo(() => ({
     type: historyType === 'all' ? 'all' : historyType,
@@ -40,6 +35,7 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
     status: [] as InOutStatus[],
     date: "",
   }), [historyType]);
+
   const [filters, setFilters] = useState(initialFilters);
   const [showFilters, setShowFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -52,15 +48,13 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
   const SET_QUANTITY = 14
 
   const historyData: InOutRecord[] = useMemo(() => {
-    const filtered = (data || []).filter(item => {
+    return (data || []).filter(item => {
       const typeMatch = historyType === 'all' || 
         item.type === historyType || 
         (historyType === 'inbound' && (item.type as any) === 'INBOUND') ||
         (historyType === 'outbound' && (item.type as any) === 'OUTBOUND');
       return typeMatch;
     });
-    
-    return filtered;
   }, [data, historyType]);
 
   const handleFilterChange = (field: string, value: string) => {

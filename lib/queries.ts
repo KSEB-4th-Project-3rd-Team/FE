@@ -32,7 +32,8 @@ export function useDashboardAll() {
   return useQuery({
     queryKey: ['dashboard-all'], // 전용 키
     queryFn: fetchDashboardAll,
-    staleTime: 30 * 1000, // 30초 캐시
+    staleTime: 0, // 데이터를 항상 '오래된' 상태로 간주하여 포커스 시 새로고침
+    refetchOnWindowFocus: true, // 창에 포커스가 돌아왔을 때 자동 새로고침 (기본값)
     gcTime: 5 * 60 * 1000, // 5분 가비지 컬렉션
     retry: 2, // 실패시 2회 재시도
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
@@ -264,36 +265,10 @@ export function useCreateCompany() {
   
   return useMutation({
     mutationFn: createCompany,
-    // 옵티미스틱 업데이트
-    onMutate: async (newCompany) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.companies });
-      const previousCompanies = queryClient.getQueryData(queryKeys.companies);
-      
-      const optimisticCompany = {
-        companyId: `temp-${Date.now()}`,
-        companyName: newCompany.companyName,
-        companyCode: newCompany.companyCode,  
-        address: newCompany.address || '',
-        contactPerson: newCompany.contactPerson || '',
-        contactPhone: newCompany.contactPhone || '',
-        contactEmail: newCompany.contactEmail || '',
-        type: newCompany.type || [],
-        createdAt: new Date().toISOString()
-      };
-      
-      queryClient.setQueryData(queryKeys.companies, (old: any) => 
-        old ? [optimisticCompany, ...old] : [optimisticCompany]
-      );
-      
-      return { previousCompanies };
-    },
-    onError: (err, newCompany, context) => {
-      if (context?.previousCompanies) {
-        queryClient.setQueryData(queryKeys.companies, context.previousCompanies);
-      }
-    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.companies });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
   });
 }
@@ -303,37 +278,11 @@ export function useCreateItem() {
   
   return useMutation({
     mutationFn: createItem,
-    // 옵티미스틱 업데이트
-    onMutate: async (newItem) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.items });
-      const previousItems = queryClient.getQueryData(queryKeys.items);
-      
-      const optimisticItem = {
-        itemId: `temp-${Date.now()}`,
-        itemName: newItem.itemName,
-        itemCode: newItem.itemCode,
-        itemGroup: newItem.itemGroup || '',
-        spec: newItem.spec || '',
-        unit: newItem.unit || '',
-        unitPriceIn: newItem.unitPriceIn || 0,
-        unitPriceOut: newItem.unitPriceOut || 0,
-        createdAt: new Date().toISOString()
-      };
-      
-      queryClient.setQueryData(queryKeys.items, (old: any) => 
-        old ? [optimisticItem, ...old] : [optimisticItem]
-      );
-      
-      return { previousItems };
-    },
-    onError: (err, newItem, context) => {
-      if (context?.previousItems) {
-        queryClient.setQueryData(queryKeys.items, context.previousItems);
-      }
-    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.items });
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
   });
 }
@@ -343,45 +292,11 @@ export function useCreateInboundOrder() {
   
   return useMutation({
     mutationFn: createInboundOrder,
-    // 옵티미스틱 업데이트: 즉시 UI에 반영
-    onMutate: async (newOrder) => {
-      // 진행 중인 쿼리들 취소
-      await queryClient.cancelQueries({ queryKey: queryKeys.inOutData });
-      
-      // 이전 데이터 스냅샷 저장
-      const previousInOutData = queryClient.getQueryData(queryKeys.inOutData);
-      
-      // 옵티미스틱 데이터로 캐시 업데이트
-      const optimisticOrder = {
-        orderId: `temp-${Date.now()}`,
-        type: 'INBOUND',
-        status: 'PENDING',
-        companyName: 'Loading...',
-        companyCode: 'TEMP',
-        items: [{
-          itemId: newOrder.itemId,
-          itemName: 'Loading...',
-          requestedQuantity: newOrder.quantity
-        }],
-        createdAt: new Date().toISOString(),
-        notes: newOrder.notes
-      };
-      
-      queryClient.setQueryData(queryKeys.inOutData, (old: any) => 
-        old ? [optimisticOrder, ...old] : [optimisticOrder]
-      );
-      
-      return { previousInOutData };
-    },
-    onError: (err, newOrder, context) => {
-      // 에러 시 이전 데이터로 롤백
-      if (context?.previousInOutData) {
-        queryClient.setQueryData(queryKeys.inOutData, context.previousInOutData);
-      }
-    },
     onSuccess: () => {
       // 성공 시 최신 데이터로 갱신
       queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
   });
 }
@@ -391,45 +306,11 @@ export function useCreateOutboundOrder() {
   
   return useMutation({
     mutationFn: createOutboundOrder,
-    // 옵티미스틱 업데이트: 즉시 UI에 반영
-    onMutate: async (newOrder) => {
-      // 진행 중인 쿼리들 취소
-      await queryClient.cancelQueries({ queryKey: queryKeys.inOutData });
-      
-      // 이전 데이터 스냅샷 저장
-      const previousInOutData = queryClient.getQueryData(queryKeys.inOutData);
-      
-      // 옵티미스틱 데이터로 캐시 업데이트
-      const optimisticOrder = {
-        orderId: `temp-${Date.now()}`,
-        type: 'OUTBOUND',
-        status: 'PENDING',
-        companyName: 'Loading...',
-        companyCode: 'TEMP',
-        items: [{
-          itemId: newOrder.itemId,
-          itemName: 'Loading...',
-          requestedQuantity: newOrder.quantity
-        }],
-        createdAt: new Date().toISOString(),
-        notes: newOrder.notes
-      };
-      
-      queryClient.setQueryData(queryKeys.inOutData, (old: any) => 
-        old ? [optimisticOrder, ...old] : [optimisticOrder]
-      );
-      
-      return { previousInOutData };
-    },
-    onError: (err, newOrder, context) => {
-      // 에러 시 이전 데이터로 롤백
-      if (context?.previousInOutData) {
-        queryClient.setQueryData(queryKeys.inOutData, context.previousInOutData);
-      }
-    },
     onSuccess: () => {
       // 성공 시 최신 데이터로 갱신
       queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
   });
 }

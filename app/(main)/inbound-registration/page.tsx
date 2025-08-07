@@ -46,10 +46,12 @@ export default function InboundRegistrationPage() {
       notes: formData.notes,
     };
     
-    // React Query Mutation 사용 (자동 캐시 무효화 + 에러 처리)
+    // React Query Mutation 사용 (lib/queries.ts의 중앙 로직 사용)
     createInbound(orderData, {
       onSuccess: () => {
         toast.success("신규 입고가 성공적으로 등록되었습니다.");
+      },
+      onSettled: () => {
         setIsModalOpen(false);
       },
       onError: (error: any) => {
@@ -87,7 +89,7 @@ export default function InboundRegistrationPage() {
       </div>
       <InOutHistoryTable 
         historyType="inbound"
-        initialData={inOutData.data || []}
+        data={inOutData.data || []}
       />
     </div>
   )

@@ -1,15 +1,17 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { X, Calendar, MapPin, Clock } from "lucide-react"
+import { X, Calendar, MapPin, Clock, Loader2 } from "lucide-react"
 import { createSchedule, type Schedule, type CreateScheduleRequest } from "@/lib/api"
+import { toast } from "sonner"
+import { queryKeys } from "@/lib/react-query"
 
 interface ScheduleModalProps {
   isOpen: boolean
@@ -19,13 +21,35 @@ interface ScheduleModalProps {
 }
 
 export default function ScheduleModal({ isOpen, onClose, onScheduleAdded, selectedDate }: ScheduleModalProps) {
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     title: "",
-    date: selectedDate || new Date().toISOString().split("T")[0],
+    date: "",
     startTime: "09:00",
     endTime: "10:00",
     type: "MEETING" as const,
   })
+
+  useEffect(() => {
+    if (selectedDate) {
+      setFormData(prev => ({ ...prev, date: selectedDate }));
+    }
+  }, [selectedDate, isOpen]);
+
+
+  const { mutate: create, isPending } = useMutation({
+    mutationFn: createSchedule,
+    onSuccess: () => {
+      toast.success("일정이 성공적으로 등록되었습니다.");
+      queryClient.invalidateQueries({ queryKey: queryKeys.schedules() });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      onScheduleAdded();
+      onClose();
+    },
+    onError: (error) => {
+      toast.error(`일정 등록 실패: ${error.message}`);
+    }
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
@@ -38,35 +62,17 @@ export default function ScheduleModal({ isOpen, onClose, onScheduleAdded, select
     e.preventDefault()
 
     if (!formData.title || !formData.date || !formData.startTime || !formData.endTime) {
-      alert("제목, 날짜, 시작시간, 종료시간을 입력해주세요.")
+      toast.warning("제목, 날짜, 시작시간, 종료시간을 모두 입력해주세요.");
       return
     }
 
-    try {
-      const scheduleRequest: CreateScheduleRequest = {
-        title: formData.title,
-        startTime: `${formData.date}T${formData.startTime}:00`,
-        endTime: `${formData.date}T${formData.endTime}:00`,
-        type: formData.type,
-      }
-
-      await createSchedule(scheduleRequest)
-      onScheduleAdded()
-
-      // 폼 초기화
-      setFormData({
-        title: "",
-        date: selectedDate || new Date().toISOString().split("T")[0],
-        startTime: "09:00",
-        endTime: "10:00",
-        type: "MEETING",
-      })
-
-      onClose()
-    } catch (error) {
-      console.error("Failed to create schedule:", error)
-      alert(`일정 등록 실패: ${error}`)
+    const scheduleRequest: CreateScheduleRequest = {
+      title: formData.title,
+      startTime: `${formData.date}T${formData.startTime}:00`,
+      endTime: `${formData.date}T${formData.endTime}:00`,
+      type: formData.type,
     }
+    create(scheduleRequest);
   }
 
   if (!isOpen) return null
@@ -96,12 +102,13 @@ export default function ScheduleModal({ isOpen, onClose, onScheduleAdded, select
                 onChange={handleInputChange}
                 placeholder="일정 제목을 입력하세요"
                 required
+                disabled={isPending}
               />
             </div>
 
             <div>
               <Label htmlFor="date">날짜 *</Label>
-              <Input id="date" name="date" type="date" value={formData.date} onChange={handleInputChange} required />
+              <Input id="date" name="date" type="date" value={formData.date} onChange={handleInputChange} required disabled={isPending} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -117,6 +124,7 @@ export default function ScheduleModal({ isOpen, onClose, onScheduleAdded, select
                     onChange={handleInputChange}
                     className="pl-10"
                     required
+                    disabled={isPending}
                   />
                 </div>
               </div>
@@ -132,6 +140,7 @@ export default function ScheduleModal({ isOpen, onClose, onScheduleAdded, select
                     onChange={handleInputChange}
                     className="pl-10"
                     required
+                    disabled={isPending}
                   />
                 </div>
               </div>
@@ -145,6 +154,7 @@ export default function ScheduleModal({ isOpen, onClose, onScheduleAdded, select
                 value={formData.type}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={isPending}
               >
                 <option value="INBOUND">입고</option>
                 <option value="OUTBOUND">출고</option>
@@ -155,10 +165,11 @@ export default function ScheduleModal({ isOpen, onClose, onScheduleAdded, select
             </div>
 
             <div className="flex gap-2 pt-4">
-              <Button type="submit" className="flex-1">
+              <Button type="submit" className="flex-1" disabled={isPending}>
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 등록
               </Button>
-              <Button type="button" variant="outline" onClick={onClose} className="flex-1 bg-transparent">
+              <Button type="button" variant="outline" onClick={onClose} className="flex-1 bg-transparent" disabled={isPending}>
                 취소
               </Button>
             </div>

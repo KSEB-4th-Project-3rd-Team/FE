@@ -43,6 +43,8 @@ export default function ItemList({ initialItems }: ItemListProps) {
     onSuccess: () => {
       toast.success("품목이 성공적으로 등록되었습니다.");
       queryClient.invalidateQueries({ queryKey: ['items'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
       resetForm();
     },
     onError: (error) => {
@@ -55,6 +57,8 @@ export default function ItemList({ initialItems }: ItemListProps) {
     onSuccess: () => {
       toast.success("품목이 성공적으로 수정되었습니다.");
       queryClient.invalidateQueries({ queryKey: ['items'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
       resetForm();
     },
     onError: (error) => {
@@ -67,6 +71,8 @@ export default function ItemList({ initialItems }: ItemListProps) {
     onSuccess: () => {
       toast.success("품목이 성공적으로 삭제되었습니다.");
       queryClient.invalidateQueries({ queryKey: ['items'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
     onError: (error) => {
       toast.error(`품목 삭제 실패: ${error.message}`);
