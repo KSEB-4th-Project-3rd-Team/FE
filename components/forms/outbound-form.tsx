@@ -20,24 +20,22 @@ interface OutboundFormData {
   quantity: number;
   companyId: number | null;
   expectedDate: string;
-  destination: string;
   notes: string;
 }
 
 interface OutboundFormProps {
-  onSubmit: (data: OutboundFormData) => void;
+  onSubmit: (data: Omit<OutboundFormData, 'destination'>) => void;
   onClose: () => void;
   items: any[];
 }
 
 export default function OutboundForm({ onSubmit, onClose, items: propsItems }: OutboundFormProps) {
   const { companies } = useQueryData();
-  const [formData, setFormData] = useState<OutboundFormData>({
+  const [formData, setFormData] = useState<Omit<OutboundFormData, 'destination'>>({
     itemId: null,
     quantity: 0,
     companyId: null,
     expectedDate: format(new Date(), "yyyy-MM-dd"),
-    destination: "",
     notes: "",
   })
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -55,18 +53,12 @@ export default function OutboundForm({ onSubmit, onClose, items: propsItems }: O
       return;
     }
     
-    if (!formData.destination) {
-      alert("목적지를 입력해주세요.");
-      return;
-    }
-    
     onSubmit(formData)
     setFormData({
       itemId: null,
       quantity: 0,
       companyId: null,
       expectedDate: format(new Date(), "yyyy-MM-dd"),
-      destination: "",
       notes: "",
     })
     setDate(new Date());
@@ -80,7 +72,7 @@ export default function OutboundForm({ onSubmit, onClose, items: propsItems }: O
     }));
   };
 
-  const handleValueChange = (field: keyof OutboundFormData, value: any) => {
+  const handleValueChange = (field: keyof Omit<OutboundFormData, 'destination'>, value: any) => {
     setFormData(prev => ({
       ...prev,
       [field]: value,
@@ -163,18 +155,6 @@ export default function OutboundForm({ onSubmit, onClose, items: propsItems }: O
             />
           </PopoverContent>
         </Popover>
-      </div>
-
-      <div>
-        <Label htmlFor="destination">목적지 *</Label>
-        <Input
-          id="destination"
-          name="destination"
-          value={formData.destination}
-          onChange={handleInputChange}
-          placeholder="목적지를 입력하세요"
-          required
-        />
       </div>
 
       <div>

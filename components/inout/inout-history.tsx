@@ -20,7 +20,6 @@ interface RegistrationItem {
   quantity: string;
   location: string;
   company: string;
-  destination: string;
   notes: string;
   type?: "inbound" | "outbound";
 }
@@ -33,7 +32,6 @@ export default function InOutHistory({ data }: { data: InOutRecord[] }) {
     location: "",
     company: "",
     status: "all",
-    destination: "",
     date: "",
   })
   const [showFilters, setShowFilters] = useState(false)
@@ -71,7 +69,6 @@ export default function InOutHistory({ data }: { data: InOutRecord[] }) {
       (item.location || '').toLowerCase().includes(filters.location.toLowerCase()) &&
       (item.company || '').toLowerCase().includes(filters.company.toLowerCase()) &&
       (filters.status === "all" || item.status === filters.status) &&
-      (item.destination || '').toLowerCase().includes(filters.destination.toLowerCase()) &&
       (filters.date === "" || item.date === filters.date)
     )
   }).sort((a, b) => {
@@ -96,7 +93,6 @@ export default function InOutHistory({ data }: { data: InOutRecord[] }) {
       quantity: "",
       location: "창고1",
       company: "",
-      destination: "",
       notes: "",
     }
     setRegistrationItems([...registrationItems, newItem])
@@ -250,7 +246,6 @@ export default function InOutHistory({ data }: { data: InOutRecord[] }) {
                 <Input placeholder="규격" value={filters.specification} onChange={(e) => handleFilterChange("specification", e.target.value)} />
                 <Input placeholder="구역" value={filters.location} onChange={(e) => handleFilterChange("location", e.target.value)} />
                 <Input placeholder="거래처" value={filters.company} onChange={(e) => handleFilterChange("company", e.target.value)} />
-                <Input placeholder="목적지" value={filters.destination} onChange={(e) => handleFilterChange("destination", e.target.value)} />
                 <Input type="date" value={filters.date} onChange={(e) => handleFilterChange("date", e.target.value)} />
                 
                  <Button
@@ -263,7 +258,6 @@ export default function InOutHistory({ data }: { data: InOutRecord[] }) {
                         location: "",
                         company: "",
                         status: "all",
-                        destination: "",
                         date: "",
                       })
                       setCurrentPage(1)
@@ -288,7 +282,7 @@ export default function InOutHistory({ data }: { data: InOutRecord[] }) {
             </div>
 
             <div>
-              <table className="w-full text-sm min-w-[1200px]">
+              <table className="w-full text-sm min-w-[1100px]">
                 <thead>
                   <tr className="border-b">
                     <th className="text-left p-2 md:p-3 font-semibold">유형</th>
@@ -320,7 +314,6 @@ export default function InOutHistory({ data }: { data: InOutRecord[] }) {
                     <th className="text-center p-2 md:p-3 font-semibold">구역</th>
                     <th className="text-left p-2 md:p-3 font-semibold">거래처</th>
                     <th className="text-center p-2 md:p-3 font-semibold">상태</th>
-                    <th className="text-left p-2 md:p-3 font-semibold">목적지</th>
                     <th className="text-center p-2 md:p-3 font-semibold">날짜</th>
                   </tr>
                 </thead>
@@ -361,7 +354,6 @@ export default function InOutHistory({ data }: { data: InOutRecord[] }) {
                           {item.status}
                         </span>
                       </td>
-                      <td className="p-2 md:p-3 text-sm">{item.destination || "-"}</td>
                       <td className="p-2 md:p-3 text-center">
                         <div>
                           <p className="text-sm whitespace-nowrap">{item.date}</p>
@@ -540,18 +532,6 @@ export default function InOutHistory({ data }: { data: InOutRecord[] }) {
                           placeholder="거래처를 입력하세요"
                         />
                       </div>
-
-                      {item.type === "outbound" && (
-                        <div>
-                          <Label htmlFor={`destination-${item.id}`}>목적지</Label>
-                          <Input
-                            id={`destination-${item.id}`}
-                            value={item.destination}
-                            onChange={(e) => updateRegistrationItem(item.id, "destination", e.target.value)}
-                            placeholder="목적지를 입력하세요"
-                          />
-                        </div>
-                      )}
                     </div>
 
                     <div className="mt-4">

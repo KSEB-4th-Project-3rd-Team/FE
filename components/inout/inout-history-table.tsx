@@ -38,7 +38,6 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
     location: "",
     company: "",
     status: [] as InOutStatus[],
-    destination: "",
     date: "",
   }), [historyType]);
   const [filters, setFilters] = useState(initialFilters);
@@ -95,7 +94,6 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
       location: record.location || "",
       company: record.company || "",
       companyCode: record.companyCode || "",
-      destination: record.destination || "",
       notes: record.notes || "",
     });
     setIsModalOpen(true);
@@ -111,7 +109,6 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
       (item.location || '').toLowerCase().includes(filters.location.toLowerCase()) &&
       (item.company || '').toLowerCase().includes(filters.company.toLowerCase()) &&
       statusMatch &&
-      (item.destination || '').toLowerCase().includes(filters.destination.toLowerCase()) &&
       (filters.date === "" || item.date === filters.date)
     )
   }).sort((a, b) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime()), [filters, historyData]);
@@ -182,7 +179,6 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
               <Input placeholder="규격" value={filters.specification} onChange={(e) => handleFilterChange("specification", e.target.value)} />
               <Input placeholder="구역" value={filters.location} onChange={(e) => handleFilterChange("location", e.target.value)} />
               <Input placeholder="거래처" value={filters.company} onChange={(e) => handleFilterChange("company", e.target.value)} />
-              {historyType !== 'inbound' && <Input placeholder="목적지" value={filters.destination} onChange={(e) => handleFilterChange("destination", e.target.value)} />}
               <Input type="date" value={filters.date} onChange={(e) => handleFilterChange("date", e.target.value)} />
               <Button variant="outline" onClick={() => setFilters(initialFilters)} className="text-gray-600">필터 초기화</Button>
             </div>
@@ -194,13 +190,13 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
             </div>
           </div>
           <div>
-            <table className="w-full text-sm min-w-[1200px] table-fixed">
+            <table className="w-full text-sm min-w-[1100px] table-fixed">
               <thead>
                 <tr className="border-b">
                   <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[8%]">유형</th>
-                  <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[18%]">상품명</th>
+                  <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[20%]">상품명</th>
                   <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[12%]">개별코드</th>
-                  <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[8%]">규격</th>
+                  <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">규격</th>
                   <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[7%]">수량</th>
                   <th className="text-center p-2 md:p-3 font-semibold align-bottom w-[12%]">
                     <div className="flex flex-col items-center pt-4" style={{ height: '3.5rem' }}>
@@ -218,10 +214,9 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
                     </div>
                   </th>
                   <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[8%]">구역</th>
-                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">거래처</th>
+                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[12%]">거래처</th>
                   <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">상태</th>
-                  {historyType !== 'inbound' && <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[8%]">목적지</th>}
-                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">날짜</th>
+                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[11%]">날짜</th>
                 </tr>
               </thead>
               <tbody>
@@ -236,7 +231,6 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
                     <td className="p-2 md:p-3 text-center">{item.location}</td>
                     <td className="p-2 md:p-3 text-center truncate"><p className="font-medium">{item.company}</p><p className="text-xs text-gray-500">코드: {item.companyCode}</p></td>
                     <td className="p-2 md:p-3 text-center"><span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusChipClass(item.status)}`}>{item.status}</span></td>
-                    {historyType !== 'inbound' && <td className="p-2 md:p-3 text-left truncate">{item.destination || "-"}</td>}
                     <td className="p-2 md:p-3 text-center"><div><p>{item.date}</p><p className="text-xs text-gray-500">{item.time}</p></div></td>
                   </tr>
                 ))}
@@ -286,7 +280,6 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
                 <div><Label className="text-gray-500">구역</Label><p>{formData.location}</p></div>
                 <div><Label className="text-gray-500">거래처</Label><p>{formData.company} ({formData.companyCode})</p></div>
                 <div><Label className="text-gray-500">상태</Label><p>{formData.status}</p></div>
-                {historyType !== 'inbound' && <div><Label className="text-gray-500">목적지</Label><p>{formData.destination}</p></div>}
                 <div><Label className="text-gray-500">일시</Label><p>{formData.date} {formData.time}</p></div>
               </div>
               <div className="space-y-1">

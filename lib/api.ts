@@ -332,13 +332,12 @@ export interface InOutOrderRequest {
   type: 'INBOUND' | 'OUTBOUND';
   companyId: number;
   expectedDate: string; // ISO format YYYY-MM-DD
-  destination?: string;
   notes?: string;
   items: InOutOrderItem[];
 }
 
 export async function createInboundOrder(orderData: { itemId: number; quantity: number; companyId?: number; expectedDate?: string; notes?: string }): Promise<any> {
-  const requestData: InOutOrderRequest = {
+  const requestData: Omit<InOutOrderRequest, 'destination'> = {
     type: 'INBOUND',
     companyId: orderData.companyId || 1, // Default company if not provided
     expectedDate: orderData.expectedDate || new Date().toISOString().split('T')[0],
@@ -367,12 +366,11 @@ export async function createInboundOrder(orderData: { itemId: number; quantity: 
   return result;
 }
 
-export async function createOutboundOrder(orderData: { itemId: number; quantity: number; companyId?: number; expectedDate?: string; destination?: string; notes?: string }): Promise<any> {
-  const requestData: InOutOrderRequest = {
+export async function createOutboundOrder(orderData: { itemId: number; quantity: number; companyId?: number; expectedDate?: string; notes?: string }): Promise<any> {
+  const requestData: Omit<InOutOrderRequest, 'destination'> = {
     type: 'OUTBOUND',
     companyId: orderData.companyId || 1, // Default company if not provided
     expectedDate: orderData.expectedDate || new Date().toISOString().split('T')[0],
-    destination: orderData.destination,
     notes: orderData.notes,
     items: [{
       itemId: orderData.itemId,

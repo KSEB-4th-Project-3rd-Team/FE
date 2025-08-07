@@ -223,7 +223,6 @@ export function useInOutData() {
           companyCode: actualCompany?.companyCode || record.companyCode || 'N/A',
           status: record.status === 'COMPLETED' ? '완료' : 
                   record.status === 'PENDING' ? '예약' : '진행 중',
-          destination: record.destination || '-',
           date,
           time,
           notes: record.notes || '-'
