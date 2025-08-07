@@ -43,6 +43,7 @@ export default function OutboundRegistrationPage() {
       quantity: Number(formData.quantity),
       companyId: formData.companyId,
       expectedDate: formData.expectedDate,
+      destination: formData.destination,
       notes: formData.notes,
     };
     

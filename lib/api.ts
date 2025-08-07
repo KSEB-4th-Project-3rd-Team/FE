@@ -332,6 +332,8 @@ export interface InOutOrderRequest {
   type: 'INBOUND' | 'OUTBOUND';
   companyId: number;
   expectedDate: string; // ISO format YYYY-MM-DD
+  destination?: string;
+  notes?: string;
   items: InOutOrderItem[];
 }
 
@@ -340,6 +342,7 @@ export async function createInboundOrder(orderData: { itemId: number; quantity: 
     type: 'INBOUND',
     companyId: orderData.companyId || 1, // Default company if not provided
     expectedDate: orderData.expectedDate || new Date().toISOString().split('T')[0],
+    notes: orderData.notes,
     items: [{
       itemId: orderData.itemId,
       quantity: orderData.quantity
@@ -364,11 +367,13 @@ export async function createInboundOrder(orderData: { itemId: number; quantity: 
   return result;
 }
 
-export async function createOutboundOrder(orderData: { itemId: number; quantity: number; companyId?: number; expectedDate?: string; notes?: string }): Promise<any> {
+export async function createOutboundOrder(orderData: { itemId: number; quantity: number; companyId?: number; expectedDate?: string; destination?: string; notes?: string }): Promise<any> {
   const requestData: InOutOrderRequest = {
     type: 'OUTBOUND',
     companyId: orderData.companyId || 1, // Default company if not provided
     expectedDate: orderData.expectedDate || new Date().toISOString().split('T')[0],
+    destination: orderData.destination,
+    notes: orderData.notes,
     items: [{
       itemId: orderData.itemId,
       quantity: orderData.quantity
@@ -394,12 +399,34 @@ export async function createOutboundOrder(orderData: { itemId: number; quantity:
 }
 
 export async function updateInOutRecord(id: string, recordData: Partial<InOutRecord>): Promise<InOutRecord> {
-  const numericId = Number(id);
-  if (isNaN(numericId)) {
+  // ID가 "orderId-itemIndex" 형태이므로 orderId만 추출
+  const orderId = id.includes('-') ? id.split('-')[0] : id;
+  const numericOrderId = Number(orderId);
+  
+  if (isNaN(numericOrderId)) {
     throw new Error("Invalid InOut record ID provided for update.");
   }
-  const response = await apiClient.put(`/api/inout/orders/${numericId}/status`, recordData);
-  return handleResponse(response);
+  
+  // 여러 가능한 엔드포인트와 메서드 시도
+  try {
+    // 1. PUT /api/inout/orders/{id}/status (원래 스펙대로)
+    const response = await apiClient.put(`/api/inout/orders/${numericOrderId}/status`, recordData);
+    return handleResponse(response);
+  } catch (error: any) {
+    if (error?.response?.status === 405) {
+      try {
+        const response = await apiClient.patch(`/api/inout/orders/${numericOrderId}`, recordData);
+        return handleResponse(response);
+      } catch (error2: any) {
+        if (error2?.response?.status === 405) {
+          const response = await apiClient.put(`/api/inout/orders/${numericOrderId}`, recordData);
+          return handleResponse(response);
+        }
+        throw error2;
+      }
+    }
+    throw error;
+  }
 }
 
 

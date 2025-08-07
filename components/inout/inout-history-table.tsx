@@ -12,7 +12,6 @@ import { Search, Filter, Package } from "lucide-react"
 import { CustomPagination } from "@/components/ui/custom-pagination"
 import { InOutRecord } from "@/components/utils"
 import { Separator } from "@/components/ui/separator"
-import { updateInOutRecord } from "@/lib/api"
 
 import { useRouter } from "next/navigation"
 
@@ -102,19 +101,6 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
     setIsModalOpen(true);
   }
 
-  const handleFormSubmit = async () => {
-    if (!selectedRecord) return;
-    try {
-      await updateInOutRecord(selectedRecord.id.toString(), formData);
-      reloadData();
-      setIsModalOpen(false);
-      setSelectedRecord(null);
-      // Optionally, add a success toast message here
-    } catch (error) {
-      console.error("Failed to update record:", error);
-      // Optionally, add an error toast message here
-    }
-  };
 
   const filteredHistory = useMemo(() => historyData.filter((item) => {
     const statusMatch = filters.status.length === 0 || filters.status.includes(item.status);
@@ -305,11 +291,15 @@ export default function InOutHistoryTable({ historyType, initialData }: InOutHis
               </div>
               <div className="space-y-1">
                 <Label htmlFor="notes">비고</Label>
-                <Textarea id="notes" value={formData.notes || ""} onChange={(e) => setFormData(prev => ({...prev, notes: e.target.value}))} />
+                <Textarea 
+                  id="notes" 
+                  value={formData.notes || "비고 없음"} 
+                  readOnly 
+                  className="bg-gray-100 cursor-not-allowed resize-none"
+                />
               </div>
               <div className="flex justify-end gap-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>취소</Button>
-                <Button type="button" onClick={handleFormSubmit}>저장</Button>
+                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>닫기</Button>
               </div>
             </div>
           </DialogContent>

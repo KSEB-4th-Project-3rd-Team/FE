@@ -205,23 +205,28 @@ export function useInOutData() {
         const date = dateTime.split('T')[0];
         const time = dateTime.split('T')[1]?.substring(0, 8) || '00:00:00';
         
+        // 실제 품목 정보와 매핑
+        const actualItem = items?.find(i => i.itemId === item.itemId);
+        // 실제 거래처 정보와 매핑  
+        const actualCompany = companies?.find(c => c.companyId === record.companyId);
+        
         return {
           id: `${record.orderId}-${itemIndex}`,
           type: record.type?.toLowerCase() || 'inbound',
-          productName: item.itemName || 'N/A',
-          sku: item.itemCode || 'N/A',
+          productName: actualItem?.itemName || item.itemName || 'N/A',
+          sku: actualItem?.itemCode || item.itemCode || 'N/A',
           individualCode: `ORDER-${record.orderId}-${item.itemId}`,
-          specification: item.specification || 'N/A',
+          specification: actualItem?.spec || item.specification || 'N/A',
           quantity: item.requestedQuantity || 0,
           location: 'A-01',
-          company: record.companyName || 'N/A',
-          companyCode: record.companyCode || 'N/A',
+          company: actualCompany?.companyName || record.companyName || 'N/A',
+          companyCode: actualCompany?.companyCode || record.companyCode || 'N/A',
           status: record.status === 'COMPLETED' ? '완료' : 
                   record.status === 'PENDING' ? '예약' : '진행 중',
-          destination: '-',
+          destination: record.destination || '-',
           date,
           time,
-          notes: '-'
+          notes: record.notes || '-'
         };
       });
     });

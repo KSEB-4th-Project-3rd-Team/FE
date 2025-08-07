@@ -94,9 +94,8 @@ export default function OutboundForm({ onSubmit, onClose, items: propsItems }: O
         <ItemAutocomplete
           id="item-select"
           items={propsItems}
-          value={formData.itemId}
+          value={formData.itemId ?? ''}
           onValueChange={(value) => {
-            console.log("OutboundForm received itemId:", value);
             handleValueChange("itemId", value);
           }}
         />
@@ -121,9 +120,8 @@ export default function OutboundForm({ onSubmit, onClose, items: propsItems }: O
         <CompanyAutocomplete
           id="company-select"
           companies={companies.data || []}
-          value={formData.companyId}
+          value={formData.companyId ?? ''}
           onValueChange={(value) => {
-            console.log("OutboundForm received companyId:", value);
             handleValueChange("companyId", value);
           }}
         />
@@ -145,17 +143,22 @@ export default function OutboundForm({ onSubmit, onClose, items: propsItems }: O
               {date ? format(date, "yyyy-MM-dd") : <span>날짜 선택</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+          <PopoverContent 
+            className="w-auto p-0 z-[10000] bg-white border shadow-lg" 
+            align="start" 
+            style={{ pointerEvents: 'auto', position: 'fixed' }}
+            avoidCollisions={false}
+          >
             <Calendar
               mode="single"
               selected={date}
               onSelect={(selectedDate) => {
-                console.log("Calendar onSelect triggered! selectedDate:", selectedDate);
                 setDate(selectedDate);
                 if (selectedDate) {
                   handleValueChange("expectedDate", format(selectedDate, "yyyy-MM-dd"));
                 }
               }}
+              disabled={(date) => false}
               initialFocus
             />
           </PopoverContent>

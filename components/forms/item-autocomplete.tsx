@@ -68,10 +68,22 @@ export function ItemAutocomplete({ id, items, value, onValueChange }: ItemAutoco
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 z-[9999]" align="start">
-        <Command>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 z-[9999]" align="start" style={{ maxHeight: '300px' }}>
+        <Command style={{ pointerEvents: 'auto' }}>
           <CommandInput placeholder="품목 검색..." />
-          <CommandList>
+          <div 
+            style={{ 
+              maxHeight: '200px', 
+              overflowY: 'auto', 
+              overflowX: 'hidden',
+              pointerEvents: 'auto',
+              position: 'relative',
+              zIndex: 1000
+            }}
+            onWheel={(e) => {
+              e.stopPropagation();
+            }}
+          >
             <CommandEmpty>해당 품목이 없습니다.</CommandEmpty>
             <CommandGroup>
             {itemOptions.map((item, index) => (
@@ -106,7 +118,7 @@ export function ItemAutocomplete({ id, items, value, onValueChange }: ItemAutoco
               </CommandItem>
             ))}
             </CommandGroup>
-          </CommandList>
+          </div>
         </Command>
       </PopoverContent>
     </Popover>

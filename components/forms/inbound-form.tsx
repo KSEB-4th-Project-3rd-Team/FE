@@ -137,7 +137,12 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
               {date ? format(date, "yyyy-MM-dd") : <span>날짜 선택</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 z-[9999]" align="start">
+          <PopoverContent 
+            className="w-auto p-0 z-[10000] bg-white border shadow-lg" 
+            align="start" 
+            style={{ pointerEvents: 'auto', position: 'fixed' }}
+            avoidCollisions={false}
+          >
             <Calendar
               mode="single"
               selected={date}
@@ -148,6 +153,7 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
                   handleValueChange("expectedDate", format(selectedDate, "yyyy-MM-dd"));
                 }
               }}
+              disabled={(date) => false}
               initialFocus
             />
           </PopoverContent>
