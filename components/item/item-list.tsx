@@ -1,18 +1,17 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Plus, Search, Trash2 } from "lucide-react"
+import { Plus, Search, Trash2, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
-import { createItem, updateItem, deleteItem } from "@/lib/api"
+import { fetchItems, createItem, updateItem, deleteItem } from "@/lib/api"
 import { CustomPagination } from "@/components/ui/custom-pagination"
-
-import { useRouter } from "next/navigation"
 
 export type Item = {
   itemId: number;
@@ -23,7 +22,7 @@ export type Item = {
   unit: string;
   unitPriceIn: number;
   unitPriceOut: number;
-  createdAt?: string; // 선택적 필드로 추가
+  createdAt?: string;
 };
 
 interface ItemListProps {
@@ -31,12 +30,51 @@ interface ItemListProps {
 }
 
 export default function ItemList({ initialItems }: ItemListProps) {
-  const [items, setItems] = useState(initialItems);
-  const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const reloadItems = () => {
-    router.refresh();
-  };
+  const { data: items = initialItems, isLoading, isError } = useQuery<Item[]>({
+    queryKey: ['items'],
+    queryFn: fetchItems,
+    initialData: initialItems,
+  });
+
+  const { mutate: create, isPending: isCreating } = useMutation({
+    mutationFn: createItem,
+    onSuccess: () => {
+      toast.success("품목이 성공적으로 등록되었습니다.");
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      resetForm();
+    },
+    onError: (error) => {
+      toast.error(`품목 등록 실패: ${error.message}`);
+    }
+  });
+
+  const { mutate: update, isPending: isUpdating } = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: Omit<Item, 'itemId'> }) => updateItem(id, data),
+    onSuccess: () => {
+      toast.success("품목이 성공적으로 수정되었습니다.");
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      resetForm();
+    },
+    onError: (error) => {
+      toast.error(`품목 수정 실패: ${error.message}`);
+    }
+  });
+
+  const { mutate: remove, isPending: isDeleting } = useMutation({
+    mutationFn: deleteItem,
+    onSuccess: () => {
+      toast.success("품목이 성공적으로 삭제되었습니다.");
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+    },
+    onError: (error) => {
+      toast.error(`품목 삭제 실패: ${error.message}`);
+    }
+  });
+
+  const isMutating = isCreating || isUpdating || isDeleting;
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<Item | null>(null)
   const [searchFilters, setSearchFilters] = useState({
@@ -45,27 +83,16 @@ export default function ItemList({ initialItems }: ItemListProps) {
   const [showSearchFilters, setShowSearchFilters] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
-  const [formData, setFormData] = useState<Omit<Item, 'itemId'> & { itemId?: number }> ({
+  const [formData, setFormData] = useState<Omit<Item, 'itemId' | 'createdAt'>>({
     itemCode: "", itemName: "", itemGroup: "", spec: "", unit: "", unitPriceIn: 0, unitPriceOut: 0,
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    try {
-      console.log("Submitting item data:", { editingItem, formData })
-      if (editingItem) {
-        console.log("Updating item ID:", editingItem.itemId)
-        const result = await updateItem(editingItem.itemId.toString(), formData);
-        console.log("Update result:", result)
-      } else {
-        const result = await createItem(formData);
-        console.log("Create result:", result)
-      }
-      reloadItems();
-      resetForm();
-    } catch (error) {
-      console.error("Failed to save item:", error);
-      alert(`품목 저장 실패: ${error}`)
+    if (editingItem) {
+      update({ id: editingItem.itemId.toString(), data: formData });
+    } else {
+      create(formData);
     }
   }
 
@@ -76,48 +103,34 @@ export default function ItemList({ initialItems }: ItemListProps) {
   }
 
   const handleRowClick = (item: Item) => {
-    setFormData({ 
-      ...item,
-      itemCode: item.itemCode || "",
-      itemName: item.itemName || "",
-      itemGroup: item.itemGroup || "",
-      spec: item.spec || "",
-      unit: item.unit || "",
-    });
+    setFormData({ ...item });
     setEditingItem(item);
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (e: React.MouseEvent, id: number) => {
+  const handleDelete = (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
-    console.log("Deleting item with ID:", id, "Type:", typeof id);
     if (confirm("이 품목을 삭제하시겠습니까?")) {
-      try {
-        await deleteItem(id.toString());
-        reloadItems();
-      } catch (error) {
-        console.error("Failed to delete item:", error);
-        alert(`품목 삭제 실패: ${error}`)
-      }
+      remove(id.toString());
     }
   }
 
-  const filteredItems = items.filter((item) => {
-    const itemCode = item.itemCode || "";
-    const itemName = item.itemName || "";
-    const itemGroup = item.itemGroup || "";
-    const itemSpecification = item.spec || "";
-
-    return (
-      itemCode.toLowerCase().includes(searchFilters.itemCode.toLowerCase()) &&
-      itemName.toLowerCase().includes(searchFilters.itemName.toLowerCase()) &&
-      itemGroup.toLowerCase().includes(searchFilters.itemGroup.toLowerCase()) &&
-      itemSpecification.toLowerCase().includes(searchFilters.spec.toLowerCase())
-    )
-  })
+  const filteredItems = useMemo(() => {
+    return (items || []).filter((item) => {
+      return (
+        (item.itemCode || "").toLowerCase().includes(searchFilters.itemCode.toLowerCase()) &&
+        (item.itemName || "").toLowerCase().includes(searchFilters.itemName.toLowerCase()) &&
+        (item.itemGroup || "").toLowerCase().includes(searchFilters.itemGroup.toLowerCase()) &&
+        (item.spec || "").toLowerCase().includes(searchFilters.spec.toLowerCase())
+      )
+    })
+  }, [items, searchFilters]);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage)
   const paginatedItems = filteredItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
+  if (isLoading) return <div>로딩 중...</div>
+  if (isError) return <div>오류가 발생했습니다.</div>
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -162,8 +175,8 @@ export default function ItemList({ initialItems }: ItemListProps) {
                 </tr>
               </thead>
               <tbody>
-                {paginatedItems.map((item, index) => (
-                  <tr key={item.itemId || `item-${index}`} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(item)}>
+                {paginatedItems.map((item) => (
+                  <tr key={item.itemId} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(item)}>
                     <td className="p-3">{item.itemCode}</td>
                     <td className="p-3 font-medium">{item.itemName}</td>
                     <td className="p-3">{item.itemGroup}</td>
@@ -172,7 +185,7 @@ export default function ItemList({ initialItems }: ItemListProps) {
                     <td className="p-3 text-right">{(item.unitPriceIn || 0).toLocaleString()}원</td>
                     <td className="p-3 text-right">{(item.unitPriceOut || 0).toLocaleString()}원</td>
                     <td className="p-3 text-center">
-                      <Button variant="ghost" size="sm" onClick={(e) => handleDelete(e, item.itemId)} className="text-red-600 hover:text-red-700">
+                      <Button variant="ghost" size="sm" onClick={(e) => handleDelete(e, item.itemId)} className="text-red-600 hover:text-red-700" disabled={isMutating}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </td>
@@ -180,24 +193,11 @@ export default function ItemList({ initialItems }: ItemListProps) {
                 ))}
               </tbody>
             </table>
-            {filteredItems.length === 0 ? (
+            {filteredItems.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                {Object.values(searchFilters).some(val => val !== "") ? (
-                  <>
-                    <p>검색 결과가 없습니다.</p>
-                    <p className="text-sm mt-1">다른 검색어를 시도해보세요.</p>
-                  </>
-                ) : (
-                  <>
-                    <p>등록된 품목이 없습니다.</p>
-                    <Button onClick={() => setIsModalOpen(true)} className="mt-4">
-                      <Plus className="w-4 h-4 mr-2" />
-                      첫 품목 등록하기
-                    </Button>
-                  </>
-                )}
+                <p>표시할 품목이 없습니다.</p>
               </div>
-            ) : null}
+            )}
           </div>
           {totalPages > 1 && (
             <div className="flex justify-center mt-4">
@@ -222,36 +222,39 @@ export default function ItemList({ initialItems }: ItemListProps) {
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                   <div className="space-y-1">
                     <Label htmlFor="itemCode">품목코드 *</Label>
-                    <Input id="itemCode" name="itemCode" value={formData.itemCode} onChange={(e) => setFormData({ ...formData, itemCode: e.target.value })} required />
+                    <Input id="itemCode" name="itemCode" value={formData.itemCode} onChange={(e) => setFormData({ ...formData, itemCode: e.target.value })} required disabled={isMutating} />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="itemName">품목명 *</Label>
-                    <Input id="itemName" name="itemName" value={formData.itemName} onChange={(e) => setFormData({ ...formData, itemName: e.target.value })} required />
+                    <Input id="itemName" name="itemName" value={formData.itemName} onChange={(e) => setFormData({ ...formData, itemName: e.target.value })} required disabled={isMutating} />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="itemGroup">품목그룹</Label>
-                    <Input id="itemGroup" name="itemGroup" value={formData.itemGroup} onChange={(e) => setFormData({ ...formData, itemGroup: e.target.value })} />
+                    <Input id="itemGroup" name="itemGroup" value={formData.itemGroup} onChange={(e) => setFormData({ ...formData, itemGroup: e.target.value })} disabled={isMutating} />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="spec">규격</Label>
-                    <Input id="spec" name="spec" value={formData.spec} onChange={(e) => setFormData({ ...formData, spec: e.target.value })} />
+                    <Input id="spec" name="spec" value={formData.spec} onChange={(e) => setFormData({ ...formData, spec: e.target.value })} disabled={isMutating} />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="unit">단위</Label>
-                    <Input id="unit" name="unit" value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} />
+                    <Input id="unit" name="unit" value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} disabled={isMutating} />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="unitPriceIn">입고단가</Label>
-                    <Input id="unitPriceIn" name="unitPriceIn" type="number" value={formData.unitPriceIn} onChange={(e) => setFormData({ ...formData, unitPriceIn: Number(e.target.value) })} />
+                    <Input id="unitPriceIn" name="unitPriceIn" type="number" value={formData.unitPriceIn} onChange={(e) => setFormData({ ...formData, unitPriceIn: Number(e.target.value) })} disabled={isMutating} />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="unitPriceOut">출고단가</Label>
-                    <Input id="unitPriceOut" name="unitPriceOut" type="number" value={formData.unitPriceOut} onChange={(e) => setFormData({ ...formData, unitPriceOut: Number(e.target.value) })} />
+                    <Input id="unitPriceOut" name="unitPriceOut" type="number" value={formData.unitPriceOut} onChange={(e) => setFormData({ ...formData, unitPriceOut: Number(e.target.value) })} disabled={isMutating} />
                   </div>
                 </div>
                 <div className="flex gap-2 pt-4">
-                  <Button type="submit" className="flex-1">{editingItem ? "수정" : "등록"}</Button>
-                  <Button type="button" variant="outline" onClick={resetForm} className="flex-1 bg-transparent">취소</Button>
+                  <Button type="submit" className="flex-1" disabled={isMutating}>
+                    {isMutating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {editingItem ? "수정" : "등록"}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={resetForm} className="flex-1 bg-transparent" disabled={isMutating}>취소</Button>
                 </div>
               </form>
             </CardContent>

@@ -1,17 +1,18 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Search, Trash2 } from "lucide-react"
-import { CustomPagination } from "@/components/ui/custom-pagination"
-import { createCompany, updateCompany, deleteCompany } from "@/lib/api"
+import { Plus, Search, Trash2, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 
-import { useRouter } from "next/navigation"
+import { fetchCompanies, createCompany, updateCompany, deleteCompany } from "@/lib/api"
+import { CustomPagination } from "@/components/ui/custom-pagination"
 
 export type Company = {
   companyId: number
@@ -25,12 +26,51 @@ export type Company = {
 }
 
 export default function CompanyList({ initialCompanies }: { initialCompanies: Company[] }) {
-  const [companies, setCompanies] = useState(initialCompanies);
-  const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const reloadCompanies = () => {
-    router.refresh();
-  };
+  const { data: companies = initialCompanies, isLoading, isError } = useQuery<Company[]>({
+    queryKey: ['companies'],
+    queryFn: fetchCompanies,
+    initialData: initialCompanies,
+  });
+
+  const { mutate: create, isPending: isCreating } = useMutation({
+    mutationFn: createCompany,
+    onSuccess: () => {
+      toast.success("거래처가 성공적으로 등록되었습니다.");
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      resetForm();
+    },
+    onError: (error) => {
+      toast.error(`거래처 등록 실패: ${error.message}`);
+    }
+  });
+
+  const { mutate: update, isPending: isUpdating } = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: Omit<Company, 'companyId'> }) => updateCompany(id, data),
+    onSuccess: () => {
+      toast.success("거래처가 성공적으로 수정되었습니다.");
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      resetForm();
+    },
+    onError: (error) => {
+      toast.error(`거래처 수정 실패: ${error.message}`);
+    }
+  });
+
+  const { mutate: remove, isPending: isDeleting } = useMutation({
+    mutationFn: deleteCompany,
+    onSuccess: () => {
+      toast.success("거래처가 성공적으로 삭제되었습니다.");
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+    },
+    onError: (error) => {
+      toast.error(`거래처 삭제 실패: ${error.message}`);
+    }
+  });
+
+  const isMutating = isCreating || isUpdating || isDeleting;
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCompany, setEditingCompany] = useState<Company | null>(null)
   const [searchFilters, setSearchFilters] = useState({
@@ -45,7 +85,7 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
   const [currentPage, setCurrentPage] = useState(1)
   const companiesPerPage = 10
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<Company, 'companyId'>>({
     companyCode: "",
     companyName: "",
     contactPerson: "",
@@ -57,21 +97,10 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    try {
-      console.log("Submitting company data:", { editingCompany, formData })
-      if (editingCompany) {
-        console.log("Updating company ID:", editingCompany.companyId)
-        const result = await updateCompany(editingCompany.companyId.toString(), formData)
-        console.log("Update result:", result)
-      } else {
-        const result = await createCompany(formData)
-        console.log("Create result:", result)
-      }
-      reloadCompanies()
-      resetForm()
-    } catch (error) {
-      console.error("Failed to save company:", error)
-      alert(`회사 저장 실패: ${error}`)
+    if (editingCompany) {
+      update({ id: editingCompany.companyId.toString(), data: formData });
+    } else {
+      create(formData);
     }
   }
 
@@ -84,47 +113,37 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
   }
 
   const handleRowClick = (company: Company) => {
-    setFormData({
-      companyCode: company.companyCode || "",
-      companyName: company.companyName || "",
-      contactPerson: company.contactPerson || "",
-      contactPhone: company.contactPhone || "",
-      contactEmail: company.contactEmail || "",
-      address: company.address || "",
-      type: company.type?.length ? company.type : ["납품처"],
-    })
-    setEditingCompany(company)
-    setIsModalOpen(true)
+    setFormData({ ...company });
+    setEditingCompany(company);
+    setIsModalOpen(true);
   }
 
   const handleDelete = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation()
-    console.log("Deleting company with ID:", id, "Type:", typeof id)
     if (confirm("이 거래처를 삭제하시겠습니까?")) {
-      try {
-        await deleteCompany(id.toString())
-        reloadCompanies()
-      } catch (error) {
-        console.error("Failed to delete company:", error)
-        alert(`거래처 삭제 실패: ${error}`)
-      }
+      remove(id.toString());
     }
   }
 
-  const filteredCompanies = companies.filter((company) => {
-    const type = (company.type?.[0] || "").toLowerCase()
-    return (
-      (company.companyCode || '').toLowerCase().includes(searchFilters.companyCode.toLowerCase()) &&
-      (company.companyName || '').toLowerCase().includes(searchFilters.companyName.toLowerCase()) &&
-      (company.contactPerson || '').toLowerCase().includes(searchFilters.contactPerson.toLowerCase()) &&
-      (company.contactPhone || '').toLowerCase().includes(searchFilters.contactPhone.toLowerCase()) &&
-      (company.contactEmail || '').toLowerCase().includes(searchFilters.contactEmail.toLowerCase()) &&
-      (searchFilters.type === "전체" || type === searchFilters.type.toLowerCase())
-    )
-  })
+  const filteredCompanies = useMemo(() => {
+    return (companies || []).filter((company) => {
+      const type = (company.type?.[0] || "").toLowerCase()
+      return (
+        (company.companyCode || '').toLowerCase().includes(searchFilters.companyCode.toLowerCase()) &&
+        (company.companyName || '').toLowerCase().includes(searchFilters.companyName.toLowerCase()) &&
+        (company.contactPerson || '').toLowerCase().includes(searchFilters.contactPerson.toLowerCase()) &&
+        (company.contactPhone || '').toLowerCase().includes(searchFilters.contactPhone.toLowerCase()) &&
+        (company.contactEmail || '').toLowerCase().includes(searchFilters.contactEmail.toLowerCase()) &&
+        (searchFilters.type === "전체" || type === searchFilters.type.toLowerCase())
+      )
+    })
+  }, [companies, searchFilters]);
 
   const totalPages = Math.ceil(filteredCompanies.length / companiesPerPage)
   const paginatedCompanies = filteredCompanies.slice((currentPage - 1) * companiesPerPage, currentPage * companiesPerPage)
+
+  if (isLoading) return <div>로딩 중...</div>
+  if (isError) return <div>오류가 발생했습니다.</div>
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
@@ -202,7 +221,7 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
                       <td className="p-3">{company.contactEmail}</td>
                       <td className="p-3">{company.address}</td>
                       <td className="p-3 text-center">
-                        <Button variant="ghost" size="sm" onClick={(e) => handleDelete(e, company.companyId)} className="text-red-600 hover:text-red-700">
+                        <Button variant="ghost" size="sm" onClick={(e) => handleDelete(e, company.companyId)} className="text-red-600 hover:text-red-700" disabled={isMutating}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </td>
@@ -213,10 +232,7 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
 
             {filteredCompanies.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                <p>검색 결과가 없습니다.</p>
-                <Button onClick={() => setIsModalOpen(true)} className="mt-4">
-                  <Plus className="w-4 h-4 mr-2" /> 거래처 등록
-                </Button>
+                <p>표시할 거래처가 없습니다.</p>
               </div>
             )}
           </div>
@@ -240,11 +256,11 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
                 <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                   <div className="space-y-1">
                     <Label htmlFor="companyCode">거래처코드 *</Label>
-                    <Input id="companyCode" value={formData.companyCode} onChange={(e) => setFormData({ ...formData, companyCode: e.target.value })} required />
+                    <Input id="companyCode" value={formData.companyCode} onChange={(e) => setFormData({ ...formData, companyCode: e.target.value })} required disabled={isMutating} />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="companyName">거래처명 *</Label>
-                    <Input id="companyName" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} required />
+                    <Input id="companyName" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} required disabled={isMutating} />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="type">거래처 구분 *</Label>
@@ -252,6 +268,7 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
                       key={editingCompany ? `edit-${editingCompany.companyId}` : 'new'}
                       value={formData.type[0] ?? ""}
                       onValueChange={(value: "매입처" | "납품처") => setFormData({ ...formData, type: [value] })}
+                      disabled={isMutating}
                     >
                       <SelectTrigger><SelectValue placeholder="구분을 선택하세요" /></SelectTrigger>
                       <SelectContent>
@@ -262,24 +279,27 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="contactPerson">대표자명</Label>
-                    <Input id="contactPerson" value={formData.contactPerson} onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })} />
+                    <Input id="contactPerson" value={formData.contactPerson} onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })} disabled={isMutating} />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="contactPhone">전화번호</Label>
-                    <Input id="contactPhone" value={formData.contactPhone} onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} />
+                    <Input id="contactPhone" value={formData.contactPhone} onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })} disabled={isMutating} />
                   </div>
                   <div className="space-y-1">
                     <Label htmlFor="contactEmail">Email</Label>
-                    <Input id="contactEmail" value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} />
+                    <Input id="contactEmail" value={formData.contactEmail} onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })} disabled={isMutating} />
                   </div>
                   <div className="col-span-2 space-y-1">
                     <Label htmlFor="address">주소</Label>
-                    <Input id="address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+                    <Input id="address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} disabled={isMutating} />
                   </div>
                 </div>
                 <div className="flex gap-2 pt-4">
-                  <Button type="submit" className="flex-1">{editingCompany ? "수정" : "등록"}</Button>
-                  <Button type="button" variant="outline" onClick={resetForm} className="flex-1 bg-transparent">취소</Button>
+                  <Button type="submit" className="flex-1" disabled={isMutating}>
+                    {isMutating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {editingCompany ? "수정" : "등록"}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={resetForm} className="flex-1 bg-transparent" disabled={isMutating}>취소</Button>
                 </div>
               </form>
             </CardContent>

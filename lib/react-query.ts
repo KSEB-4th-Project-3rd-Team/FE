@@ -45,7 +45,6 @@ export const queryKeys = {
   
   // 입출고 관련
   inOutData: ['inOutData'] as const,
-  inOutRequests: ['inOutRequests'] as const,
   
   // 재고 관련
   inventory: ['inventory'] as const,

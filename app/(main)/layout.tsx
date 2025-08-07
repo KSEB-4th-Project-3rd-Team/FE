@@ -200,7 +200,6 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                     <Button asChild variant={isActive("/inbound-registration") ? "default" : "ghost"} size="sm" className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"><Link href="/inbound-registration"><span className="mr-2">•</span>입고 관리</Link></Button>
                     <Button asChild variant={isActive("/outbound-registration") ? "default" : "ghost"} size="sm" className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"><Link href="/outbound-registration"><span className="mr-2">•</span>출고 관리</Link></Button>
                     <Button asChild variant={isActive("/inout-history") ? "default" : "ghost"} size="sm" className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"><Link href="/inout-history"><span className="mr-2">•</span>입출고 내역</Link></Button>
-                    <Button asChild variant={isActive("/inout-request") ? "default" : "ghost"} size="sm" className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"><Link href="/inout-request"><span className="mr-2">•</span>입출고 요청</Link></Button>
                   </div>
                 )}
               </div>

@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 // Data Interfaces
 export interface InOutRecord {
-  id: number;
+  id: string;
   type: "inbound" | "outbound";
   productName: string;
   sku: string;
@@ -24,19 +24,6 @@ export interface InOutRecord {
   notes: string;
 }
 
-export interface InOutRequest {
-  id: string;
-  type: "inbound" | "outbound";
-  itemCode: string;
-  itemName: string;
-  specification: string;
-  quantity: number;
-  companyCode: string;
-  companyName: string;
-  scheduledDateTime: string;
-  notes: string;
-  status: "pending" | "approved" | "rejected";
-}
 
 export interface InventoryItem {
   id: number;

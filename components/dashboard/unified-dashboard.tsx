@@ -115,10 +115,10 @@ export function UnifiedDashboard() {
           company: record.companyName || 'N/A',
           companyCode: record.companyCode || 'N/A',
           status: record.status === 'COMPLETED' ? '완료' : '진행 중',
-          destination: 'N/A',
+          destination: '-',
           date,
           time,
-          notes: 'N/A'
+          notes: '-'
         };
       });
     });
@@ -148,20 +148,20 @@ export function UnifiedDashboard() {
   const [activeWorkDetail, setActiveWorkDetail] = useState<string | null>(null);
   const [workCurrentPage, setWorkCurrentPage] = useState(1);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [filterType, setFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('monthly');
+  const [filterType, setFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
   const [fromMonth, setFromMonth] = useState(startOfMonth(subMonths(new Date(), 1)));
   const [toMonth, setToMonth] = useState(startOfMonth(new Date()));
   const [salesDateRange, setSalesDateRange] = useState<DateRange | undefined>(undefined);
-  const [salesFilterType, setSalesFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('monthly');
+  const [salesFilterType, setSalesFilterType] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
   const [salesFromMonth, setSalesFromMonth] = useState(startOfMonth(subMonths(new Date(), 1)));
   const [salesToMonth, setSalesToMonth] = useState(startOfMonth(new Date()));
   const [activePieIndex, setActivePieIndex] = useState(0);
 
   useEffect(() => {
     const today = new Date();
-    const oneYearAgo = subYears(today, 1);
-    setDateRange({ from: oneYearAgo, to: today });
-    setSalesDateRange({ from: oneYearAgo, to: today });
+    const oneWeekAgo = subDays(today, 6);
+    setDateRange({ from: oneWeekAgo, to: today });
+    setSalesDateRange({ from: oneWeekAgo, to: today });
   }, []);
 
   const itemPriceMap = useMemo(() => {
@@ -460,7 +460,7 @@ export function UnifiedDashboard() {
                         <Button variant={filterType === 'monthly' ? 'default' : 'outline'} onClick={() => handleFilterClick('monthly', setDateRange, setFilterType)}>1년</Button>
                         <Popover>
                             <PopoverTrigger asChild><Button variant={"outline"} className={`w-[280px] justify-start text-left font-normal ${!dateRange && "text-muted-foreground"}`}><CalendarIcon className="mr-2 h-4 w-4" />{dateRange?.from ? (dateRange.to ? (<>{format(dateRange.from, "yyyy-MM-dd")} - {format(dateRange.to, "yyyy-MM-dd")}</>) : (format(dateRange.from, "yyyy-MM-dd"))) : (<span>기간 선택</span>)}</Button></PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="end"><div className="flex"><Calendar initialFocus mode="range" selected={dateRange} onSelect={(range) => { setDateRange(range); setFilterType('custom'); }} month={fromMonth} onMonthChange={setFromMonth} toMonth={toMonth} /><Calendar mode="range" selected={dateRange} onSelect={(range) => { setDateRange(range); setFilterType('custom'); }} month={toMonth} onMonthChange={setToMonth} fromMonth={fromMonth} /></div></PopoverContent>
+                            <PopoverContent className="w-auto p-0" align="end"><Calendar initialFocus mode="range" selected={dateRange} onSelect={(range) => { setDateRange(range); setFilterType('custom'); }} /></PopoverContent>
                         </Popover>
                     </div>
                 </div>
@@ -504,7 +504,7 @@ export function UnifiedDashboard() {
                         <Button variant={salesFilterType === 'monthly' ? 'default' : 'outline'} onClick={() => handleFilterClick('monthly', setSalesDateRange, setSalesFilterType)}>1년</Button>
                         <Popover>
                             <PopoverTrigger asChild><Button variant={"outline"} className={`w-[280px] justify-start text-left font-normal ${!salesDateRange && "text-muted-foreground"}`}><CalendarIcon className="mr-2 h-4 w-4" />{salesDateRange?.from ? (salesDateRange.to ? (<>{format(salesDateRange.from, "yyyy-MM-dd")} - {format(salesDateRange.to, "yyyy-MM-dd")}</>) : (format(salesDateRange.from, "yyyy-MM-dd"))) : (<span>기간 선택</span>)}</Button></PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="end"><div className="flex"><Calendar initialFocus mode="range" selected={salesDateRange} onSelect={(range) => { setSalesDateRange(range); setSalesFilterType('custom'); }} month={salesFromMonth} onMonthChange={setSalesFromMonth} toMonth={salesToMonth} /><Calendar mode="range" selected={salesDateRange} onSelect={(range) => { setSalesDateRange(range); setSalesFilterType('custom'); }} month={salesToMonth} onMonthChange={setSalesToMonth} fromMonth={salesFromMonth} /></div></PopoverContent>
+                            <PopoverContent className="w-auto p-0" align="end"><Calendar initialFocus mode="range" selected={salesDateRange} onSelect={(range) => { setSalesDateRange(range); setSalesFilterType('custom'); }} /></PopoverContent>
                         </Popover>
                     </div>
                 </div>
@@ -528,7 +528,7 @@ export function UnifiedDashboard() {
                         <ChartContainer config={{ count: { label: "납품 건수" } }} className="h-[300px] w-full">
                             <PieChart>
                                 <AnyPie activeIndex={activePieIndex} activeShape={renderActiveShape as any} data={salesAnalysis.companyPieChartData} cx="50%" cy="50%" innerRadius={80} outerRadius={110} dataKey="count" onMouseEnter={onPieEnter}>
-                                    {salesAnalysis.companyPieChartData.map((entry, index) => (<Cell key={`cell-${index}`} fill={`hsl(var(--chart-${index + 1}))`} />))}
+                                    {salesAnalysis.companyPieChartData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.name === '기타' ? '#6B7280' : `hsl(var(--chart-${index + 1}))`} />))}
                                 </AnyPie>
                             </PieChart>
                         </ChartContainer>

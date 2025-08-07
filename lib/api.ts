@@ -311,10 +311,10 @@ export async function fetchInOutData(): Promise<InOutRecord[]> {
         company: record.companyName || 'N/A',
         companyCode: record.companyCode || 'N/A',
         status: record.status === 'COMPLETED' ? '완료' : '진행 중',
-        destination: 'N/A',
+        destination: '-',
         date: date,
         time: time,
-        notes: 'N/A'
+        notes: '-'
       };
     });
   });
@@ -322,12 +322,6 @@ export async function fetchInOutData(): Promise<InOutRecord[]> {
   return transformedData;
 }
 
-export async function fetchInOutRequests(): Promise<InOutRequest[]> {
-  // 원시 데이터 재사용 (중복 호출 제거!)
-  const allData = await fetchRawInOutData();
-  // Filter for pending requests only
-  return allData.filter(record => record.status === 'PENDING');
-}
 
 export interface InOutOrderItem {
   itemId: number;

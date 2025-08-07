@@ -7,7 +7,6 @@ import {
   useUsers,
   useInventoryData,
   useInOutData,
-  useInOutRequests,
   useSchedules,
   useDashboardSummary,
 } from '@/lib/queries';
@@ -22,7 +21,6 @@ interface QueryDataContextType {
   // 조합된 데이터
   inventoryData: ReturnType<typeof useInventoryData>;
   inOutData: ReturnType<typeof useInOutData>;
-  inOutRequests: ReturnType<typeof useInOutRequests>;
   
   // 스케줄 및 대시보드
   schedules: ReturnType<typeof useSchedules>;
@@ -43,7 +41,6 @@ export function QueryDataProvider({ children }: { children: ReactNode }) {
   const users = useUsers();
   const inventoryData = useInventoryData();
   const inOutData = useInOutData();
-  const inOutRequests = useInOutRequests();
   const schedules = useSchedules();
   const dashboardSummary = useDashboardSummary();
 
@@ -69,7 +66,6 @@ export function QueryDataProvider({ children }: { children: ReactNode }) {
     users,
     inventoryData,
     inOutData,
-    inOutRequests,
     schedules,
     dashboardSummary,
     isLoading,

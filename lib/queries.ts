@@ -5,7 +5,6 @@ import {
   fetchCompanies,
   fetchItems,
   fetchRawInOutData,
-  fetchInOutRequests,
   fetchRawInventoryData,
   fetchSchedules,
   fetchUsers,
@@ -24,7 +23,7 @@ import {
 import { useMemo } from 'react';
 import type { Company } from '@/components/company/company-list';
 import type { Item } from '@/components/item/item-list';
-import type { InOutRecord, InOutRequest, InventoryItem } from '@/components/utils';
+import type { InOutRecord, InventoryItem } from '@/components/utils';
 
 // ===== 🚀 통합 대시보드 Query 훅 (5 API → 1 API) =====
 // 75% 성능 향상을 위한 통합 API 사용
@@ -117,13 +116,6 @@ export function useRawInOutData() {
   });
 }
 
-export function useInOutRequests() {
-  return useQuery({
-    queryKey: queryKeys.inOutRequests,
-    queryFn: fetchInOutRequests,
-    staleTime: 30 * 1000, // 30초 캐시
-  });
-}
 
 // ===== 재고 관련 Query 훅들 =====
 
@@ -141,7 +133,7 @@ export function useRawInventoryData() {
 export function useInventoryData() {
   const { data: rawInventory, ...inventoryQuery } = useRawInventoryData();
   const { data: items } = useItems();
-  const { data: inOutRequests } = useInOutRequests();
+  const { data: inOutData } = useInOutData();
 
   const enrichedInventory = useMemo((): InventoryItem[] => {
     if (!rawInventory || !items) return [];
@@ -149,22 +141,22 @@ export function useInventoryData() {
     return rawInventory.map((backendItem, index) => {
       const item = items.find(i => i.itemId === backendItem.itemId);
       
-      // Calculate scheduled inbound/outbound from pending requests
-      const inboundScheduled = inOutRequests
-        ?.filter(request => 
-          request.type === 'inbound' && 
-          request.itemName === backendItem.itemName &&
-          request.status === 'pending'
+      // Calculate scheduled quantities from pending/in-progress inout data
+      const inboundScheduled = inOutData
+        ?.filter(record => 
+          record.type === 'inbound' && 
+          record.sku === item?.itemCode &&
+          (record.status === '예약' || record.status === '진행 중')
         )
-        .reduce((sum, request) => sum + request.quantity, 0) || 0;
+        .reduce((sum, record) => sum + record.quantity, 0) || 0;
       
-      const outboundScheduled = inOutRequests
-        ?.filter(request => 
-          request.type === 'outbound' && 
-          request.itemName === backendItem.itemName &&
-          request.status === 'pending'
+      const outboundScheduled = inOutData
+        ?.filter(record => 
+          record.type === 'outbound' && 
+          record.sku === item?.itemCode &&
+          (record.status === '예약' || record.status === '진행 중')
         )
-        .reduce((sum, request) => sum + request.quantity, 0) || 0;
+        .reduce((sum, record) => sum + record.quantity, 0) || 0;
 
       // Determine status based on quantity
       let status = '정상';
@@ -187,7 +179,7 @@ export function useInventoryData() {
         lastUpdate: new Date(backendItem.lastUpdated).toLocaleString('ko-KR')
       };
     });
-  }, [rawInventory, items, inOutRequests]);
+  }, [rawInventory, items, inOutData]);
 
   return {
     data: enrichedInventory,
@@ -204,9 +196,10 @@ export function useInOutData() {
   const enrichedInOut = useMemo((): InOutRecord[] => {
     if (!rawInOut) return [];
 
-    const completedData = rawInOut.filter(record => record.status === 'COMPLETED');
+    // 모든 상태의 데이터 포함 (CANCELLED 제외)
+    const allData = rawInOut.filter(record => record.status !== 'CANCELLED');
     
-    return completedData.flatMap(record => {
+    return allData.flatMap(record => {
       return record.items.map((item, itemIndex) => {
         const dateTime = record.createdAt || record.updatedAt || new Date().toISOString();
         const date = dateTime.split('T')[0];
@@ -223,11 +216,12 @@ export function useInOutData() {
           location: 'A-01',
           company: record.companyName || 'N/A',
           companyCode: record.companyCode || 'N/A',
-          status: record.status === 'COMPLETED' ? '완료' : '진행 중',
-          destination: 'N/A',
+          status: record.status === 'COMPLETED' ? '완료' : 
+                  record.status === 'PENDING' ? '예약' : '진행 중',
+          destination: '-',
           date,
           time,
-          notes: 'N/A'
+          notes: '-'
         };
       });
     });
@@ -383,9 +377,7 @@ export function useCreateInboundOrder() {
     },
     onSuccess: () => {
       // 성공 시 최신 데이터로 갱신
-      queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
-      queryClient.invalidateQueries({ queryKey: queryKeys.inOutRequests });
-      queryClient.invalidateQueries({ queryKey: queryKeys.inventory });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
     },
   });
 }
@@ -433,9 +425,7 @@ export function useCreateOutboundOrder() {
     },
     onSuccess: () => {
       // 성공 시 최신 데이터로 갱신
-      queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
-      queryClient.invalidateQueries({ queryKey: queryKeys.inOutRequests });
-      queryClient.invalidateQueries({ queryKey: queryKeys.inventory });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
     },
   });
 }
