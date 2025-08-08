@@ -96,8 +96,4 @@
 - **API 프록시:** 개발 환경의 CORS 문제를 해결하기 위해 `next.config.mjs`에 API 프록시가 설정되어 있습니다. `/api`로 시작하는 모든 요청은 백엔드 서버로 전달됩니다.
 - **API 명세:** 자세한 API 엔드포인트 및 데이터 구조는 `backend_api_spec.md` 문서를 참고하세요.
 
----
 
-
-    npm run start
-    ```
