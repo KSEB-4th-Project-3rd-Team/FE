@@ -24,16 +24,16 @@
 🛠️ 기술 스택
 
 # Frontend
-![Next.js]
-![React]
-![TypeScript]
-![Tailwind CSS]
-![Shadcn/UI]
+[Next.js]
+[React]
+[TypeScript]
+[Tailwind CSS]
+[Shadcn/UI]
 
 # State Management & Form
-![TanStack Query]
-![React Hook Form]
-![Zod]
+[TanStack Query]
+[React Hook Form]
+[Zod]
 
 
 🚀 시작하기
