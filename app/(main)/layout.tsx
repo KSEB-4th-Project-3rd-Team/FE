@@ -7,7 +7,7 @@ import { usePathname, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Calendar, Package, Warehouse, LogOut, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
-  Building2, Box, BarChart3, Settings, Search,
+  Building2, Box, BarChart3, Settings, Search, Menu,
 } from "lucide-react"
 import AuthForm from "@/components/auth/auth-form"
 import dynamic from "next/dynamic"
@@ -59,6 +59,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
 
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -157,7 +158,25 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <NotificationProvider>
       <div className="flex min-h-screen bg-gray-50">
-        <div className="w-64 bg-white shadow-xl flex flex-col fixed top-0 bottom-0 left-0 z-20 overflow-y-auto border-r border-gray-200">
+        {/* 모바일 햄버거 메뉴 버튼 */}
+        <button
+          className="fixed top-4 left-4 z-50 md:hidden bg-white p-2 rounded-md shadow-lg border"
+          onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
+        >
+          <Menu className="w-5 h-5 text-gray-600" />
+        </button>
+        
+        {/* 모바일 오버레이 */}
+        {isMobileNavOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+            onClick={() => setIsMobileNavOpen(false)}
+          />
+        )}
+        
+        <div className={`w-64 bg-white shadow-xl flex flex-col fixed top-0 bottom-0 left-0 z-40 overflow-y-auto border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${
+          isMobileNavOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0`}>
           <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-indigo-600" style={{ height: "120px" }}>
             <Link href="/dashboard">
               <div className="flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity h-full">
@@ -238,7 +257,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
-        <div className={`flex-1 ml-64 transition-all duration-300 ${sidePanel && !isPanelCollapsed ? "mr-[350px]" : ""}`}>
+        <div className={`flex-1 ml-0 md:ml-64 transition-all duration-300 ${sidePanel && !isPanelCollapsed ? "mr-[350px]" : ""}`}>
           {children}
           {renderSidePanel()}
         </div>
