@@ -296,6 +296,7 @@ export function useCreateInboundOrder() {
       // 성공 시 최신 데이터로 갱신
       queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
   });
@@ -310,6 +311,7 @@ export function useCreateOutboundOrder() {
       // 성공 시 최신 데이터로 갱신
       queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
     },
   });

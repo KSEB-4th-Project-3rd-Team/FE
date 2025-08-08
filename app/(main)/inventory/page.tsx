@@ -1,10 +1,10 @@
 "use client"
 
 import InventoryManagement from "@/components/inventory/inventory-management"
-import { useQueryInventory } from "@/contexts/query-data-context"
+import { useInventoryData } from "@/lib/queries"
 
 export default function InventoryPage() {
-  const { data: inventoryData, isLoading, error } = useQueryInventory();
+  const { data: inventoryData, isLoading, error } = useInventoryData();
 
   if (isLoading) {
     return (
