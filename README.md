@@ -5,15 +5,6 @@
   <h1 align="center">KSEB Smart WMS</h1>
   <p align="center">
     Next.js 기반의 스마트 창고 관리 시스템(WMS) 프론트엔드
-    <br />
-    <a href="https://your-project-link.com/docs"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://your-project-demo.com">View Demo</a>
-    ·
-    <a href="https://github.com/your-username/KSEB-Web/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/your-username/KSEB-Web/issues">Request Feature</a>
   </p>
 </div>
 
@@ -102,7 +93,7 @@
 
 - **API 통신:** 모든 백엔드 API 요청은 `lib/api.ts`에 정의된 함수를 통해 이루어집니다.
 - **서버 상태 관리:** `TanStack Query`를 사용하여 서버 데이터를 효율적으로 `fetching`, `caching`, `synchronizing`, `updating` 합니다.
-- **API 프록시:** 개발 환경의 CORS 문제를 해결하기 위해 `next.config.mjs`에 API 프록시가 설정되어 있습니다. `/api`로 시작하는 모든 요청은 백엔드 서버(`http://localhost:8080`)로 전달됩니다.
+- **API 프록시:** 개발 환경의 CORS 문제를 해결하기 위해 `next.config.mjs`에 API 프록시가 설정되어 있습니다. `/api`로 시작하는 모든 요청은 백엔드 서버로 전달됩니다.
 - **API 명세:** 자세한 API 엔드포인트 및 데이터 구조는 `backend_api_spec.md` 문서를 참고하세요.
 
 ---
