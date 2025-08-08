@@ -44,8 +44,12 @@
 - Package Manager: `npm` 또는 `pnpm`
 - Backend Server: 백엔드 서버 실행
 
-📂 프로젝트 구조
+## 📂 프로젝트 구조
 
+<details>
+<summary><strong>주요 디렉토리 구조 보기</strong></summary>
+
+```
 /
 ├── app/              # Next.js App Router 기반의 페이지 및 레이아웃
 │   ├── (main)/       # 메인 레이아웃이 적용되는 페이지 그룹
@@ -63,8 +67,9 @@
 ├── styles/           # 전역 스타일시트
 ├── next.config.mjs   # Next.js 설정 파일 (프록시, 웹팩 최적화 등)
 └── package.json      # 프로젝트 의존성 및 스크립트 정의
+```
 
-
+</details>
 
 ---
 
