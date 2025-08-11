@@ -3,12 +3,14 @@
 import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Package, TruckIcon } from "lucide-react"
+import { Package, TruckIcon, Timer, CalendarDays, CheckCircle, X, XCircle } from "lucide-react"
 import { InOutRecord } from "@/components/utils"
 import { Separator } from "@/components/ui/separator"
 import { CustomPagination } from "@/components/ui/custom-pagination"
 import { useApproveInboundOrder, useDeclineInboundOrder } from "@/lib/queries"
 import { toast } from "sonner"
+import { ORDER_STATUS_CONFIG, type OrderStatus, getStatusIcon } from "@/lib/order-status"
+import { Badge } from "@/components/ui/badge"
 
 interface InOutStatusPanelProps {
   showSearch: boolean;
@@ -28,9 +30,9 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  // '완료' 상태를 제외한 데이터만 사용하도록 수정
+  // 🔄 새로운 상태 시스템: 완료되지 않은 상태만 표시 (대기중, 예약)
   const statusData: InOutRecord[] = useMemo(() => data.filter(
-    (item) => item.status === "진행 중" || item.status === "예약"
+    (item) => item.status === "pending" || item.status === "scheduled"
   ), [data]);
 
   const handleApprove = (orderId: string) => {
@@ -78,16 +80,29 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
     currentPage * itemsPerPage
   );
 
-  const getStatusChipClass = (status: "완료" | "진행 중" | "예약") => {
-    switch (status) {
-      case "진행 중":
-        return "bg-blue-100 text-blue-800"
-      case "예약":
-        return "bg-yellow-100 text-yellow-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+  // 🎯 새로운 상태 배지 렌더링 함수
+  const getStatusBadge = (status: OrderStatus) => {
+    const config = ORDER_STATUS_CONFIG[status];
+    
+    if (!config) {
+      return (
+        <Badge variant="secondary" className="text-xs">
+          <span className="mr-1">?</span>
+          알 수 없음
+        </Badge>
+      );
     }
-  }
+
+    return (
+      <Badge 
+        variant={config.variant as any}
+        className={`${config.bgColor} ${config.textColor} text-xs whitespace-nowrap`}
+      >
+        <span className="mr-1">{getStatusIcon(status)}</span>
+        {config.label}
+      </Badge>
+    );
+  };
   
   const getTypeIcon = (type: "inbound" | "outbound") => {
     return type === 'inbound' 
@@ -145,16 +160,16 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
           </Button>
           <Separator orientation="vertical" className="h-6" />
           <Button
-            variant={filters.status === "진행 중" ? "default" : "outline"}
+            variant={filters.status === "pending" ? "default" : "outline"}
             size="sm"
-            onClick={() => handleToggleFilter("status", "진행 중")}
+            onClick={() => handleToggleFilter("status", "pending")}
           >
-            진행 중
+            대기중
           </Button>
           <Button
-            variant={filters.status === "예약" ? "default" : "outline"}
+            variant={filters.status === "scheduled" ? "default" : "outline"}
             size="sm"
-            onClick={() => handleToggleFilter("status", "예약")}
+            onClick={() => handleToggleFilter("status", "scheduled")}
           >
             예약
           </Button>
@@ -172,11 +187,7 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
                   <div>
                     <p className="font-semibold text-sm text-gray-800 break-words truncate">{item.productName}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusChipClass(item.status)}`}
-                      >
-                        {item.status}
-                      </span>
+                      {getStatusBadge(item.status as OrderStatus)}
                       <span className="text-xs text-gray-600 font-medium">{item.quantity}개</span>
                     </div>
                   </div>
@@ -186,7 +197,7 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
                   <p className="text-xs text-gray-500">{item.time}</p>
                 </div>
               </div>
-              {item.status === '예약' && (
+              {item.status === 'pending' && (
                 <div className="mt-2 pt-2 border-t border-gray-200 flex justify-end gap-2">
                   <Button
                     size="sm"
@@ -195,6 +206,7 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
                     onClick={() => handleDecline(item.id)}
                     disabled={isApproving || isDeclining}
                   >
+                    <XCircle className="w-3 h-3 mr-1" />
                     거절
                   </Button>
                   <Button
@@ -203,7 +215,31 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
                     onClick={() => handleApprove(item.id)}
                     disabled={isApproving || isDeclining}
                   >
+                    <CheckCircle className="w-3 h-3 mr-1" />
                     승인
+                  </Button>
+                </div>
+              )}
+              {item.status === 'scheduled' && (
+                <div className="mt-2 pt-2 border-t border-gray-200 flex justify-end gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    onClick={() => handleDecline(item.id)}
+                    disabled={isApproving || isDeclining}
+                  >
+                    <X className="w-3 h-3 mr-1" />
+                    취소
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs bg-green-600 hover:bg-green-700"
+                    onClick={() => handleApprove(item.id)}
+                    disabled={isApproving || isDeclining}
+                  >
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    완료
                   </Button>
                 </div>
               )}

@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Line, XAxis, YAxis, CartesianGrid, LineChart, Pie, PieChart, Cell, Sector } from 'recharts';
-import { Package, CheckCircle, AlertTriangle, XCircle, Archive, Truck, Clock, CalendarCheck, TrendingUp, TrendingDown, Percent, CalendarIcon, Bot, Activity, AlertCircle, Building, DollarSign, ShoppingCart, Timer, CalendarDays, X, ClipboardList, LineChart as LucideLineChart } from 'lucide-react';
+import { Package, CheckCircle, AlertTriangle, XCircle, Archive, Truck, Clock, CalendarCheck, TrendingUp, TrendingDown, Percent, CalendarIcon, Bot, Activity, AlertCircle, Building, DollarSign, ShoppingCart, Timer, CalendarDays, X } from 'lucide-react';
 import { CustomPagination } from '@/components/ui/custom-pagination';
 import { InOutRecord, InventoryItem } from '../utils';
 import { Item } from '../item/item-list';
@@ -506,7 +506,7 @@ export function UnifiedDashboard() {
       <Accordion type="multiple" defaultValue={['inventory', 'orderStatus', 'inOutAnalysis', 'amrPerformance', 'salesManagement']} className="w-full space-y-4">
         
         <AccordionItem value="inventory" className="border rounded-lg bg-white shadow-sm">
-          <AccordionTrigger className="p-6 font-semibold text-lg"><div className="flex items-center gap-2"><Archive className="h-5 w-5" /> 재고 현황</div></AccordionTrigger>
+          <AccordionTrigger className="p-6 font-semibold text-lg">재고 현황</AccordionTrigger>
           <AccordionContent className="p-6 pt-0">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               {inventoryMetrics.map(({ id, title, value, icon: Icon, textColor, iconColor }) => (
@@ -534,7 +534,7 @@ export function UnifiedDashboard() {
         </AccordionItem>
 
         <AccordionItem value="orderStatus" className="border rounded-lg bg-white shadow-sm">
-          <AccordionTrigger className="p-6 font-semibold text-lg"><div className="flex items-center gap-2"><ClipboardList className="h-5 w-5" /> 오늘의 입출고 현황</div></AccordionTrigger>
+          <AccordionTrigger className="p-6 font-semibold text-lg">📋 오늘의 입출고 현황</AccordionTrigger>
           <AccordionContent className="p-6 pt-0">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               {orderStatusMetrics.map(({ id, title, value, icon: Icon }) => {
@@ -578,7 +578,7 @@ export function UnifiedDashboard() {
         </AccordionItem>
 
         <AccordionItem value="inOutAnalysis" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="p-6 font-semibold text-lg"><div className="flex items-center gap-2"><LucideLineChart className="h-5 w-5" /> 입출고 분석</div></AccordionTrigger>
+            <AccordionTrigger className="p-6 font-semibold text-lg">입출고 분석</AccordionTrigger>
             <AccordionContent className="p-6 pt-0">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full sm:w-auto">
@@ -606,7 +606,7 @@ export function UnifiedDashboard() {
         </AccordionItem>
 
         <AccordionItem value="amrPerformance" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="p-6 font-semibold text-lg"><div className="flex items-center gap-2"><Bot className="h-5 w-5" /> AMR 성능</div></AccordionTrigger>
+            <AccordionTrigger className="p-6 font-semibold text-lg">AMR 성능</AccordionTrigger>
             <AccordionContent className="p-6 pt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">{amrMetrics.map(({ id, title, value, icon: Icon }) => (<Card key={id}><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{value}</div></CardContent></Card>))}</div>
@@ -624,7 +624,7 @@ export function UnifiedDashboard() {
         </AccordionItem>
 
         <AccordionItem value="salesManagement" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="p-6 font-semibold text-lg"><div className="flex items-center gap-2"><DollarSign className="h-5 w-5" /> 매출 및 거래처 관리</div></AccordionTrigger>
+            <AccordionTrigger className="p-6 font-semibold text-lg">매출 및 거래처 관리</AccordionTrigger>
             <AccordionContent className="p-6 pt-0 space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full sm:w-auto">{salesMetrics.map(({ id, title, value, icon: Icon }) => (<Card key={id} className="flex-1"><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{value}</div></CardContent></Card>))}</div>

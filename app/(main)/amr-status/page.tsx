@@ -10,7 +10,7 @@ export default function AmrStatusPage() {
           AMR 실시간 현황
         </h1>
         <p className="mt-1 text-sm text-gray-600">
-          현재 진행 중이거나 예약된 입출고 작업 현황을 실시간으로 확인합니다.
+          현재 대기중이거나 예약된 입출고 작업 현황을 실시간으로 확인합니다.
         </p>
       </div>
       <div className="h-[calc(100vh-10rem)]">
