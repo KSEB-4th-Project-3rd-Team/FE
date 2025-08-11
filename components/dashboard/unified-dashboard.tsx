@@ -25,6 +25,28 @@ const AnyPie = Pie as any;
 // Helper function to format numbers with commas
 const formatNumber = (num: number) => num.toLocaleString();
 
+// Helper function to get inventory card border colors
+const getInventoryCardBorder = (id: string) => {
+  switch (id) {
+    case 'totalItems': return 'border-l-blue-500';
+    case 'lowStock': return 'border-l-yellow-500';
+    case 'outOfStock': return 'border-l-red-500';
+    case 'totalQuantity': return 'border-l-green-500';
+    default: return 'border-l-gray-500';
+  }
+};
+
+// Helper function to get icon backgrounds
+const getIconBackground = (id: string) => {
+  switch (id) {
+    case 'totalItems': return 'bg-blue-100';
+    case 'lowStock': return 'bg-yellow-100';
+    case 'outOfStock': return 'bg-red-100';
+    case 'totalQuantity': return 'bg-green-100';
+    default: return 'bg-gray-100';
+  }
+};
+
 // --- Mock Data Section (AMR only, as it's not in the backend) ---
 type AmrStatus = "moving" | "charging" | "idle" | "error";
 interface Amr { id: string; name: string; status: AmrStatus; battery: number; location: string; currentTask: string | null; }
@@ -497,27 +519,77 @@ export function UnifiedDashboard() {
     );
   };
 
-  if (loading) return <div className="p-8 text-center">대시보드 데이터를 불러오는 중입니다...</div>;
-  if (errorMessage) return <div className="p-8 text-center text-red-600">데이터 로딩 실패: {errorMessage}</div>;
+  if (loading) return (
+    <div className="p-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center mb-4 mx-auto animate-pulse">
+          <Package className="w-8 h-8 text-white" />
+        </div>
+        <h3 className="text-xl font-semibold text-gray-700 mb-2">대시보드 로딩 중...</h3>
+        <p className="text-gray-500">📊 실시간 데이터를 가져오고 있습니다</p>
+        <div className="w-32 h-1 bg-gray-200 rounded-full mx-auto mt-4">
+          <div className="h-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full animate-pulse"></div>
+        </div>
+      </div>
+    </div>
+  );
+  
+  if (errorMessage) return (
+    <div className="p-8 bg-gradient-to-br from-red-50 via-white to-orange-50 min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-orange-500 rounded-full flex items-center justify-center mb-4 mx-auto">
+          <AlertCircle className="w-8 h-8 text-white" />
+        </div>
+        <h3 className="text-xl font-semibold text-gray-700 mb-2">데이터 로딩 실패</h3>
+        <p className="text-red-600 mb-4">⚠️ {errorMessage}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+        >
+          새로고침
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
-      <header className="mb-8"><h1 className="text-3xl font-bold text-gray-800">통합 대시보드</h1><p className="text-md text-gray-600 mt-1">전체 현황을 요약하고 분석합니다.</p></header>
+    <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
+      <header className="mb-8">
+        <div className="flex items-center gap-4 mb-2">
+          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+            <Package className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold text-blue-600">통합 대시보드</h1>
+            <p className="text-lg text-gray-600 mt-1">전체 현황을 실시간으로 모니터링합니다</p>
+          </div>
+        </div>
+        <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-full"></div>
+      </header>
       <Accordion type="multiple" defaultValue={['inventory', 'orderStatus', 'inOutAnalysis', 'amrPerformance', 'salesManagement']} className="w-full space-y-4">
         
-        <AccordionItem value="inventory" className="border rounded-lg bg-white shadow-sm">
-          <AccordionTrigger className="p-6 font-semibold text-lg">재고 현황</AccordionTrigger>
+        <AccordionItem value="inventory" className="border-2 border-blue-100 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
+          <AccordionTrigger className="p-6 font-bold text-xl text-blue-700 hover:text-blue-800">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Package className="w-5 h-5 text-blue-600" />
+              </div>
+              재고 현황
+            </div>
+          </AccordionTrigger>
           <AccordionContent className="p-6 pt-0">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
               {inventoryMetrics.map(({ id, title, value, icon: Icon, textColor, iconColor }) => (
-                <Card key={id} onClick={() => handleCardClick(id, 'inventory')} className={`transition-all hover:shadow-md ${id !== 'totalQuantity' ? 'cursor-pointer' : ''} ${activeInventoryDetail === id ? 'shadow-md' : ''}`}>
-                  <CardContent className="p-4">
+                <Card key={id} onClick={() => handleCardClick(id, 'inventory')} className={`transition-all duration-300 hover:shadow-lg hover:scale-105 border-l-4 ${getInventoryCardBorder(id)} ${id !== 'totalQuantity' ? 'cursor-pointer' : ''} ${activeInventoryDetail === id ? 'shadow-lg scale-105' : ''}`}>
+                  <CardContent className="p-6 bg-gradient-to-br from-white to-gray-50">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className={`text-sm font-medium ${textColor || 'text-gray-600'}`}>{title}</p>
-                        <p className="text-2xl font-bold text-gray-900">{typeof value === 'number' ? formatNumber(value) : value}</p>
+                        <p className={`text-sm font-semibold uppercase tracking-wider ${textColor || 'text-gray-600'}`}>{title}</p>
+                        <p className="text-3xl font-bold text-gray-900 mt-2">{typeof value === 'number' ? formatNumber(value) : value}</p>
                       </div>
-                      <Icon className={`h-6 w-6 ${iconColor || 'text-gray-400'}`} />
+                      <div className={`p-3 rounded-xl ${getIconBackground(id)}`}>
+                        <Icon className={`h-6 w-6 ${iconColor || 'text-gray-400'}`} />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -533,21 +605,30 @@ export function UnifiedDashboard() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="orderStatus" className="border rounded-lg bg-white shadow-sm">
-          <AccordionTrigger className="p-6 font-semibold text-lg">📋 오늘의 입출고 현황</AccordionTrigger>
+        <AccordionItem value="orderStatus" className="border-2 border-green-100 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
+          <AccordionTrigger className="p-6 font-bold text-xl text-green-700 hover:text-green-800">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <CalendarCheck className="w-5 h-5 text-green-600" />
+              </div>
+              오늘의 입출고 현황
+            </div>
+          </AccordionTrigger>
           <AccordionContent className="p-6 pt-0">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               {orderStatusMetrics.map(({ id, title, value, icon: Icon }) => {
                 const config = ORDER_STATUS_CONFIG[id as OrderStatus];
                 return (
-                  <Card key={id} onClick={() => handleCardClick(id, 'work')} className={`cursor-pointer hover:bg-gray-50 transition-colors ${activeWorkDetail === id ? 'shadow-md bg-gray-50' : ''}`}>
-                    <CardContent className="p-4">
+                  <Card key={id} onClick={() => handleCardClick(id, 'work')} className={`cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-300 border-l-4 ${config ? config.bgColor.replace('bg-', 'border-l-') : 'border-l-gray-500'} ${activeWorkDetail === id ? 'shadow-lg scale-105' : ''}`}>
+                    <CardContent className="p-6 bg-gradient-to-br from-white to-gray-50">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className={`text-sm font-medium ${config ? config.textColor : 'text-gray-600'}`}>{title}</p>
-                          <p className="text-2xl font-bold text-gray-900">{formatNumber(value as number)}</p>
+                          <p className={`text-sm font-semibold uppercase tracking-wider ${config ? config.textColor : 'text-gray-600'}`}>{title}</p>
+                          <p className="text-3xl font-bold text-gray-900 mt-2">{formatNumber(value as number)}</p>
                         </div>
-                        <Icon className={`h-6 w-6 ${config ? config.textColor : 'text-gray-400'}`} />
+                        <div className={`p-3 rounded-xl ${config ? config.bgColor : 'bg-gray-100'}`}>
+                          <Icon className={`h-6 w-6 ${config ? config.textColor : 'text-gray-400'}`} />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -577,8 +658,15 @@ export function UnifiedDashboard() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="inOutAnalysis" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="p-6 font-semibold text-lg">입출고 분석</AccordionTrigger>
+        <AccordionItem value="inOutAnalysis" className="border-2 border-purple-100 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
+            <AccordionTrigger className="p-6 font-bold text-xl text-purple-700 hover:text-purple-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-purple-600" />
+                </div>
+                입출고 분석
+              </div>
+            </AccordionTrigger>
             <AccordionContent className="p-6 pt-0">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full sm:w-auto">
@@ -605,8 +693,15 @@ export function UnifiedDashboard() {
             </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="amrPerformance" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="p-6 font-semibold text-lg">AMR 성능</AccordionTrigger>
+        <AccordionItem value="amrPerformance" className="border-2 border-orange-100 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
+            <AccordionTrigger className="p-6 font-bold text-xl text-orange-700 hover:text-orange-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                  <Bot className="w-5 h-5 text-orange-600" />
+                </div>
+                AMR 성능
+              </div>
+            </AccordionTrigger>
             <AccordionContent className="p-6 pt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">{amrMetrics.map(({ id, title, value, icon: Icon }) => (<Card key={id}><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{value}</div></CardContent></Card>))}</div>
@@ -623,8 +718,15 @@ export function UnifiedDashboard() {
             </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="salesManagement" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="p-6 font-semibold text-lg">매출 및 거래처 관리</AccordionTrigger>
+        <AccordionItem value="salesManagement" className="border-2 border-indigo-100 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
+            <AccordionTrigger className="p-6 font-bold text-xl text-indigo-700 hover:text-indigo-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-indigo-600" />
+                </div>
+                매출 및 거래처 관리
+              </div>
+            </AccordionTrigger>
             <AccordionContent className="p-6 pt-0 space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full sm:w-auto">{salesMetrics.map(({ id, title, value, icon: Icon }) => (<Card key={id} className="flex-1"><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{value}</div></CardContent></Card>))}</div>
