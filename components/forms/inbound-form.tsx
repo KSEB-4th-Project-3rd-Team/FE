@@ -21,6 +21,7 @@ interface InboundFormData {
   companyId: number | null;
   expectedDate: string;
   notes: string;
+  status: 'pending'; // 새로 등록되는 입고는 항상 '대기중' 상태
 }
 
 interface InboundFormProps {
@@ -37,6 +38,7 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
     companyId: null,
     expectedDate: format(new Date(), "yyyy-MM-dd"),
     notes: "",
+    status: 'pending', // 기본값은 항상 '대기중'
   })
   const [date, setDate] = useState<Date | undefined>(new Date());
 
@@ -60,6 +62,7 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
       companyId: null,
       expectedDate: format(new Date(), "yyyy-MM-dd"),
       notes: "",
+      status: 'pending', // 폼 리셋 시에도 '대기중' 상태
     })
     setDate(new Date());
   }

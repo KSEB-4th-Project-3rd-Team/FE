@@ -8,15 +8,25 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Filter, Package } from "lucide-react"
+import { Search, Filter, Package, Check, X, Calendar, Trash2 } from "lucide-react"
 import { CustomPagination } from "@/components/ui/custom-pagination"
 import { InOutRecord } from "@/components/utils"
 import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
+import { 
+  ORDER_STATUS_CONFIG, 
+  STATUS_TRANSITIONS, 
+  type OrderStatus, 
+  canTransitionTo,
+  isActionableStatus,
+  getStatusIcon
+} from "@/lib/order-status"
 
 import { useRouter } from "next/navigation"
 
 type DisplayUnit = "개수" | "set"
-type InOutStatus = "완료" | "진행 중" | "예약";
+// 새로운 상태 타입 사용
+type InOutStatus = OrderStatus;
 
 type InOutHistoryTableProps = {
   historyType: "inbound" | "outbound" | "all";
@@ -119,13 +129,102 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
     setCurrentPage(page)
   }
 
-  const getStatusChipClass = (status: "완료" | "진행 중" | "예약") => {
-    switch (status) {
-      case "완료": return "bg-green-100 text-green-800"
-      case "진행 중": return "bg-blue-100 text-blue-800"
-      case "예약": return "bg-yellow-100 text-yellow-800"
+  // 상태 변경 핸들러 추가
+  const handleStatusChange = async (recordId: string, newStatus: OrderStatus) => {
+    try {
+      // TODO: API 호출로 상태 변경
+      console.log(`Changing status of record ${recordId} to ${newStatus}`);
+      // await updateOrderStatus(recordId, newStatus);
+      
+      // 성공 시 데이터 갱신 (React Query 무효화)
+      // queryClient.invalidateQueries(['inOutData']);
+    } catch (error) {
+      console.error('Status change failed:', error);
     }
-  }
+  };
+
+  // 새로운 상태별 스타일 함수
+  const getStatusBadge = (status: OrderStatus) => {
+    const config = ORDER_STATUS_CONFIG[status];
+    
+    if (!config) {
+      return (
+        <Badge 
+          variant="secondary"
+          className="bg-gray-200 text-gray-800 whitespace-nowrap"
+        >
+          <span className="mr-1">?</span>
+          알 수 없음
+        </Badge>
+      );
+    }
+
+    return (
+      <Badge 
+        variant={config.variant as any}
+        className={`${config.bgColor} ${config.textColor} whitespace-nowrap`}
+      >
+        <span className="mr-1">{getStatusIcon(status)}</span>
+        {config.label}
+      </Badge>
+    );
+  };
+
+  // 액션 버튼 렌더링
+  const renderActionButtons = (record: any) => {
+    const currentStatus = record.status as OrderStatus;
+    const possibleTransitions = STATUS_TRANSITIONS[currentStatus];
+
+    if (!possibleTransitions || possibleTransitions.length === 0) {
+      return <span className="text-xs text-gray-400">액션 없음</span>;
+    }
+
+    return (
+      <div className="flex gap-1">
+        {possibleTransitions.map((targetStatus) => {
+          const config = ORDER_STATUS_CONFIG[targetStatus];
+          let icon = null;
+          let variant: any = 'outline';
+
+          switch (targetStatus) {
+            case 'scheduled':
+              icon = <Check className="w-3 h-3" />;
+              variant = 'default';
+              break;
+            case 'rejected':
+              icon = <X className="w-3 h-3" />;
+              variant = 'destructive';
+              break;
+            case 'completed':
+              icon = <Check className="w-3 h-3" />;
+              variant = 'success';
+              break;
+            case 'cancelled':
+              icon = <Trash2 className="w-3 h-3" />;
+              variant = 'secondary';
+              break;
+          }
+
+          return (
+            <Button
+              key={targetStatus}
+              size="sm"
+              variant={variant}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleStatusChange(record.id, targetStatus);
+              }}
+              className="h-6 px-2 text-xs"
+              title={`${config.label}로 변경`}
+            >
+              {icon}
+              <span className="ml-1 hidden sm:inline">{config.label}</span>
+            </Button>
+          );
+        })}
+      </div>
+    );
+  };
 
   return (
     <>
@@ -156,9 +255,11 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
                   <Separator orientation="vertical" className="mx-1 h-6" />
                 </>
               )}
-              <Button variant={filters.status.includes("진행 중") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("진행 중")}>진행 중</Button>
-              <Button variant={filters.status.includes("예약") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("예약")}>예약</Button>
-              <Button variant={filters.status.includes("완료") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("완료")}>완료</Button>
+              <Button variant={filters.status.includes("pending") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("pending")}>대기중</Button>
+              <Button variant={filters.status.includes("scheduled") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("scheduled")}>예약</Button>
+              <Button variant={filters.status.includes("completed") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("completed")}>완료</Button>
+              <Button variant={filters.status.includes("rejected") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("rejected")}>거절</Button>
+              <Button variant={filters.status.includes("cancelled") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("cancelled")}>취소</Button>
             </div>
             <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2">
               <Search className="w-4 h-4" />
@@ -207,10 +308,11 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
                       </div>
                     </div>
                   </th>
-                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[8%]">구역</th>
-                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[12%]">거래처</th>
-                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">상태</th>
-                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[11%]">날짜</th>
+                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[7%]">구역</th>
+                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">거래처</th>
+                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[8%]">상태</th>
+                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[9%]">날짜</th>
+                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[12%]">액션</th>
                 </tr>
               </thead>
               <tbody>
@@ -224,8 +326,9 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
                     <td className="p-2 md:p-3 text-center"><div className="font-semibold">{displayUnit === 'set' ? `${Math.floor(item.quantity / SET_QUANTITY)} set` : `${item.quantity} 개`}</div></td>
                     <td className="p-2 md:p-3 text-center">{item.location}</td>
                     <td className="p-2 md:p-3 text-center truncate"><p className="font-medium">{item.company}</p><p className="text-xs text-gray-500">코드: {item.companyCode}</p></td>
-                    <td className="p-2 md:p-3 text-center"><span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusChipClass(item.status)}`}>{item.status}</span></td>
+                    <td className="p-2 md:p-3 text-center">{getStatusBadge(item.status as OrderStatus)}</td>
                     <td className="p-2 md:p-3 text-center"><div><p>{item.date}</p><p className="text-xs text-gray-500">{item.time}</p></div></td>
+                    <td className="p-2 md:p-3 text-center">{renderActionButtons(item)}</td>
                   </tr>
                 ))}
               </tbody>

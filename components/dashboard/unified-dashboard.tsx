@@ -12,11 +12,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Line, XAxis, YAxis, CartesianGrid, LineChart, Pie, PieChart, Cell, Sector } from 'recharts';
-import { Package, CheckCircle, AlertTriangle, XCircle, Archive, Truck, Clock, CalendarCheck, TrendingUp, TrendingDown, Percent, CalendarIcon, Bot, Activity, AlertCircle, Building, DollarSign, ShoppingCart } from 'lucide-react';
+import { Package, CheckCircle, AlertTriangle, XCircle, Archive, Truck, Clock, CalendarCheck, TrendingUp, TrendingDown, Percent, CalendarIcon, Bot, Activity, AlertCircle, Building, DollarSign, ShoppingCart, Timer, CalendarDays, X } from 'lucide-react';
 import { CustomPagination } from '@/components/ui/custom-pagination';
 import { InOutRecord, InventoryItem } from '../utils';
 import { Item } from '../item/item-list';
 import { useDashboardAll } from '@/lib/queries';
+import { ORDER_STATUS_CONFIG, type OrderStatus } from '@/lib/order-status';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const AnyPie = Pie as any;
@@ -95,13 +96,34 @@ export function UnifiedDashboard() {
   const inOutData = useMemo((): InOutRecord[] => {
     if (!dashboardData?.orders) return [];
 
-    const completedData = dashboardData.orders.filter(record => record.status === 'COMPLETED');
-    
-    return completedData.flatMap(record => {
+    // 모든 상태의 데이터를 포함 (COMPLETED뿐만 아니라 모든 상태)
+    return dashboardData.orders.flatMap(record => {
       return record.items.map((item, itemIndex) => {
         const dateTime = record.createdAt || record.updatedAt || new Date().toISOString();
         const date = dateTime.split('T')[0];
         const time = dateTime.split('T')[1]?.substring(0, 8) || '00:00:00';
+        
+        // 새로운 상태 매핑
+        let status: OrderStatus = 'pending';
+        switch (record.status) {
+          case 'PENDING':
+            status = 'pending';
+            break;
+          case 'SCHEDULED':
+            status = 'scheduled';
+            break;
+          case 'COMPLETED':
+            status = 'completed';
+            break;
+          case 'REJECTED':
+            status = 'rejected';
+            break;
+          case 'CANCELLED':
+            status = 'cancelled';
+            break;
+          default:
+            status = 'pending';
+        }
         
         return {
           id: `${record.orderId}-${itemIndex}`,
@@ -114,7 +136,7 @@ export function UnifiedDashboard() {
           location: 'A-01',
           company: record.companyName || 'N/A',
           companyCode: record.companyCode || 'N/A',
-          status: record.status === 'COMPLETED' ? '완료' : '진행 중',
+          status: status as any, // OrderStatus를 기존 타입으로 캐스팅
           destination: '-',
           date,
           time,
@@ -138,6 +160,63 @@ export function UnifiedDashboard() {
       unitPriceOut: item.unitPriceOut,
       createdAt: item.createdAt,
     }));
+  }, [dashboardData]);
+
+  // 🎯 새로운 상태별 통계 계산
+  const orderStatistics = useMemo(() => {
+    if (!dashboardData?.orders) return {
+      pending: 0,
+      scheduled: 0,
+      completed: 0,
+      rejected: 0,
+      cancelled: 0,
+      total: 0,
+      todayCompleted: 0,
+      todayTotal: 0
+    };
+
+    const today = format(new Date(), 'yyyy-MM-dd');
+    
+    const stats = dashboardData.orders.reduce((acc, record) => {
+      const orderDate = record.createdAt ? format(new Date(record.createdAt), 'yyyy-MM-dd') : '';
+      const isToday = orderDate === today;
+      
+      // 전체 통계
+      switch (record.status) {
+        case 'PENDING':
+          acc.pending++;
+          break;
+        case 'SCHEDULED':
+          acc.scheduled++;
+          break;
+        case 'COMPLETED':
+          acc.completed++;
+          if (isToday) acc.todayCompleted++;
+          break;
+        case 'REJECTED':
+          acc.rejected++;
+          break;
+        case 'CANCELLED':
+          acc.cancelled++;
+          break;
+      }
+      
+      acc.total++;
+      if (isToday) acc.todayTotal++;
+      
+      return acc;
+    }, {
+      pending: 0,
+      scheduled: 0,
+      completed: 0,
+      rejected: 0,
+      cancelled: 0,
+      total: 0,
+      todayCompleted: 0,
+      todayTotal: 0
+    });
+
+    return stats;
   }, [dashboardData]);
 
   const loading = isLoading;
@@ -330,10 +409,20 @@ export function UnifiedDashboard() {
     { id: 'outOfStock', title: '품절', value: inventorySummary.outOfStock.count, icon: XCircle, items: inventorySummary.outOfStock.items },
     { id: 'totalQuantity', title: '총 재고 수량', value: inventorySummary.totalQuantity, icon: Archive, items: [] },
   ];
-  const workStatusMetrics: MetricItem[] = [
-    { id: 'completed', title: '완료', value: workStatusSummary.completed.count, icon: CalendarCheck, items: workStatusSummary.completed.items },
-    { id: 'inProgress', title: '진행 중', value: workStatusSummary.inProgress.count, icon: Truck, items: workStatusSummary.inProgress.items },
-    { id: 'pending', title: '대기 중', value: workStatusSummary.pending.count, icon: Clock, items: workStatusSummary.pending.items },
+  // 🔄 새로운 상태별 지표 (기존 workStatusMetrics 대체)
+  const orderStatusMetrics: MetricItem[] = [
+    { id: 'pending', title: '대기중', value: orderStatistics.pending, icon: Timer, items: [] },
+    { id: 'scheduled', title: '예약', value: orderStatistics.scheduled, icon: CalendarDays, items: [] },
+    { id: 'completed', title: '완료', value: orderStatistics.completed, icon: CheckCircle, items: [] },
+    { id: 'rejected', title: '거절', value: orderStatistics.rejected, icon: X, items: [] },
+    { id: 'cancelled', title: '취소', value: orderStatistics.cancelled, icon: XCircle, items: [] },
+  ];
+
+  // 오늘의 작업 지표
+  const todayMetrics: MetricItem[] = [
+    { id: 'todayTotal', title: '오늘 총 요청', value: orderStatistics.todayTotal, icon: Package, items: [] },
+    { id: 'todayCompleted', title: '오늘 완료', value: orderStatistics.todayCompleted, icon: CheckCircle, items: [] },
+    { id: 'todayPending', title: '오늘 대기중', value: orderStatistics.todayTotal - orderStatistics.todayCompleted, icon: Clock, items: [] },
   ];
   const inOutMetrics = [
       { id: 'totalInbound', title: '총 입고', value: inOutAnalysis.totalInbound, icon: TrendingUp },
@@ -402,7 +491,7 @@ export function UnifiedDashboard() {
   return (
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
       <header className="mb-8"><h1 className="text-3xl font-bold text-gray-800">통합 대시보드</h1><p className="text-md text-gray-600 mt-1">전체 현황을 요약하고 분석합니다.</p></header>
-      <Accordion type="multiple" defaultValue={['inventory', 'workStatus', 'inOutAnalysis', 'amrPerformance', 'salesManagement']} className="w-full space-y-4">
+      <Accordion type="multiple" defaultValue={['inventory', 'orderStatus', 'inOutAnalysis', 'amrPerformance', 'salesManagement']} className="w-full space-y-4">
         
         <AccordionItem value="inventory" className="border rounded-lg bg-white shadow-sm">
           <AccordionTrigger className="p-6 font-semibold text-lg">재고 현황</AccordionTrigger>
@@ -425,25 +514,47 @@ export function UnifiedDashboard() {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="workStatus" className="border rounded-lg bg-white shadow-sm">
-          <AccordionTrigger className="p-6 font-semibold text-lg">오늘의 작업 현황</AccordionTrigger>
+        <AccordionItem value="orderStatus" className="border rounded-lg bg-white shadow-sm">
+          <AccordionTrigger className="p-6 font-semibold text-lg">📋 입출고 상태별 현황</AccordionTrigger>
           <AccordionContent className="p-6 pt-0">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {workStatusMetrics.map(({ id, title, value, icon: Icon }) => (
-                <Card key={id} onClick={() => handleCardClick(id, 'work')} className={`transition-all hover:shadow-md hover:border-blue-500 cursor-pointer ${activeWorkDetail === id ? 'border-blue-500 shadow-md' : ''}`}>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" /></CardHeader>
-                  <CardContent><div className="text-2xl font-bold">{typeof value === 'number' ? formatNumber(value) : value}</div></CardContent>
-                </Card>
-              ))}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+              {orderStatusMetrics.map(({ id, title, value, icon: Icon }) => {
+                const config = ORDER_STATUS_CONFIG[id as OrderStatus];
+                return (
+                  <Card key={id} className={`cursor-pointer hover:bg-gray-50 transition-colors border-l-4 ${config ? config.bgColor : 'border-gray-200'}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className={`text-sm font-medium ${config ? config.textColor : 'text-gray-600'}`}>{title}</p>
+                          <p className="text-2xl font-bold text-gray-900">{formatNumber(value as number)}</p>
+                        </div>
+                        <Icon className={`h-6 w-6 ${config ? config.textColor : 'text-gray-400'}`} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
-            <div className="mt-4">{renderDetailTable(activeWorkDetail, workStatusMetrics, [
-                { key: 'type', label: '유형', className: 'w-[10%] text-center', render: (item) => (item as InOutRecord).type === 'inbound' ? '입고' : '출고' },
-                { key: 'productName', label: '상품명', className: 'w-[25%] text-left truncate' },
-                { key: 'quantity', label: '수량', className: 'w-[30%] text-center' },
-                { key: 'company', label: '거래처', className: 'w-[15%] text-left' },
-                { key: 'status', label: '상태', className: 'w-[15%] text-center' },
-                { key: 'date', label: '일자', className: 'w-[20%] text-center', render: (item) => (<div>{(item as InOutRecord).date}<div className="text-xs text-gray-500">{(item as InOutRecord).time}</div></div>)},
-            ], '작업 현황', workCurrentPage, setWorkCurrentPage)}</div>
+            
+            {/* 오늘의 작업 현황 */}
+            <div className="border-t pt-4">
+              <h4 className="text-md font-semibold mb-4 text-gray-800">📅 오늘의 작업</h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {todayMetrics.map(({ id, title, value, icon: Icon }) => (
+                  <Card key={id} className="cursor-pointer hover:bg-gray-50 transition-colors">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">{title}</p>
+                          <p className="text-xl font-bold text-gray-900">{formatNumber(value as number)}</p>
+                        </div>
+                        <Icon className="h-5 w-5 text-gray-400" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
           </AccordionContent>
         </AccordionItem>
 
