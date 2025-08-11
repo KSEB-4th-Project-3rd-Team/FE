@@ -670,7 +670,31 @@ export function UnifiedDashboard() {
             <AccordionContent className="p-6 pt-0">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full sm:w-auto">
-                        {inOutMetrics.map(({ id, title, value, icon: Icon }) => (<Card key={id} className="flex-1"><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{typeof value === 'number' ? formatNumber(value) : value}</div></CardContent></Card>))}
+                        {inOutMetrics.map(({ id, title, value, icon: Icon }, index) => {
+                          const colors = [
+                            { iconBg: 'bg-slate-100', iconColor: 'text-slate-600', titleColor: 'text-slate-700' },
+                            { iconBg: 'bg-slate-100', iconColor: 'text-slate-600', titleColor: 'text-slate-700' },
+                            { iconBg: 'bg-slate-100', iconColor: 'text-slate-600', titleColor: 'text-slate-700' }
+                          ];
+                          const color = colors[index % colors.length];
+                          
+                          const iconColors = ['text-emerald-600', 'text-rose-600', 'text-blue-600'];
+                          const iconColor = iconColors[index % iconColors.length];
+                          
+                          return (
+                            <Card key={id} className="flex-1 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-200 shadow-sm bg-white/80 backdrop-blur-sm">
+                              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                                <CardTitle className="text-sm font-medium tracking-wide text-slate-700">{title}</CardTitle>
+                                <div className="p-2.5 rounded-full bg-slate-100">
+                                  <Icon className={`h-4 w-4 ${iconColor}`} />
+                                </div>
+                              </CardHeader>
+                              <CardContent className="pt-0">
+                                <div className="text-2xl font-bold text-slate-900 mb-1">{typeof value === 'number' ? formatNumber(value) : value}</div>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
                     </div>
                     <div className="flex items-center gap-2">
                         <Button variant={filterType === 'daily' ? 'default' : 'outline'} onClick={() => handleFilterClick('daily', setDateRange, setFilterType)}>1주</Button>
@@ -704,7 +728,26 @@ export function UnifiedDashboard() {
             </AccordionTrigger>
             <AccordionContent className="p-6 pt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">{amrMetrics.map(({ id, title, value, icon: Icon }) => (<Card key={id}><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{value}</div></CardContent></Card>))}</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {amrMetrics.map(({ id, title, value, icon: Icon }, index) => {
+                        const iconColors = ['text-amber-600', 'text-green-600', 'text-red-600'];
+                        const iconColor = iconColors[index % iconColors.length];
+                        
+                        return (
+                          <Card key={id} className="hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-200 shadow-sm bg-white/80 backdrop-blur-sm">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                              <CardTitle className="text-sm font-medium tracking-wide text-slate-700">{title}</CardTitle>
+                              <div className="p-2.5 rounded-full bg-slate-100">
+                                <Icon className={`h-4 w-4 ${iconColor}`} />
+                              </div>
+                            </CardHeader>
+                            <CardContent className="pt-0">
+                              <div className="text-2xl font-bold text-slate-900 mb-1">{value}</div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
                     <div className="h-[200px]">
                         <ChartContainer config={{ moving: { label: '이동 중', color: 'hsl(var(--chart-1))' }, charging: { label: '충전 중', color: 'hsl(var(--chart-2))' }, idle: { label: '대기 중', color: 'hsl(var(--chart-3))' }, error: { label: '오류', color: 'hsl(var(--chart-4))' } }} className="h-full w-full">
                             <PieChart>
@@ -729,7 +772,26 @@ export function UnifiedDashboard() {
             </AccordionTrigger>
             <AccordionContent className="p-6 pt-0 space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full sm:w-auto">{salesMetrics.map(({ id, title, value, icon: Icon }) => (<Card key={id} className="flex-1"><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{value}</div></CardContent></Card>))}</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full sm:w-auto">
+                      {salesMetrics.map(({ id, title, value, icon: Icon }, index) => {
+                        const iconColors = ['text-indigo-600', 'text-purple-600', 'text-teal-600'];
+                        const iconColor = iconColors[index % iconColors.length];
+                        
+                        return (
+                          <Card key={id} className="flex-1 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-200 shadow-sm bg-white/80 backdrop-blur-sm">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                              <CardTitle className="text-sm font-medium tracking-wide text-slate-700">{title}</CardTitle>
+                              <div className="p-2.5 rounded-full bg-slate-100">
+                                <Icon className={`h-4 w-4 ${iconColor}`} />
+                              </div>
+                            </CardHeader>
+                            <CardContent className="pt-0">
+                              <div className="text-2xl font-bold text-slate-900 mb-1">{value}</div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
                     <div className="flex items-center gap-2">
                         <Button variant={salesFilterType === 'daily' ? 'default' : 'outline'} onClick={() => handleFilterClick('daily', setSalesDateRange, setSalesFilterType)}>1주</Button>
                         <Button variant={salesFilterType === 'weekly' ? 'default' : 'outline'} onClick={() => handleFilterClick('weekly', setSalesDateRange, setSalesFilterType)}>3개월</Button>
