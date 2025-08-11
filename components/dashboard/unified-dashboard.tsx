@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Line, XAxis, YAxis, CartesianGrid, LineChart, Pie, PieChart, Cell, Sector } from 'recharts';
-import { Package, CheckCircle, AlertTriangle, XCircle, Archive, Truck, Clock, CalendarCheck, TrendingUp, TrendingDown, Percent, CalendarIcon, Bot, Activity, AlertCircle, Building, DollarSign, ShoppingCart, Timer, CalendarDays, X } from 'lucide-react';
+import { Package, CheckCircle, AlertTriangle, XCircle, Archive, Truck, Clock, CalendarCheck, TrendingUp, TrendingDown, Percent, CalendarIcon, Bot, Activity, AlertCircle, Building, DollarSign, ShoppingCart, Timer, CalendarDays, X, ClipboardList, LineChart as LucideLineChart } from 'lucide-react';
 import { CustomPagination } from '@/components/ui/custom-pagination';
 import { InOutRecord, InventoryItem } from '../utils';
 import { Item } from '../item/item-list';
@@ -42,6 +42,8 @@ type MetricItem = {
     value: number | string;
     icon: React.ElementType;
     items: (InventoryItem | InOutRecord)[];
+    textColor?: string;
+    iconColor?: string;
 };
 
 interface ActiveShapeProps {
@@ -305,16 +307,6 @@ export function UnifiedDashboard() {
     return { totalItems, normalStock: { count: normalStockItems.length, items: normalStockItems }, lowStock: { count: lowStockItems.length, items: lowStockItems }, outOfStock: { count: outOfStockItems.length, items: outOfStockItems }, totalQuantity };
   }, [inventoryData]);
 
-  const workStatusSummary = useMemo(() => {
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
-    const todaysData = inOutData.filter(item => item.date === todayStr);
-    const sortFn = (a: InOutRecord, b: InOutRecord) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime();
-    const completed = todaysData.filter(item => item.status === '완료').sort(sortFn);
-    const inProgress = todaysData.filter(item => item.status === '진행 중').sort(sortFn);
-    const pending = todaysData.filter(item => item.status === '예약').sort(sortFn);
-    return { completed: { count: completed.length, items: completed }, inProgress: { count: inProgress.length, items: inProgress }, pending: { count: pending.length, items: pending } };
-  }, [inOutData]);
-
   const inOutAnalysis = useMemo(() => {
     const filteredData = inOutData.filter(item => {
         const itemDate = new Date(item.date);
@@ -403,27 +395,35 @@ export function UnifiedDashboard() {
   const salesXAxisTickFormatter = (tick: string) => (salesFilterType === 'daily' && /\d{4}-\d{2}-\d{2}/.test(tick)) ? format(new Date(tick), 'MM-dd') : tick;
 
   const inventoryMetrics: MetricItem[] = [
-    { id: 'totalItems', title: '총 품목 수', value: inventorySummary.totalItems, icon: Package, items: inventoryData },
-    { id: 'normalStock', title: '정상 재고', value: inventorySummary.normalStock.count, icon: CheckCircle, items: inventorySummary.normalStock.items },
-    { id: 'lowStock', title: '부족 재고', value: inventorySummary.lowStock.count, icon: AlertTriangle, items: inventorySummary.lowStock.items },
-    { id: 'outOfStock', title: '품절', value: inventorySummary.outOfStock.count, icon: XCircle, items: inventorySummary.outOfStock.items },
-    { id: 'totalQuantity', title: '총 재고 수량', value: inventorySummary.totalQuantity, icon: Archive, items: [] },
-  ];
-  // 🔄 새로운 상태별 지표 (기존 workStatusMetrics 대체)
-  const orderStatusMetrics: MetricItem[] = [
-    { id: 'pending', title: '대기중', value: orderStatistics.pending, icon: Timer, items: [] },
-    { id: 'scheduled', title: '예약', value: orderStatistics.scheduled, icon: CalendarDays, items: [] },
-    { id: 'completed', title: '완료', value: orderStatistics.completed, icon: CheckCircle, items: [] },
-    { id: 'rejected', title: '거절', value: orderStatistics.rejected, icon: X, items: [] },
-    { id: 'cancelled', title: '취소', value: orderStatistics.cancelled, icon: XCircle, items: [] },
+    { id: 'totalItems', title: '총 품목 수', value: inventorySummary.totalItems, icon: Package, items: inventoryData, textColor: 'text-blue-600', iconColor: 'text-blue-400' },
+    { id: 'normalStock', title: '정상 재고', value: inventorySummary.normalStock.count, icon: CheckCircle, items: inventorySummary.normalStock.items, textColor: 'text-green-600', iconColor: 'text-green-400' },
+    { id: 'lowStock', title: '부족 재고', value: inventorySummary.lowStock.count, icon: AlertTriangle, items: inventorySummary.lowStock.items, textColor: 'text-yellow-600', iconColor: 'text-yellow-400' },
+    { id: 'outOfStock', title: '품절', value: inventorySummary.outOfStock.count, icon: XCircle, items: inventorySummary.outOfStock.items, textColor: 'text-red-600', iconColor: 'text-red-400' },
+    { id: 'totalQuantity', title: '총 재고 수량', value: inventorySummary.totalQuantity, icon: Archive, items: [], textColor: 'text-gray-600', iconColor: 'text-gray-400' },
   ];
 
-  // 오늘의 작업 지표
-  const todayMetrics: MetricItem[] = [
-    { id: 'todayTotal', title: '오늘 총 요청', value: orderStatistics.todayTotal, icon: Package, items: [] },
-    { id: 'todayCompleted', title: '오늘 완료', value: orderStatistics.todayCompleted, icon: CheckCircle, items: [] },
-    { id: 'todayPending', title: '오늘 대기중', value: orderStatistics.todayTotal - orderStatistics.todayCompleted, icon: Clock, items: [] },
+  const todayOrderStatusItems = useMemo(() => {
+    if (!inOutData) return {} as Record<OrderStatus, InOutRecord[]>;
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const todaysItems = inOutData.filter(item => item.date === todayStr);
+    
+    return {
+      pending: todaysItems.filter(i => i.status === 'pending'),
+      scheduled: todaysItems.filter(i => i.status === 'scheduled'),
+      completed: todaysItems.filter(i => i.status === 'completed'),
+      rejected: todaysItems.filter(i => i.status === 'rejected'),
+      cancelled: todaysItems.filter(i => i.status === 'cancelled'),
+    };
+  }, [inOutData]);
+
+  const orderStatusMetrics: MetricItem[] = [
+    { id: 'pending', title: '대기중', value: (todayOrderStatusItems.pending || []).length, icon: Timer, items: todayOrderStatusItems.pending || [] },
+    { id: 'scheduled', title: '예약', value: (todayOrderStatusItems.scheduled || []).length, icon: CalendarDays, items: todayOrderStatusItems.scheduled || [] },
+    { id: 'completed', title: '완료', value: (todayOrderStatusItems.completed || []).length, icon: CheckCircle, items: todayOrderStatusItems.completed || [] },
+    { id: 'rejected', title: '거절', value: (todayOrderStatusItems.rejected || []).length, icon: X, items: todayOrderStatusItems.rejected || [] },
+    { id: 'cancelled', title: '취소', value: (todayOrderStatusItems.cancelled || []).length, icon: XCircle, items: todayOrderStatusItems.cancelled || [] },
   ];
+
   const inOutMetrics = [
       { id: 'totalInbound', title: '총 입고', value: inOutAnalysis.totalInbound, icon: TrendingUp },
       { id: 'totalOutbound', title: '총 출고', value: inOutAnalysis.totalOutbound, icon: TrendingDown },
@@ -461,7 +461,19 @@ export function UnifiedDashboard() {
   ) => {
     if (!activeDetail) return null;
     const metric = metrics.find(m => m.id === activeDetail);
-    if (!metric || !metric.items || metric.items.length === 0) return null;
+    if (!metric || !metric.items || metric.items.length === 0) {
+        return (
+            <Card className="mt-4">
+                <CardHeader><CardTitle>{titlePrefix}: {metric?.title} 상세 목록</CardTitle></CardHeader>
+                <CardContent>
+                    <div className="text-center py-8 text-gray-500">
+                        <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                        <p>오늘 해당하는 내역이 없습니다.</p>
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
     const itemsPerPage = 10;
     const paginatedItems = currentPage && setCurrentPage ? metric.items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage) : metric.items;
     const totalPages = currentPage && setCurrentPage ? Math.ceil(metric.items.length / itemsPerPage) : 1;
@@ -494,13 +506,20 @@ export function UnifiedDashboard() {
       <Accordion type="multiple" defaultValue={['inventory', 'orderStatus', 'inOutAnalysis', 'amrPerformance', 'salesManagement']} className="w-full space-y-4">
         
         <AccordionItem value="inventory" className="border rounded-lg bg-white shadow-sm">
-          <AccordionTrigger className="p-6 font-semibold text-lg">재고 현황</AccordionTrigger>
+          <AccordionTrigger className="p-6 font-semibold text-lg"><div className="flex items-center gap-2"><Archive className="h-5 w-5" /> 재고 현황</div></AccordionTrigger>
           <AccordionContent className="p-6 pt-0">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {inventoryMetrics.map(({ id, title, value, icon: Icon }) => (
-                <Card key={id} onClick={() => handleCardClick(id, 'inventory')} className={`transition-all hover:shadow-md hover:border-blue-500 ${activeInventoryDetail === id ? 'border-blue-500 shadow-md' : ''} ${id !== 'totalQuantity' ? 'cursor-pointer' : ''}`}>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" /></CardHeader>
-                  <CardContent><div className="text-2xl font-bold">{typeof value === 'number' ? formatNumber(value) : value}</div></CardContent>
+              {inventoryMetrics.map(({ id, title, value, icon: Icon, textColor, iconColor }) => (
+                <Card key={id} onClick={() => handleCardClick(id, 'inventory')} className={`transition-all hover:shadow-md ${id !== 'totalQuantity' ? 'cursor-pointer' : ''} ${activeInventoryDetail === id ? 'shadow-md' : ''}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className={`text-sm font-medium ${textColor || 'text-gray-600'}`}>{title}</p>
+                        <p className="text-2xl font-bold text-gray-900">{typeof value === 'number' ? formatNumber(value) : value}</p>
+                      </div>
+                      <Icon className={`h-6 w-6 ${iconColor || 'text-gray-400'}`} />
+                    </div>
+                  </CardContent>
                 </Card>
               ))}
             </div>
@@ -515,13 +534,13 @@ export function UnifiedDashboard() {
         </AccordionItem>
 
         <AccordionItem value="orderStatus" className="border rounded-lg bg-white shadow-sm">
-          <AccordionTrigger className="p-6 font-semibold text-lg">📋 입출고 상태별 현황</AccordionTrigger>
+          <AccordionTrigger className="p-6 font-semibold text-lg"><div className="flex items-center gap-2"><ClipboardList className="h-5 w-5" /> 오늘의 입출고 현황</div></AccordionTrigger>
           <AccordionContent className="p-6 pt-0">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               {orderStatusMetrics.map(({ id, title, value, icon: Icon }) => {
                 const config = ORDER_STATUS_CONFIG[id as OrderStatus];
                 return (
-                  <Card key={id} className={`cursor-pointer hover:bg-gray-50 transition-colors border-l-4 ${config ? config.bgColor : 'border-gray-200'}`}>
+                  <Card key={id} onClick={() => handleCardClick(id, 'work')} className={`cursor-pointer hover:bg-gray-50 transition-colors ${activeWorkDetail === id ? 'shadow-md bg-gray-50' : ''}`}>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div>
@@ -535,31 +554,31 @@ export function UnifiedDashboard() {
                 );
               })}
             </div>
-            
-            {/* 오늘의 작업 현황 */}
-            <div className="border-t pt-4">
-              <h4 className="text-md font-semibold mb-4 text-gray-800">📅 오늘의 작업</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {todayMetrics.map(({ id, title, value, icon: Icon }) => (
-                  <Card key={id} className="cursor-pointer hover:bg-gray-50 transition-colors">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">{title}</p>
-                          <p className="text-xl font-bold text-gray-900">{formatNumber(value as number)}</p>
-                        </div>
-                        <Icon className="h-5 w-5 text-gray-400" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
+            {renderDetailTable(
+              activeWorkDetail,
+              orderStatusMetrics,
+              [
+                { key: 'type', label: '유형', className: 'w-[10%]', render: (item) => <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${(item as InOutRecord).type === "inbound" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"}`}>{(item as InOutRecord).type === "inbound" ? "입고" : "출고"}</span> },
+                { key: 'productName', label: '상품명', className: 'w-[20%]' },
+                { key: 'quantity', label: '수량', className: 'w-[30%] text-center' },
+                { key: 'company', label: '거래처', className: 'w-[20%]' },
+                { key: 'status', label: '상태', className: 'w-[15%] text-center', render: (item) => {
+                    const status = (item as InOutRecord).status as OrderStatus;
+                    const config = ORDER_STATUS_CONFIG[status];
+                    if (!config) return <span>{status}</span>;
+                    return <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${config.bgColor} ${config.textColor}`}>{config.label}</span>
+                }},
+                { key: 'time', label: '요청 시간', className: 'w-[15%] text-center' },
+              ],
+              '오늘의 입출고 상세',
+              workCurrentPage,
+              setWorkCurrentPage
+            )}
           </AccordionContent>
         </AccordionItem>
 
         <AccordionItem value="inOutAnalysis" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="p-6 font-semibold text-lg">입출고 분석</AccordionTrigger>
+            <AccordionTrigger className="p-6 font-semibold text-lg"><div className="flex items-center gap-2"><LucideLineChart className="h-5 w-5" /> 입출고 분석</div></AccordionTrigger>
             <AccordionContent className="p-6 pt-0">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full sm:w-auto">
@@ -587,7 +606,7 @@ export function UnifiedDashboard() {
         </AccordionItem>
 
         <AccordionItem value="amrPerformance" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="p-6 font-semibold text-lg">AMR 성능</AccordionTrigger>
+            <AccordionTrigger className="p-6 font-semibold text-lg"><div className="flex items-center gap-2"><Bot className="h-5 w-5" /> AMR 성능</div></AccordionTrigger>
             <AccordionContent className="p-6 pt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">{amrMetrics.map(({ id, title, value, icon: Icon }) => (<Card key={id}><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{value}</div></CardContent></Card>))}</div>
@@ -605,7 +624,7 @@ export function UnifiedDashboard() {
         </AccordionItem>
 
         <AccordionItem value="salesManagement" className="border rounded-lg bg-white shadow-sm">
-            <AccordionTrigger className="p-6 font-semibold text-lg">매출 및 거래처 관리</AccordionTrigger>
+            <AccordionTrigger className="p-6 font-semibold text-lg"><div className="flex items-center gap-2"><DollarSign className="h-5 w-5" /> 매출 및 거래처 관리</div></AccordionTrigger>
             <AccordionContent className="p-6 pt-0 space-y-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full sm:w-auto">{salesMetrics.map(({ id, title, value, icon: Icon }) => (<Card key={id} className="flex-1"><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">{title}</CardTitle><Icon className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{value}</div></CardContent></Card>))}</div>
