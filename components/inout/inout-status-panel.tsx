@@ -7,6 +7,8 @@ import { Package, TruckIcon } from "lucide-react"
 import { InOutRecord } from "@/components/utils"
 import { Separator } from "@/components/ui/separator"
 import { CustomPagination } from "@/components/ui/custom-pagination"
+import { useApproveInboundOrder, useDeclineInboundOrder } from "@/lib/queries"
+import { toast } from "sonner"
 
 interface InOutStatusPanelProps {
   showSearch: boolean;
@@ -14,6 +16,9 @@ interface InOutStatusPanelProps {
 }
 
 export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelProps) {
+  const { mutate: approveOrder, isPending: isApproving } = useApproveInboundOrder();
+  const { mutate: declineOrder, isPending: isDeclining } = useDeclineInboundOrder();
+
   const [filters, setFilters] = useState({
     type: "all",
     status: "all",
@@ -23,9 +28,24 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
+  // '완료' 상태를 제외한 데이터만 사용하도록 수정
   const statusData: InOutRecord[] = useMemo(() => data.filter(
     (item) => item.status === "진행 중" || item.status === "예약"
   ), [data]);
+
+  const handleApprove = (orderId: string) => {
+    approveOrder(orderId, {
+      onSuccess: () => toast.success("작업이 승인되었습니다."),
+      onError: (err: any) => toast.error(`승인 실패: ${err.message}`),
+    });
+  };
+
+  const handleDecline = (orderId: string) => {
+    declineOrder(orderId, {
+      onSuccess: () => toast.success("작업이 거절되었습니다."),
+      onError: (err: any) => toast.error(`거절 실패: ${err.message}`),
+    });
+  };
 
   const handleToggleFilter = (field: 'type' | 'status', value: string) => {
     setFilters(prev => ({
@@ -166,6 +186,27 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
                   <p className="text-xs text-gray-500">{item.time}</p>
                 </div>
               </div>
+              {item.status === '예약' && (
+                <div className="mt-2 pt-2 border-t border-gray-200 flex justify-end gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    onClick={() => handleDecline(item.id)}
+                    disabled={isApproving || isDeclining}
+                  >
+                    거절
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => handleApprove(item.id)}
+                    disabled={isApproving || isDeclining}
+                  >
+                    승인
+                  </Button>
+                </div>
+              )}
             </div>
           ))
         ) : (

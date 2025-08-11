@@ -122,14 +122,16 @@ export default function ItemList({ initialItems }: ItemListProps) {
   }
 
   const filteredItems = useMemo(() => {
-    return (items || []).filter((item) => {
-      return (
-        (item.itemCode || "").toLowerCase().includes(searchFilters.itemCode.toLowerCase()) &&
-        (item.itemName || "").toLowerCase().includes(searchFilters.itemName.toLowerCase()) &&
-        (item.itemGroup || "").toLowerCase().includes(searchFilters.itemGroup.toLowerCase()) &&
-        (item.spec || "").toLowerCase().includes(searchFilters.spec.toLowerCase())
-      )
-    })
+    return (items || [])
+      .filter((item) => {
+        return (
+          (item.itemCode || "").toLowerCase().includes(searchFilters.itemCode.toLowerCase()) &&
+          (item.itemName || "").toLowerCase().includes(searchFilters.itemName.toLowerCase()) &&
+          (item.itemGroup || "").toLowerCase().includes(searchFilters.itemGroup.toLowerCase()) &&
+          (item.spec || "").toLowerCase().includes(searchFilters.spec.toLowerCase())
+        )
+      })
+      .sort((a, b) => a.itemCode.localeCompare(b.itemCode));
   }, [items, searchFilters]);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage)

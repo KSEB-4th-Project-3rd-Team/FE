@@ -132,17 +132,19 @@ export default function CompanyList({ initialCompanies }: { initialCompanies: Co
   }
 
   const filteredCompanies = useMemo(() => {
-    return (companies || []).filter((company) => {
-      const type = (company.type?.[0] || "").toLowerCase()
-      return (
-        (company.companyCode || '').toLowerCase().includes(searchFilters.companyCode.toLowerCase()) &&
-        (company.companyName || '').toLowerCase().includes(searchFilters.companyName.toLowerCase()) &&
-        (company.contactPerson || '').toLowerCase().includes(searchFilters.contactPerson.toLowerCase()) &&
-        (company.contactPhone || '').toLowerCase().includes(searchFilters.contactPhone.toLowerCase()) &&
-        (company.contactEmail || '').toLowerCase().includes(searchFilters.contactEmail.toLowerCase()) &&
-        (searchFilters.type === "전체" || type === searchFilters.type.toLowerCase())
-      )
-    })
+    return (companies || [])
+      .filter((company) => {
+        const type = (company.type?.[0] || "").toLowerCase()
+        return (
+          (company.companyCode || '').toLowerCase().includes(searchFilters.companyCode.toLowerCase()) &&
+          (company.companyName || '').toLowerCase().includes(searchFilters.companyName.toLowerCase()) &&
+          (company.contactPerson || '').toLowerCase().includes(searchFilters.contactPerson.toLowerCase()) &&
+          (company.contactPhone || '').toLowerCase().includes(searchFilters.contactPhone.toLowerCase()) &&
+          (company.contactEmail || '').toLowerCase().includes(searchFilters.contactEmail.toLowerCase()) &&
+          (searchFilters.type === "전체" || type === searchFilters.type.toLowerCase())
+        )
+      })
+      .sort((a, b) => a.companyCode.localeCompare(b.companyCode));
   }, [companies, searchFilters]);
 
   const totalPages = Math.ceil(filteredCompanies.length / companiesPerPage)

@@ -34,9 +34,7 @@ const NotificationProvider = dynamic(() => import("@/hooks/use-notifications").t
   loading: () => <div />
 })
 
-const GlobalSearch = dynamic(() => import("@/components/search/global-search"), {
-  loading: () => null
-})
+
 
 export type User = {
   id: number;
@@ -58,7 +56,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const [sidePanel, setSidePanel] = useState<SidePanelType>(null)
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(true)
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null)
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
 
   const pathname = usePathname()
@@ -68,16 +66,14 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     basicInfo: false,
     inoutManagement: false,
     systemManagement: false,
-    amrManagement: false,
   })
 
   useEffect(() => {
     if (pathname === "/simulation") {
       const panel = searchParams.get("panel")
-      if (panel === "inout-status" || panel === "amr-status") {
+      if (panel === "inout-status") {
         setSidePanel(panel)
         setIsPanelCollapsed(false)
-        setExpandedMenus((prev) => ({ ...prev, amrManagement: true }))
       } else {
         setSidePanel(null)
         setIsPanelCollapsed(true)
@@ -105,10 +101,6 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       case "inout-status":
         panelContent = <InOutStatusPanel showSearch={false} data={inOutData.data || []} />
         panelTitle = "실시간 작업 현황"
-        break
-      case "amr-status":
-        panelContent = <AmrStatusPanel amrList={amrData} />
-        panelTitle = "실시간 AMR 현황"
         break
     }
     return (
@@ -197,18 +189,12 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
             <nav className="space-y-1">
               {/* Navigation Links */}
               <Button asChild variant={isActive("/dashboard") ? "default" : "ghost"} className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"><Link href="/dashboard"><BarChart3 className="w-4 h-4 mr-2" /><span>대시보드</span></Link></Button>
-              <div>
-                <Button variant="ghost" className="w-full justify-between text-sm hover:bg-blue-50 hover:text-blue-700" onClick={() => toggleMenu("amrManagement")}>
-                  <div className="flex items-center"><Warehouse className="w-4 h-4 mr-4" /><span>AMR 작동 현황</span></div>
-                  {expandedMenus.amrManagement ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </Button>
-                {expandedMenus.amrManagement && (
-                  <div className="ml-6 mt-1 space-y-1">
-                    <Button asChild variant={isActive("/simulation") && sidePanel === "inout-status" ? "default" : "ghost"} size="sm" className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"><Link href="/simulation?panel=inout-status"><span className="mr-2">•</span>실시간 작업 현황</Link></Button>
-                    <Button asChild variant={isActive("/simulation") && sidePanel === "amr-status" ? "default" : "ghost"} size="sm" className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"><Link href="/simulation?panel=amr-status"><span className="mr-2">•</span>실시간 AMR 현황</Link></Button>
-                  </div>
-                )}
-              </div>
+              <Button asChild variant={isActive("/simulation") && sidePanel === "inout-status" ? "default" : "ghost"} className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700">
+                <Link href="/simulation?panel=inout-status">
+                  <Warehouse className="w-4 h-4 mr-2" />
+                  <span>AMR 작동 현황</span>
+                </Link>
+              </Button>
               <div>
                 <Button variant="ghost" className="w-full justify-between text-sm hover:bg-blue-50 hover:text-blue-700" onClick={() => toggleMenu("inoutManagement")}>
                   <div className="flex items-center"><Box className="w-4 h-4 mr-4" /><span>입/출고 관리</span></div>
@@ -252,7 +238,6 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           </div>
           <div className="border-t border-gray-200 bg-gray-50">
             <div className="p-3 space-y-2">
-              <Button variant="outline" size="sm" className="w-full justify-center text-sm bg-white hover:bg-gray-50" onClick={() => setIsSearchOpen(true)}><Search className="w-4 h-4 mr-2" />전역 검색</Button>
               <Button variant="ghost" size="sm" className="w-full justify-center text-sm text-red-600 hover:text-red-700 hover:bg-red-50" onClick={logout}><LogOut className="w-4 h-4 mr-1" />로그아웃</Button>
             </div>
           </div>
@@ -270,7 +255,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         )}
-        <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+        
         <NotificationPopover />
       </div>
     </NotificationProvider>

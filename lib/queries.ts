@@ -18,6 +18,8 @@ import {
   updateItem,
   deleteCompany,
   deleteItem,
+  approveInboundOrder,
+  declineInboundOrder,
   DashboardData, // 통합 API 타입
 } from './api';
 import { useMemo } from 'react';
@@ -313,6 +315,30 @@ export function useCreateOutboundOrder() {
       queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
+    },
+  });
+}
+
+export function useApproveInboundOrder() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: approveInboundOrder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
+    },
+  });
+}
+
+export function useDeclineInboundOrder() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: declineInboundOrder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
     },
   });
 }

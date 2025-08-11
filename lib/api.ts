@@ -396,6 +396,28 @@ export async function createOutboundOrder(orderData: { itemId: number; quantity:
   return result;
 }
 
+export async function approveInboundOrder(orderId: string): Promise<any> {
+  const numericOrderId = Number(orderId.split('-')[0]);
+  if (isNaN(numericOrderId)) {
+    throw new Error("Invalid order ID provided for approval.");
+  }
+  const response = await apiClient.put(`/api/inout/orders/${numericOrderId}/status`, {
+    status: 'COMPLETED'
+  });
+  return handleResponse(response);
+}
+
+export async function declineInboundOrder(orderId: string): Promise<any> {
+  const numericOrderId = Number(orderId.split('-')[0]);
+  if (isNaN(numericOrderId)) {
+    throw new Error("Invalid order ID provided for declining.");
+  }
+  const response = await apiClient.put(`/api/inout/orders/${numericOrderId}/status`, {
+    status: 'CANCELLED'
+  });
+  return handleResponse(response);
+}
+
 export async function updateInOutRecord(id: string, recordData: Partial<InOutRecord>): Promise<InOutRecord> {
   // ID가 "orderId-itemIndex" 형태이므로 orderId만 추출
   const orderId = id.includes('-') ? id.split('-')[0] : id;
