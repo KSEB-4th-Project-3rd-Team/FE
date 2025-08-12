@@ -336,11 +336,12 @@ export interface InOutOrderRequest {
   items: InOutOrderItem[];
 }
 
-export async function createInboundOrder(orderData: { itemId: number; quantity: number; companyId?: number; expectedDate?: string; notes?: string }): Promise<any> {
+export async function createInboundOrder(orderData: { itemId: number; quantity: number; companyId?: number; expectedDate?: string; notes?: string; locationCode?: string }): Promise<any> {
   const requestData: Omit<InOutOrderRequest, 'destination'> = {
     type: 'INBOUND',
     companyId: orderData.companyId || 1, // Default company if not provided
     expectedDate: orderData.expectedDate || new Date().toISOString().split('T')[0],
+    locationCode: orderData.locationCode || 'A-01', // 기본값 설정
     notes: orderData.notes,
     items: [{
       itemId: orderData.itemId,
@@ -352,25 +353,15 @@ export async function createInboundOrder(orderData: { itemId: number; quantity: 
   const response = await apiClient.post('/api/inout/orders', requestData);
   const result = await handleResponse(response);
   
-  // Immediately approve the order to move it to completed status
-  if (result.orderId) {
-    try {
-      await apiClient.put(`/api/inout/orders/${result.orderId}/status`, {
-        status: 'COMPLETED'
-      });
-    } catch (error) {
-      console.warn('Failed to auto-approve inbound order:', error);
-    }
-  }
-  
   return result;
 }
 
-export async function createOutboundOrder(orderData: { itemId: number; quantity: number; companyId?: number; expectedDate?: string; notes?: string }): Promise<any> {
+export async function createOutboundOrder(orderData: { itemId: number; quantity: number; companyId?: number; expectedDate?: string; notes?: string; locationCode?: string }): Promise<any> {
   const requestData: Omit<InOutOrderRequest, 'destination'> = {
     type: 'OUTBOUND',
     companyId: orderData.companyId || 1, // Default company if not provided
     expectedDate: orderData.expectedDate || new Date().toISOString().split('T')[0],
+    locationCode: orderData.locationCode || 'A-01', // 기본값 설정
     notes: orderData.notes,
     items: [{
       itemId: orderData.itemId,
@@ -382,39 +373,30 @@ export async function createOutboundOrder(orderData: { itemId: number; quantity:
   const response = await apiClient.post('/api/inout/orders', requestData);
   const result = await handleResponse(response);
   
-  // Immediately approve the order to move it to completed status
-  if (result.orderId) {
-    try {
-      await apiClient.put(`/api/inout/orders/${result.orderId}/status`, {
-        status: 'COMPLETED'
-      });
-    } catch (error) {
-      console.warn('Failed to auto-approve outbound order:', error);
-    }
-  }
-  
   return result;
 }
 
-export async function approveInboundOrder(orderId: string): Promise<any> {
+export async function updateOrderStatus(orderId: string, status: string): Promise<any> {
   const numericOrderId = Number(orderId.split('-')[0]);
   if (isNaN(numericOrderId)) {
-    throw new Error("Invalid order ID provided for approval.");
+    throw new Error("Invalid order ID provided for status update.");
   }
   const response = await apiClient.put(`/api/inout/orders/${numericOrderId}/status`, {
-    status: 'COMPLETED'
+    status: status.toUpperCase()
   });
   return handleResponse(response);
 }
 
-export async function declineInboundOrder(orderId: string): Promise<any> {
-  const numericOrderId = Number(orderId.split('-')[0]);
+export async function cancelInOutOrder(orderId: string | number): Promise<any> {
+  const numericOrderId = typeof orderId === 'string' 
+    ? Number(orderId.split('-')[0])
+    : Number(orderId);
+  
   if (isNaN(numericOrderId)) {
-    throw new Error("Invalid order ID provided for declining.");
+    throw new Error("Invalid order ID provided for cancellation.");
   }
-  const response = await apiClient.put(`/api/inout/orders/${numericOrderId}/status`, {
-    status: 'CANCELLED'
-  });
+  
+  const response = await apiClient.put(`/api/inout/orders/${numericOrderId}/cancel`);
   return handleResponse(response);
 }
 

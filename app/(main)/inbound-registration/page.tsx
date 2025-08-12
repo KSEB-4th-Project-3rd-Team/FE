@@ -44,6 +44,7 @@ export default function InboundRegistrationPage() {
       companyId: formData.companyId,
       expectedDate: formData.expectedDate,
       notes: formData.notes,
+      locationCode: formData.location,
     };
     
     // React Query Mutation 사용 (lib/queries.ts의 중앙 로직 사용)

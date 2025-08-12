@@ -23,6 +23,8 @@ import {
 } from "@/lib/order-status"
 
 import { useRouter } from "next/navigation"
+import { useCancelInOutOrder, useUpdateOrderStatus } from "@/lib/queries"
+import { toast } from "@/hooks/use-toast"
 
 type DisplayUnit = "개수" | "set"
 // 새로운 상태 타입 사용
@@ -35,6 +37,8 @@ type InOutHistoryTableProps = {
 
 export default function InOutHistoryTable({ historyType, data }: InOutHistoryTableProps) {
   const router = useRouter();
+  const cancelOrderMutation = useCancelInOutOrder();
+  const updateStatusMutation = useUpdateOrderStatus();
   
   const initialFilters = useMemo(() => ({
     type: historyType === 'all' ? 'all' : historyType,
@@ -129,17 +133,40 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
     setCurrentPage(page)
   }
 
-  // 상태 변경 핸들러 추가
   const handleStatusChange = async (recordId: string, newStatus: OrderStatus) => {
     try {
-      // TODO: API 호출로 상태 변경
-      console.log(`Changing status of record ${recordId} to ${newStatus}`);
-      // await updateOrderStatus(recordId, newStatus);
-      
-      // 성공 시 데이터 갱신 (React Query 무효화)
-      // queryClient.invalidateQueries(['inOutData']);
+      await updateStatusMutation.mutateAsync({ orderId: recordId, status: newStatus });
+      toast({
+        title: "상태 변경 성공",
+        description: `주문 상태가 ${ORDER_STATUS_CONFIG[newStatus].label}(으)로 변경되었습니다.`,
+      });
     } catch (error) {
+      toast({
+        title: "상태 변경 실패",
+        description: "상태 변경 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
       console.error('Status change failed:', error);
+    }
+  };
+
+  // 취소 핸들러
+  const handleCancelOrder = async (record: InOutRecord) => {
+    if (!record.id) return;
+    
+    try {
+      await cancelOrderMutation.mutateAsync(record.id.toString());
+      toast({
+        title: "주문 취소 성공",
+        description: "입출고 주문이 취소되었습니다.",
+      });
+      setIsModalOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "취소 실패",
+        description: error?.message || "주문 취소 중 오류가 발생했습니다.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -257,6 +284,7 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
               )}
               <Button variant={filters.status.includes("pending") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("pending")}>승인대기</Button>
               <Button variant={filters.status.includes("scheduled") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("scheduled")}>예약</Button>
+              <Button variant={filters.status.includes("in_progress") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("in_progress")}>진행중</Button>
               <Button variant={filters.status.includes("completed") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("completed")}>완료</Button>
               <Button variant={filters.status.includes("rejected") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("rejected")}>거절</Button>
               <Button variant={filters.status.includes("cancelled") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("cancelled")}>취소</Button>
@@ -376,7 +404,7 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
                 <div><Label className="text-gray-500">수량</Label><p>{formData.quantity}</p></div>
                 <div><Label className="text-gray-500">구역</Label><p>{formData.location}</p></div>
                 <div><Label className="text-gray-500">거래처</Label><p>{formData.company} ({formData.companyCode})</p></div>
-                <div><Label className="text-gray-500">상태</Label><p>{formData.status}</p></div>
+                <div><Label className="text-gray-500">상태</Label><div>{getStatusBadge(formData.status as OrderStatus)}</div></div>
                 <div><Label className="text-gray-500">일시</Label><p>{formData.date} {formData.time}</p></div>
               </div>
               <div className="space-y-1">
@@ -388,7 +416,19 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
                   className="bg-gray-100 cursor-not-allowed resize-none"
                 />
               </div>
-              <div className="flex justify-end gap-2 pt-4">
+              <div className="flex justify-between gap-2 pt-4">
+                <div className="flex gap-2">
+                  {selectedRecord && isActionableStatus(selectedRecord.status as OrderStatus) && (
+                    <Button 
+                      type="button" 
+                      variant="destructive" 
+                      onClick={() => handleCancelOrder(selectedRecord)}
+                      disabled={cancelOrderMutation.isPending}
+                    >
+                      {cancelOrderMutation.isPending ? "취소 중..." : "주문 취소"}
+                    </Button>
+                  )}
+                </div>
                 <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>닫기</Button>
               </div>
             </div>

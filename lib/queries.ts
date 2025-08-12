@@ -18,8 +18,8 @@ import {
   updateItem,
   deleteCompany,
   deleteItem,
-  approveInboundOrder,
-  declineInboundOrder,
+  updateOrderStatus,
+  cancelInOutOrder,
   DashboardData, // 통합 API 타입
 } from './api';
 import { useMemo } from 'react';
@@ -149,7 +149,7 @@ export function useInventoryData() {
         ?.filter(record => 
           record.type === 'inbound' && 
           record.sku === item?.itemCode &&
-          (record.status === '예약' || record.status === '진행 중')
+          ['pending', 'scheduled', 'in_progress'].includes(record.status)
         )
         .reduce((sum, record) => sum + record.quantity, 0) || 0;
       
@@ -157,7 +157,7 @@ export function useInventoryData() {
         ?.filter(record => 
           record.type === 'outbound' && 
           record.sku === item?.itemCode &&
-          (record.status === '예약' || record.status === '진행 중')
+          ['pending', 'scheduled', 'in_progress'].includes(record.status)
         )
         .reduce((sum, record) => sum + record.quantity, 0) || 0;
 
@@ -199,10 +199,7 @@ export function useInOutData() {
   const enrichedInOut = useMemo((): InOutRecord[] => {
     if (!rawInOut) return [];
 
-    // 모든 상태의 데이터 포함 (CANCELLED 제외)
-    const allData = rawInOut.filter(record => record.status !== 'CANCELLED');
-    
-    return allData.flatMap(record => {
+    return rawInOut.flatMap(record => {
       return record.items.map((item, itemIndex) => {
         const dateTime = record.createdAt || record.updatedAt || new Date().toISOString();
         const date = dateTime.split('T')[0];
@@ -211,21 +208,21 @@ export function useInOutData() {
         // 실제 품목 정보와 매핑
         const actualItem = items?.find(i => i.itemId === item.itemId);
         // 실제 거래처 정보와 매핑  
-        const actualCompany = companies?.find(c => c.companyId === record.companyId);
+        const actualCompany = companies?.find(c => c.companyCode === record.companyCode);
         
         return {
           id: `${record.orderId}-${itemIndex}`,
-          type: record.type?.toLowerCase() || 'inbound',
+          type: record.type?.toLowerCase() as 'inbound' | 'outbound' || 'inbound',
           productName: actualItem?.itemName || item.itemName || 'N/A',
           sku: actualItem?.itemCode || item.itemCode || 'N/A',
           individualCode: `ORDER-${record.orderId}-${item.itemId}`,
           specification: actualItem?.spec || item.specification || 'N/A',
           quantity: item.requestedQuantity || 0,
-          location: 'A-01',
+          location: record.locationCode || 'N/A',
           company: actualCompany?.companyName || record.companyName || 'N/A',
           companyCode: actualCompany?.companyCode || record.companyCode || 'N/A',
-          status: record.status === 'COMPLETED' ? '완료' : 
-                  record.status === 'PENDING' ? '예약' : '진행 중',
+          status: record.status,
+          destination: record.destination || '-',
           date,
           time,
           notes: record.notes || '-'
@@ -319,23 +316,45 @@ export function useCreateOutboundOrder() {
   });
 }
 
+export function useUpdateOrderStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orderId, status }: { orderId: string; status: string }) => 
+      updateOrderStatus(orderId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+    },
+  });
+}
+
 export function useApproveInboundOrder() {
   const queryClient = useQueryClient();
-  
   return useMutation({
-    mutationFn: approveInboundOrder,
+    mutationFn: (orderId: string) => updateOrderStatus(orderId, 'COMPLETED'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
     },
   });
 }
 
 export function useDeclineInboundOrder() {
   const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderId: string) => updateOrderStatus(orderId, 'CANCELLED'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+    },
+  });
+}
+
+export function useCancelInOutOrder() {
+  const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: declineInboundOrder,
+    mutationFn: cancelInOutOrder,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
