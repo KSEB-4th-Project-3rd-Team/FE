@@ -253,7 +253,7 @@ const inventoryData: InventoryItem[] = data;
                     <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[8%]">입고예정</th>
                     <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[8%]">출고예정</th>
                     <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[8%]">상태</th>
-                    <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 w-[12%]">마지막 업데이트</th>
+                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[12%]">마지막 업데이트</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -294,7 +294,22 @@ const inventoryData: InventoryItem[] = data;
                           {item.status}
                         </span>
                       </td>
-                      <td className="p-2 md:p-3 text-gray-600 text-xs break-words truncate">{item.lastUpdate}</td>
+                      <td className="p-2 md:p-3 text-gray-600 text-xs text-center">
+                        <div>
+                          {(() => {
+                            const parts = item.lastUpdate.split(' ');
+                            const datePart = parts.slice(0, -2).join(' '); // 오전/오후, 시간 제외한 날짜 부분
+                            const ampmPart = parts[parts.length - 2]; // 오전/오후
+                            const timePart = parts[parts.length - 1]; // 시간
+                            return (
+                              <>
+                                <p>{datePart}</p>
+                                <p className="text-xs text-gray-500">{ampmPart} {timePart}</p>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

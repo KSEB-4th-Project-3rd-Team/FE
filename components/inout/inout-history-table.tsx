@@ -207,7 +207,7 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
     }
 
     return (
-      <div className="flex gap-1">
+      <div className="flex gap-1 justify-center">
         {possibleTransitions.map((targetStatus) => {
           const config = ORDER_STATUS_CONFIG[targetStatus];
           let icon = null;
