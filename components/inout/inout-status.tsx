@@ -19,17 +19,15 @@ interface InOutData {
   type: "입고" | "출고"
   item: string
   quantity: number
-  status: "완료" | "진행중" | "예약"
+  status: "완료" | "예약"
   date: string
 }
 
 const initialData: InOutData[] = [
   { id: 1, type: "입고", item: "노트북", quantity: 10, status: "완료", date: "2024-07-15" },
   { id: 2, type: "출고", item: "모니터", quantity: 5, status: "완료", date: "2024-07-15" },
-  { id: 3, type: "입고", item: "키보드", quantity: 20, status: "진행중", date: "2024-07-16" },
   { id: 4, type: "출고", item: "마우스", quantity: 15, status: "예약", date: "2024-07-17" },
   { id: 5, type: "입고", item: "도킹 스테이션", quantity: 8, status: "완료", date: "2024-07-14" },
-  { id: 6, type: "출고", item: "웹캠", quantity: 12, status: "진행중", date: "2024-07-16" },
   { id: 7, type: "입고", item: "헤드셋", quantity: 25, status: "예약", date: "2024-07-18" },
   { id: 8, type: "출고", item: "USB 허브", quantity: 30, status: "완료", date: "2024-07-13" },
 ]
@@ -58,7 +56,7 @@ export function InOutStatus() {
     else if (filter === "outbound")
       filteredData = data.filter(item => item.type === "출고")
     else if (filter === "pending")
-      filteredData = data.filter(item => item.status === "예약" || item.status === "진행중")
+      filteredData = data.filter(item => item.status === "예약")
     else if (filter === "completed")
       filteredData = data.filter(item => item.status === "완료")
     else filteredData = data;
@@ -106,7 +104,7 @@ export function InOutStatus() {
             <TabsTrigger value="inbound">입고</TabsTrigger>
             <TabsTrigger value="outbound">출고</TabsTrigger>
             <Separator orientation="vertical" className="mx-2 h-6" />
-            <TabsTrigger value="pending">진행중 예약</TabsTrigger>
+            <TabsTrigger value="pending">예약</TabsTrigger>
             <TabsTrigger value="completed">완료</TabsTrigger>
           </TabsList>
           <TabsContent value="all">{renderTable("all")}</TabsContent>

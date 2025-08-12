@@ -92,13 +92,39 @@ export function UnifiedDashboard() {
   const inventoryData = useMemo((): InventoryItem[] => {
     if (!dashboardData?.inventory || !dashboardData?.items) return [];
     
+    // 예정 수량 계산 (SCHEDULED 상태인 주문들)
+    const scheduledInbound = dashboardData.orders
+      .filter(order => order.status === 'SCHEDULED' && order.type === 'INBOUND')
+      .reduce((acc, order) => {
+        order.items.forEach(item => {
+          acc[item.itemId] = (acc[item.itemId] || 0) + item.requestedQuantity;
+        });
+        return acc;
+      }, {} as Record<number, number>);
+
+    const scheduledOutbound = dashboardData.orders
+      .filter(order => order.status === 'SCHEDULED' && order.type === 'OUTBOUND')
+      .reduce((acc, order) => {
+        order.items.forEach(item => {
+          acc[item.itemId] = (acc[item.itemId] || 0) + item.requestedQuantity;
+        });
+        return acc;
+      }, {} as Record<number, number>);
+    
     return dashboardData.inventory.map((backendItem, index) => {
       const item = dashboardData.items.find(i => i.itemId === backendItem.itemId);
       
+      // 현재 수량 (백엔드에서 이미 완료된 주문만 반영된 수량)
+      const currentQuantity = backendItem.quantity;
+      
+      // 예정 수량
+      const inboundScheduled = scheduledInbound[backendItem.itemId] || 0;
+      const outboundScheduled = scheduledOutbound[backendItem.itemId] || 0;
+      
       let status = '정상';
-      if (backendItem.quantity <= 0) {
+      if (currentQuantity <= 0) {
         status = '위험';
-      } else if (backendItem.quantity <= 10) {
+      } else if (currentQuantity <= 10) {
         status = '부족';
       }
 
@@ -107,9 +133,9 @@ export function UnifiedDashboard() {
         name: backendItem.itemName,
         sku: item?.itemCode || `SKU-${backendItem.itemId}`,
         specification: item?.spec || 'N/A',
-        quantity: backendItem.quantity,
-        inboundScheduled: 0, // 예정된 입고 수량 (필요시 계산 로직 추가)
-        outboundScheduled: 0, // 예정된 출고 수량 (필요시 계산 로직 추가)
+        quantity: currentQuantity, // 현재 실제 재고 수량
+        inboundScheduled, // 입고 예정 수량
+        outboundScheduled, // 출고 예정 수량
         location: backendItem.locationCode,
         status,
         lastUpdate: new Date(backendItem.lastUpdated).toLocaleString('ko-KR')
@@ -378,7 +404,7 @@ export function UnifiedDashboard() {
     const salesTrend = salesData.reduce((acc, item) => {
         const key = getGroupKey(new Date(item.date));
         if (!acc[key]) { acc[key] = { date: key, amount: 0, count: 0 }; }
-        acc[key].amount += (item.quantity * (itemPriceMap[item.sku] || 0)) / 10000; // Convert to 만원
+        acc[key].amount += Math.round((item.quantity * (itemPriceMap[item.sku] || 0)) / 10000); // Convert to 만원 and round
         acc[key].count += 1;
         return acc;
     }, {} as Record<string, { date: string; amount: number; count: number }>);
@@ -411,11 +437,11 @@ export function UnifiedDashboard() {
     const todaysItems = inOutData.filter(item => item.date === todayStr);
     
     return {
-      pending: todaysItems.filter(i => i.status === 'PENDING'),
-      scheduled: todaysItems.filter(i => i.status === 'SCHEDULED'),
-      completed: todaysItems.filter(i => i.status === 'COMPLETED'),
-      rejected: todaysItems.filter(i => i.status === 'REJECTED'),
-      cancelled: todaysItems.filter(i => i.status === 'CANCELLED'),
+      pending: todaysItems.filter(i => i.status === 'PENDING' || i.status === 'pending'),
+      scheduled: todaysItems.filter(i => i.status === 'SCHEDULED' || i.status === 'scheduled'),
+      completed: todaysItems.filter(i => i.status === 'COMPLETED' || i.status === 'completed'),
+      rejected: todaysItems.filter(i => i.status === 'REJECTED' || i.status === 'rejected'),
+      cancelled: todaysItems.filter(i => i.status === 'CANCELLED' || i.status === 'cancelled'),
     };
   }, [inOutData]);
 
@@ -691,9 +717,35 @@ export function UnifiedDashboard() {
             <div className="mt-4">{renderDetailTable(activeInventoryDetail, inventoryMetrics, [
                 { key: 'name', label: '상품명', className: 'w-[20%] text-left' },
                 { key: 'specification', label: '규격', className: 'w-[15%] text-left' },
-                { key: 'quantity', label: '현재 수량', className: 'w-[15%] text-center' },
-                { key: 'location', label: '구역', className: 'w-[20%] text-center' },
-                { key: 'status', label: '상태', className: 'w-[15%] text-center' },
+                { key: 'quantity', label: '현재 수량', className: 'w-[12%] text-center' },
+                { 
+                  key: 'inboundScheduled', 
+                  label: '입고 예정', 
+                  className: 'w-[12%] text-center',
+                  render: (item) => {
+                    const scheduled = (item as InventoryItem).inboundScheduled;
+                    return scheduled > 0 ? (
+                      <span className="text-blue-600 font-medium">+{scheduled}</span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    );
+                  }
+                },
+                { 
+                  key: 'outboundScheduled', 
+                  label: '출고 예정', 
+                  className: 'w-[12%] text-center',
+                  render: (item) => {
+                    const scheduled = (item as InventoryItem).outboundScheduled;
+                    return scheduled > 0 ? (
+                      <span className="text-red-600 font-medium">-{scheduled}</span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    );
+                  }
+                },
+                { key: 'location', label: '구역', className: 'w-[15%] text-center' },
+                { key: 'status', label: '상태', className: 'w-[12%] text-center' },
             ], '재고 현황')}</div>
           </AccordionContent>
         </AccordionItem>

@@ -3,13 +3,13 @@
 import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Package, TruckIcon, Timer, CalendarDays, CheckCircle, X, XCircle } from "lucide-react"
+import { Package, TruckIcon, Check, X, Trash2 } from "lucide-react"
 import { InOutRecord } from "@/components/utils"
 import { Separator } from "@/components/ui/separator"
 import { CustomPagination } from "@/components/ui/custom-pagination"
-import { useApproveInboundOrder, useDeclineInboundOrder } from "@/lib/queries"
+import { useUpdateOrderStatus } from "@/lib/queries"
 import { toast } from "sonner"
-import { ORDER_STATUS_CONFIG, type OrderStatus, getStatusIcon } from "@/lib/order-status"
+import { ORDER_STATUS_CONFIG, type OrderStatus, getStatusIcon, STATUS_TRANSITIONS } from "@/lib/order-status"
 import { Badge } from "@/components/ui/badge"
 
 interface InOutStatusPanelProps {
@@ -18,8 +18,7 @@ interface InOutStatusPanelProps {
 }
 
 export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelProps) {
-  const { mutate: approveOrder, isPending: isApproving } = useApproveInboundOrder();
-  const { mutate: declineOrder, isPending: isDeclining } = useDeclineInboundOrder();
+  const updateStatusMutation = useUpdateOrderStatus();
 
   const [filters, setFilters] = useState({
     type: "all",
@@ -30,23 +29,18 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  // 🔄 새로운 상태 시스템: 완료되지 않은 상태만 표시 (승인대기, 예약)
   const statusData: InOutRecord[] = useMemo(() => data.filter(
     (item) => item.status === "pending" || item.status === "scheduled"
   ), [data]);
 
-  const handleApprove = (orderId: string) => {
-    approveOrder(orderId, {
-      onSuccess: () => toast.success("작업이 승인되었습니다."),
-      onError: (err: any) => toast.error(`승인 실패: ${err.message}`),
-    });
-  };
-
-  const handleDecline = (orderId: string) => {
-    declineOrder(orderId, {
-      onSuccess: () => toast.success("작업이 거절되었습니다."),
-      onError: (err: any) => toast.error(`거절 실패: ${err.message}`),
-    });
+  const handleStatusChange = async (recordId: string, newStatus: OrderStatus) => {
+    try {
+      await updateStatusMutation.mutateAsync({ orderId: recordId, status: newStatus });
+      toast.success(`주문 상태가 ${ORDER_STATUS_CONFIG[newStatus].label}(으)로 변경되었습니다.`);
+    } catch (error) {
+      toast.error("상태 변경 중 오류가 발생했습니다.");
+      console.error('Status change failed:', error);
+    }
   };
 
   const handleToggleFilter = (field: 'type' | 'status', value: string) => {
@@ -80,24 +74,11 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
     currentPage * itemsPerPage
   );
 
-  // 🎯 새로운 상태 배지 렌더링 함수
   const getStatusBadge = (status: OrderStatus) => {
     const config = ORDER_STATUS_CONFIG[status];
-    
-    if (!config) {
-      return (
-        <Badge variant="secondary" className="text-xs">
-          <span className="mr-1">?</span>
-          알 수 없음
-        </Badge>
-      );
-    }
-
+    if (!config) return <Badge variant="secondary" className="text-xs">알 수 없음</Badge>;
     return (
-      <Badge 
-        variant={config.variant as any}
-        className={`${config.bgColor} ${config.textColor} text-xs whitespace-nowrap`}
-      >
+      <Badge variant={config.variant as any} className={`${config.bgColor} ${config.textColor} text-xs whitespace-nowrap`}>
         <span className="mr-1">{getStatusIcon(status)}</span>
         {config.label}
       </Badge>
@@ -110,10 +91,58 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
       : <TruckIcon className="w-5 h-5 text-red-500" />
   }
 
+  const renderActionButtons = (record: InOutRecord) => {
+    const currentStatus = record.status as OrderStatus;
+    const possibleTransitions = STATUS_TRANSITIONS[currentStatus];
+
+    if (!possibleTransitions || possibleTransitions.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="mt-2 pt-2 border-t border-gray-200 flex justify-end gap-2">
+        {possibleTransitions.map((targetStatus) => {
+          const config = ORDER_STATUS_CONFIG[targetStatus];
+          let icon = null;
+          let variant: any = 'outline';
+
+          switch (targetStatus) {
+            case 'scheduled':
+              icon = <Check className="w-3 h-3" />;
+              variant = 'default';
+              break;
+            case 'rejected':
+              icon = <X className="w-3 h-3" />;
+              variant = 'destructive';
+              break;
+            case 'cancelled':
+              icon = <Trash2 className="w-3 h-3" />;
+              variant = 'secondary';
+              break;
+          }
+
+          return (
+            <Button
+              key={targetStatus}
+              size="sm"
+              variant={variant}
+              onClick={() => handleStatusChange(record.id, targetStatus)}
+              disabled={updateStatusMutation.isPending}
+              className="h-7 px-2 text-xs"
+              title={`${config.label}로 변경`}
+            >
+              {icon}
+              <span className="ml-1">{config.label}</span>
+            </Button>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full">
       <div className="space-y-4">
-        {/* 검색 필터 */}
         {showSearch && (
           <div className="space-y-2 p-3 bg-gray-50 rounded-lg border">
             <Input
@@ -130,53 +159,17 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
             />
           </div>
         )}
-
-        {/* 필터 버튼 */}
         <div className="flex items-center gap-1">
-          <Button
-            variant={filters.type === "all" && filters.status === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => {
-              setFilters({ type: 'all', status: 'all', productName: '', date: ''});
-              setCurrentPage(1);
-            }}
-          >
-            전체
-          </Button>
+          <Button variant={filters.type === "all" && filters.status === "all" ? "default" : "outline"} size="sm" onClick={() => { setFilters({ type: 'all', status: 'all', productName: '', date: ''}); setCurrentPage(1); }}>전체</Button>
           <Separator orientation="vertical" className="h-6" />
-          <Button
-            variant={filters.type === "inbound" ? "default" : "outline"}
-            size="sm"
-            onClick={() => handleToggleFilter("type", "inbound")}
-          >
-            입고
-          </Button>
-          <Button
-            variant={filters.type === "outbound" ? "default" : "outline"}
-            size="sm"
-            onClick={() => handleToggleFilter("type", "outbound")}
-          >
-            출고
-          </Button>
+          <Button variant={filters.type === "inbound" ? "default" : "outline"} size="sm" onClick={() => handleToggleFilter("type", "inbound")}>입고</Button>
+          <Button variant={filters.type === "outbound" ? "default" : "outline"} size="sm" onClick={() => handleToggleFilter("type", "outbound")}>출고</Button>
           <Separator orientation="vertical" className="h-6" />
-          <Button
-            variant={filters.status === "pending" ? "default" : "outline"}
-            size="sm"
-            onClick={() => handleToggleFilter("status", "pending")}
-          >
-            승인대기
-          </Button>
-          <Button
-            variant={filters.status === "scheduled" ? "default" : "outline"}
-            size="sm"
-            onClick={() => handleToggleFilter("status", "scheduled")}
-          >
-            예약
-          </Button>
+          <Button variant={filters.status === "pending" ? "default" : "outline"} size="sm" onClick={() => handleToggleFilter("status", "pending")}>승인대기</Button>
+          <Button variant={filters.status === "scheduled" ? "default" : "outline"} size="sm" onClick={() => handleToggleFilter("status", "scheduled")}>예약</Button>
         </div>
       </div>
 
-      {/* 현황 목록 */}
       <div className="flex-1 overflow-y-auto space-y-2 pr-2 mt-4">
         {paginatedData.length > 0 ? (
           paginatedData.map((item) => (
@@ -197,52 +190,7 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
                   <p className="text-xs text-gray-500">{item.time}</p>
                 </div>
               </div>
-              {item.status === 'pending' && (
-                <div className="mt-2 pt-2 border-t border-gray-200 flex justify-end gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs"
-                    onClick={() => handleDecline(item.id)}
-                    disabled={isApproving || isDeclining}
-                  >
-                    <XCircle className="w-3 h-3 mr-1" />
-                    거절
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => handleApprove(item.id)}
-                    disabled={isApproving || isDeclining}
-                  >
-                    <CheckCircle className="w-3 h-3 mr-1" />
-                    승인
-                  </Button>
-                </div>
-              )}
-              {item.status === 'scheduled' && (
-                <div className="mt-2 pt-2 border-t border-gray-200 flex justify-end gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs"
-                    onClick={() => handleDecline(item.id)}
-                    disabled={isApproving || isDeclining}
-                  >
-                    <X className="w-3 h-3 mr-1" />
-                    취소
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="h-7 text-xs bg-green-600 hover:bg-green-700"
-                    onClick={() => handleApprove(item.id)}
-                    disabled={isApproving || isDeclining}
-                  >
-                    <CheckCircle className="w-3 h-3 mr-1" />
-                    완료
-                  </Button>
-                </div>
-              )}
+              {renderActionButtons(item)}
             </div>
           ))
         ) : (

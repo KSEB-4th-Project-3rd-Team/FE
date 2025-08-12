@@ -24,7 +24,6 @@ export default function InventoryManagement({ initialData }: { initialData: Inve
   const [searchFilters, setSearchFilters] = useState({
     name: "",
     specification: "",
-    location: "",
     status: "",
   })
   const [showSearchFilters, setShowSearchFilters] = useState(false)
@@ -48,10 +47,9 @@ const inventoryData: InventoryItem[] = data;
   const filteredInventory = inventoryData.filter((item) => {
     const nameMatch = (item.name || '').toLowerCase().includes(searchFilters.name.toLowerCase())
     const specificationMatch = (item.specification || '').toLowerCase().includes(searchFilters.specification.toLowerCase())
-    const locationMatch = (item.location || '').toLowerCase().includes(searchFilters.location.toLowerCase())
     const statusMatch = (item.status || '').toLowerCase().includes(searchFilters.status.toLowerCase())
 
-    return nameMatch && specificationMatch && locationMatch && statusMatch
+    return nameMatch && specificationMatch && statusMatch
   })
 
   // 페이지네이션
@@ -154,7 +152,7 @@ const inventoryData: InventoryItem[] = data;
           <CardContent>
             {/* 검색 필터 */}
             {showSearchFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
                 <div>
                   <Label htmlFor="name-filter" className="text-sm font-medium">
                     상품명
@@ -176,18 +174,6 @@ const inventoryData: InventoryItem[] = data;
                     placeholder="규격 검색..."
                     value={searchFilters.specification}
                     onChange={(e) => handleFilterChange("specification", e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="location-filter" className="text-sm font-medium">
-                    위치
-                  </Label>
-                  <Input
-                    id="location-filter"
-                    placeholder="위치 검색..."
-                    value={searchFilters.location}
-                    onChange={(e) => handleFilterChange("location", e.target.value)}
                     className="mt-1"
                   />
                 </div>
@@ -229,7 +215,6 @@ const inventoryData: InventoryItem[] = data;
                     setSearchFilters({
                       name: "",
                       specification: "",
-                      location: "",
                       status: "",
                     })
                     setCurrentPage(1)
@@ -246,8 +231,8 @@ const inventoryData: InventoryItem[] = data;
                 <thead>
                   <tr className="border-b">
                     <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[5%]">No</th>
-                    <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 w-[25%]">상품명</th>
-                    <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 w-[12%]">규격</th>
+                    <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 w-[30%]">상품명</th>
+                    <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 w-[15%]">규격</th>
                     <th className="text-center p-2 md:p-3 font-semibold align-bottom w-[12%]">
                       <div className="flex flex-col items-center justify-end" style={{ height: '3.5rem' }}>
                         <p className={`text-xs text-gray-500 font-normal whitespace-nowrap ${displayUnit === 'set' ? 'visible' : 'invisible'}`}>
@@ -267,7 +252,6 @@ const inventoryData: InventoryItem[] = data;
                     <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[8%]">현재수량</th>
                     <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[8%]">입고예정</th>
                     <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[8%]">출고예정</th>
-                    <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[8%]">구역</th>
                     <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-2 w-[8%]">상태</th>
                     <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-2 w-[12%]">마지막 업데이트</th>
                   </tr>
@@ -297,7 +281,6 @@ const inventoryData: InventoryItem[] = data;
                       <td className="p-2 md:p-3 text-center text-sm text-red-600">
                         {item.outboundScheduled > 0 ? getDisplayQuantity(item.outboundScheduled) : "-"}
                       </td>
-                      <td className="p-2 md:p-3 text-center text-sm">{item.location}</td>
                       <td className="p-2 md:p-3 text-center">
                         <span
                           className={`px-2 py-1 rounded-full text-xs whitespace-nowrap ${

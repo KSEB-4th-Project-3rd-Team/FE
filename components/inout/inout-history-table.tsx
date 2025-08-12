@@ -197,13 +197,13 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
     );
   };
 
-  // 액션 버튼 렌더링
+  // 작업 버튼 렌더링
   const renderActionButtons = (record: any) => {
     const currentStatus = record.status as OrderStatus;
     const possibleTransitions = STATUS_TRANSITIONS[currentStatus];
 
     if (!possibleTransitions || possibleTransitions.length === 0) {
-      return <span className="text-xs text-gray-400">액션 없음</span>;
+      return <span className="text-xs text-gray-400">작업 없음</span>;
     }
 
     return (
@@ -284,7 +284,6 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
               )}
               <Button variant={filters.status.includes("pending") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("pending")}>승인대기</Button>
               <Button variant={filters.status.includes("scheduled") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("scheduled")}>예약</Button>
-              <Button variant={filters.status.includes("in_progress") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("in_progress")}>진행중</Button>
               <Button variant={filters.status.includes("completed") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("completed")}>완료</Button>
               <Button variant={filters.status.includes("rejected") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("rejected")}>거절</Button>
               <Button variant={filters.status.includes("cancelled") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("cancelled")}>취소</Button>
@@ -340,20 +339,20 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
                   <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">거래처</th>
                   <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[8%]">상태</th>
                   <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[9%]">날짜</th>
-                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[12%]">액션</th>
+                  <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[12%]">작업</th>
                 </tr>
               </thead>
               <tbody>
                 {currentItems.map((item, index) => (
                   <tr key={item.id || `history-item-${index}`} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => handleRowClick(item)}>
                     <td className="p-2 md:p-3"><span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${item.type === "inbound" ? "bg-blue-100 text-blue-800" : "bg-red-100 text-red-800"}`}>{item.type === "inbound" ? "입고" : "출고"}</span></td>
-                    <td className="p-2 md:p-3 text-left truncate"><p className="font-medium">{item.productName}</p><p className="text-xs text-gray-500">SKU: {item.sku}</p></td>
-                    <td className="p-2 md:p-3 text-left truncate">{item.individualCode}</td>
-                    <td className="p-2 md:p-3 text-left truncate">{item.specification}</td>
+                    <td className="p-2 md:p-3 text-left" title={`${item.productName} (SKU: ${item.sku})`}><p className="font-medium truncate">{item.productName}</p><p className="text-xs text-gray-500 truncate">SKU: {item.sku}</p></td>
+                    <td className="p-2 md:p-3 text-left truncate" title={item.individualCode}>{item.individualCode}</td>
+                    <td className="p-2 md:p-3 text-left truncate" title={item.specification}>{item.specification}</td>
                     <td className="p-2 md:p-3 text-center"><span className="font-semibold">{item.quantity}</span></td>
                     <td className="p-2 md:p-3 text-center"><div className="font-semibold">{displayUnit === 'set' ? `${Math.floor(item.quantity / SET_QUANTITY)} set` : `${item.quantity} 개`}</div></td>
                     <td className="p-2 md:p-3 text-center">{item.location}</td>
-                    <td className="p-2 md:p-3 text-center truncate"><p className="font-medium">{item.company}</p><p className="text-xs text-gray-500">코드: {item.companyCode}</p></td>
+                    <td className="p-2 md:p-3 text-center" title={`${item.company} (코드: ${item.companyCode})`}><p className="font-medium truncate">{item.company}</p><p className="text-xs text-gray-500 truncate">코드: {item.companyCode}</p></td>
                     <td className="p-2 md:p-3 text-center">{getStatusBadge(item.status as OrderStatus)}</td>
                     <td className="p-2 md:p-3 text-center"><div><p>{item.date}</p><p className="text-xs text-gray-500">{item.time}</p></div></td>
                     <td className="p-2 md:p-3 text-center">{renderActionButtons(item)}</td>

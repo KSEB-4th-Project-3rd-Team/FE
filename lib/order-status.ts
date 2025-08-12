@@ -1,6 +1,6 @@
 // 주문 상태 관리 시스템
 
-export type OrderStatus = 'pending' | 'scheduled' | 'in_progress' | 'rejected' | 'completed' | 'cancelled';
+export type OrderStatus = 'pending' | 'scheduled' | 'rejected' | 'completed' | 'cancelled';
 
 export interface StatusConfig {
   label: string;
@@ -28,14 +28,6 @@ export const ORDER_STATUS_CONFIG: Record<OrderStatus, StatusConfig> = {
     variant: 'default',
     bgColor: 'bg-blue-100',
     textColor: 'text-blue-800'
-  },
-  in_progress: {
-    label: '진행중',
-    color: 'cyan',
-    description: '작업이 진행중입니다.',
-    variant: 'info',
-    bgColor: 'bg-cyan-100',
-    textColor: 'text-cyan-800'
   },
   rejected: {
     label: '거절',
@@ -66,8 +58,7 @@ export const ORDER_STATUS_CONFIG: Record<OrderStatus, StatusConfig> = {
 // 상태 전환 가능한 경우들
 export const STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   pending: ['scheduled', 'rejected'],
-  scheduled: ['in_progress', 'cancelled'],
-  in_progress: ['completed', 'cancelled'],
+  scheduled: ['cancelled'],
   rejected: [],
   completed: [],
   cancelled: []
@@ -85,8 +76,6 @@ export const getStatusIcon = (status: OrderStatus): string => {
       return '⏳'; // 승인대기
     case 'scheduled':
       return '📅'; // 예약
-    case 'in_progress':
-      return '🚚';
     case 'rejected':
       return '❌'; // 거절
     case 'completed':
@@ -103,16 +92,14 @@ export const getStatusPriority = (status: OrderStatus): number => {
   switch (status) {
     case 'pending':
       return 1;
-    case 'in_progress':
-      return 2;
     case 'scheduled':
-      return 3;
+      return 2;
     case 'completed':
-      return 4;
+      return 3;
     case 'cancelled':
-      return 5;
+      return 4;
     case 'rejected':
-      return 6;
+      return 5;
     default:
       return 999;
   }
@@ -120,7 +107,7 @@ export const getStatusPriority = (status: OrderStatus): number => {
 
 // 액션 가능한 상태인지 확인
 export const isActionableStatus = (status: OrderStatus): boolean => {
-  return ['pending', 'scheduled', 'in_progress'].includes(status);
+  return ['pending', 'scheduled'].includes(status);
 };
 
 // 최종 상태인지 확인
@@ -144,15 +131,24 @@ export const getStatusChangeMessage = (
       return `${userName}님이 승인대기중인 작업을 승인하여 예약 상태로 변경했습니다.`;
     case 'pending-rejected':
       return `${userName}님이 승인대기중인 작업을 거절했습니다.`;
-    case 'scheduled-in_progress':
-      return `${userName}님이 예약된 작업을 시작하여 진행중 상태로 변경했습니다.`;
-    case 'in_progress-completed':
-      return `${userName}님이 진행중인 작업을 완료 처리했습니다.`;
     case 'scheduled-cancelled':
       return `${userName}님이 예약된 작업을 취소했습니다.`;
-    case 'in_progress-cancelled':
-      return `${userName}님이 진행중인 작업을 취소했습니다.`;
     default:
       return `${userName}님이 상태를 ${fromLabel}에서 ${toLabel}로 변경했습니다.`;
   }
+};
+
+// 상태에 따른 버튼 텍스트
+export const getActionButtonText = (status: OrderStatus): string => {
+  switch (status) {
+    case 'pending':
+      return '승인/거절';
+    default:
+      return '';
+  }
+};
+
+// 상태에 따른 다음 액션 목록
+export const getNextActions = (status: OrderStatus): OrderStatus[] => {
+  return STATUS_TRANSITIONS[status] || [];
 };
