@@ -127,27 +127,8 @@ export function UnifiedDashboard() {
         const date = dateTime.split('T')[0];
         const time = dateTime.split('T')[1]?.substring(0, 8) || '00:00:00';
         
-        // 새로운 상태 매핑
-        let status: OrderStatus = 'pending';
-        switch (record.status) {
-          case 'PENDING':
-            status = 'pending';
-            break;
-          case 'SCHEDULED':
-            status = 'scheduled';
-            break;
-          case 'COMPLETED':
-            status = 'completed';
-            break;
-          case 'REJECTED':
-            status = 'rejected';
-            break;
-          case 'CANCELLED':
-            status = 'cancelled';
-            break;
-          default:
-            status = 'pending';
-        }
+        // 백엔드 상태 그대로 사용
+        const status = record.status;
         
         return {
           id: `${record.orderId}-${itemIndex}`,
@@ -430,16 +411,16 @@ export function UnifiedDashboard() {
     const todaysItems = inOutData.filter(item => item.date === todayStr);
     
     return {
-      pending: todaysItems.filter(i => i.status === 'pending'),
-      scheduled: todaysItems.filter(i => i.status === 'scheduled'),
-      completed: todaysItems.filter(i => i.status === 'completed'),
-      rejected: todaysItems.filter(i => i.status === 'rejected'),
-      cancelled: todaysItems.filter(i => i.status === 'cancelled'),
+      pending: todaysItems.filter(i => i.status === 'PENDING'),
+      scheduled: todaysItems.filter(i => i.status === 'SCHEDULED'),
+      completed: todaysItems.filter(i => i.status === 'COMPLETED'),
+      rejected: todaysItems.filter(i => i.status === 'REJECTED'),
+      cancelled: todaysItems.filter(i => i.status === 'CANCELLED'),
     };
   }, [inOutData]);
 
   const orderStatusMetrics: MetricItem[] = [
-    { id: 'pending', title: '대기중', value: (todayOrderStatusItems.pending || []).length, icon: Timer, items: todayOrderStatusItems.pending || [] },
+    { id: 'pending', title: '승인대기', value: (todayOrderStatusItems.pending || []).length, icon: Timer, items: todayOrderStatusItems.pending || [] },
     { id: 'scheduled', title: '예약', value: (todayOrderStatusItems.scheduled || []).length, icon: CalendarDays, items: todayOrderStatusItems.scheduled || [] },
     { id: 'completed', title: '완료', value: (todayOrderStatusItems.completed || []).length, icon: CheckCircle, items: todayOrderStatusItems.completed || [] },
     { id: 'rejected', title: '거절', value: (todayOrderStatusItems.rejected || []).length, icon: X, items: todayOrderStatusItems.rejected || [] },
@@ -566,45 +547,8 @@ export function UnifiedDashboard() {
         </div>
         <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-full"></div>
       </header>
-      <Accordion type="multiple" defaultValue={['inventory', 'orderStatus', 'inOutAnalysis', 'amrPerformance', 'salesManagement']} className="w-full space-y-4">
+      <Accordion type="multiple" defaultValue={['orderStatus', 'inOutAnalysis', 'inventory', 'amrPerformance', 'salesManagement']} className="w-full space-y-4">
         
-        <AccordionItem value="inventory" className="border-2 border-blue-100 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
-          <AccordionTrigger className="p-6 font-bold text-xl text-blue-700 hover:text-blue-800">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Package className="w-5 h-5 text-blue-600" />
-              </div>
-              재고 현황
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="p-6 pt-0">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {inventoryMetrics.map(({ id, title, value, icon: Icon, textColor, iconColor }) => (
-                <Card key={id} onClick={() => handleCardClick(id, 'inventory')} className={`transition-all duration-300 hover:shadow-lg hover:scale-105 border-l-4 ${getInventoryCardBorder(id)} ${id !== 'totalQuantity' ? 'cursor-pointer' : ''} ${activeInventoryDetail === id ? 'shadow-lg scale-105' : ''}`}>
-                  <CardContent className="p-6 bg-gradient-to-br from-white to-gray-50">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className={`text-sm font-semibold uppercase tracking-wider ${textColor || 'text-gray-600'}`}>{title}</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">{typeof value === 'number' ? formatNumber(value) : value}</p>
-                      </div>
-                      <div className={`p-3 rounded-xl ${getIconBackground(id)}`}>
-                        <Icon className={`h-6 w-6 ${iconColor || 'text-gray-400'}`} />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            <div className="mt-4">{renderDetailTable(activeInventoryDetail, inventoryMetrics, [
-                { key: 'name', label: '상품명', className: 'w-[30%] text-left' },
-                { key: 'specification', label: '규격', className: 'w-[15%] text-left' },
-                { key: 'quantity', label: '현재 수량', className: 'w-[15%] text-center' },
-                { key: 'location', label: '구역', className: 'w-[20%] text-center' },
-                { key: 'status', label: '상태', className: 'w-[15%] text-center' },
-            ], '재고 현황')}</div>
-          </AccordionContent>
-        </AccordionItem>
-
         <AccordionItem value="orderStatus" className="border-2 border-green-100 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
           <AccordionTrigger className="p-6 font-bold text-xl text-green-700 hover:text-green-800">
             <div className="flex items-center gap-3">
@@ -715,6 +659,43 @@ export function UnifiedDashboard() {
                     </LineChart>
                 </ChartContainer>
             </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="inventory" className="border-2 border-blue-100 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
+          <AccordionTrigger className="p-6 font-bold text-xl text-blue-700 hover:text-blue-800">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Package className="w-5 h-5 text-blue-600" />
+              </div>
+              재고 현황
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="p-6 pt-0">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {inventoryMetrics.map(({ id, title, value, icon: Icon, textColor, iconColor }) => (
+                <Card key={id} onClick={() => handleCardClick(id, 'inventory')} className={`transition-all duration-300 hover:shadow-lg hover:scale-105 border-l-4 ${getInventoryCardBorder(id)} ${id !== 'totalQuantity' ? 'cursor-pointer' : ''} ${activeInventoryDetail === id ? 'shadow-lg scale-105' : ''}`}>
+                  <CardContent className="p-6 bg-gradient-to-br from-white to-gray-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className={`text-sm font-semibold uppercase tracking-wider ${textColor || 'text-gray-600'}`}>{title}</p>
+                        <p className="text-3xl font-bold text-gray-900 mt-2">{typeof value === 'number' ? formatNumber(value) : value}</p>
+                      </div>
+                      <div className={`p-3 rounded-xl ${getIconBackground(id)}`}>
+                        <Icon className={`h-6 w-6 ${iconColor || 'text-gray-400'}`} />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div className="mt-4">{renderDetailTable(activeInventoryDetail, inventoryMetrics, [
+                { key: 'name', label: '상품명', className: 'w-[20%] text-left' },
+                { key: 'specification', label: '규격', className: 'w-[15%] text-left' },
+                { key: 'quantity', label: '현재 수량', className: 'w-[15%] text-center' },
+                { key: 'location', label: '구역', className: 'w-[20%] text-center' },
+                { key: 'status', label: '상태', className: 'w-[15%] text-center' },
+            ], '재고 현황')}</div>
+          </AccordionContent>
         </AccordionItem>
 
         <AccordionItem value="amrPerformance" className="border-2 border-orange-100 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">

@@ -21,7 +21,7 @@ interface OutboundFormData {
   companyId: number | null;
   expectedDate: string;
   notes: string;
-  status: 'pending'; // 새로 등록되는 출고는 항상 '대기중' 상태
+  status: 'pending'; // 새로 등록되는 출고는 항상 '승인대기' 상태
 }
 
 interface OutboundFormProps {
@@ -38,7 +38,7 @@ export default function OutboundForm({ onSubmit, onClose, items: propsItems }: O
     companyId: null,
     expectedDate: format(new Date(), "yyyy-MM-dd"),
     notes: "",
-    status: 'pending', // 기본값은 항상 '대기중'
+    status: 'pending', // 기본값은 항상 '승인대기'
   })
   const [date, setDate] = useState<Date | undefined>(new Date());
 
@@ -62,7 +62,7 @@ export default function OutboundForm({ onSubmit, onClose, items: propsItems }: O
       companyId: null,
       expectedDate: format(new Date(), "yyyy-MM-dd"),
       notes: "",
-      status: 'pending', // 폼 리셋 시에도 '대기중' 상태
+      status: 'pending', // 폼 리셋 시에도 '승인대기' 상태
     })
     setDate(new Date());
   }

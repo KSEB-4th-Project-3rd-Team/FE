@@ -30,7 +30,7 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  // 🔄 새로운 상태 시스템: 완료되지 않은 상태만 표시 (대기중, 예약)
+  // 🔄 새로운 상태 시스템: 완료되지 않은 상태만 표시 (승인대기, 예약)
   const statusData: InOutRecord[] = useMemo(() => data.filter(
     (item) => item.status === "pending" || item.status === "scheduled"
   ), [data]);
@@ -164,7 +164,7 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
             size="sm"
             onClick={() => handleToggleFilter("status", "pending")}
           >
-            대기중
+            승인대기
           </Button>
           <Button
             variant={filters.status === "scheduled" ? "default" : "outline"}

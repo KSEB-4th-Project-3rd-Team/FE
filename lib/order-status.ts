@@ -14,7 +14,7 @@ export interface StatusConfig {
 // 상태별 설정
 export const ORDER_STATUS_CONFIG: Record<OrderStatus, StatusConfig> = {
   pending: {
-    label: '대기중',
+    label: '승인대기',
     color: 'yellow',
     description: '관리자 승인 대기 중',
     variant: 'warning',
@@ -57,7 +57,7 @@ export const ORDER_STATUS_CONFIG: Record<OrderStatus, StatusConfig> = {
 
 // 상태 전환 가능한 경우들
 export const STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  pending: ['scheduled', 'rejected'],      // 대기중 → 예약 or 거절
+  pending: ['scheduled', 'rejected'],      // 승인대기 → 예약 or 거절
   scheduled: ['completed', 'cancelled'],   // 예약 → 완료 or 취소
   rejected: [],                            // 거절 → 변경 불가 (최종 상태)
   completed: [],                           // 완료 → 변경 불가 (최종 상태)
@@ -73,7 +73,7 @@ export const canTransitionTo = (currentStatus: OrderStatus, targetStatus: OrderS
 export const getStatusIcon = (status: OrderStatus): string => {
   switch (status) {
     case 'pending':
-      return '⏳'; // 대기중
+      return '⏳'; // 승인대기
     case 'scheduled':
       return '📅'; // 예약
     case 'rejected':
@@ -126,9 +126,9 @@ export const getStatusChangeMessage = (
   
   switch (`${fromStatus}-${toStatus}`) {
     case 'pending-scheduled':
-      return `${userName}님이 대기중인 작업을 승인하여 예약 상태로 변경했습니다.`;
+      return `${userName}님이 승인대기중인 작업을 승인하여 예약 상태로 변경했습니다.`;
     case 'pending-rejected':
-      return `${userName}님이 대기중인 작업을 거절했습니다.`;
+      return `${userName}님이 승인대기중인 작업을 거절했습니다.`;
     case 'scheduled-completed':
       return `${userName}님이 예약된 작업을 완료 처리했습니다.`;
     case 'scheduled-cancelled':

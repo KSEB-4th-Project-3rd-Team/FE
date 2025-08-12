@@ -255,7 +255,7 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
                   <Separator orientation="vertical" className="mx-1 h-6" />
                 </>
               )}
-              <Button variant={filters.status.includes("pending") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("pending")}>대기중</Button>
+              <Button variant={filters.status.includes("pending") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("pending")}>승인대기</Button>
               <Button variant={filters.status.includes("scheduled") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("scheduled")}>예약</Button>
               <Button variant={filters.status.includes("completed") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("completed")}>완료</Button>
               <Button variant={filters.status.includes("rejected") ? "default" : "outline"} size="sm" onClick={() => handleStatusToggle("rejected")}>거절</Button>
@@ -289,7 +289,7 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
               <thead>
                 <tr className="border-b">
                   <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[8%]">유형</th>
-                  <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[20%]">상품명</th>
+                  <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">상품명</th>
                   <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[12%]">개별코드</th>
                   <th className="text-left p-2 md:p-3 font-semibold align-bottom pb-3 w-[10%]">규격</th>
                   <th className="text-center p-2 md:p-3 font-semibold align-bottom pb-3 w-[7%]">수량</th>
