@@ -11,6 +11,7 @@ import {
   fetchDashboardSummary,
   fetchDashboardAll, // 통합 대시보드 API
   fetchRacks, // 랙 API 추가
+  fetchRackInventory, // 랙 재고 API 추가
   createCompany,
   createItem,
   createInboundOrder,
@@ -23,6 +24,7 @@ import {
   cancelInOutOrder,
   DashboardData, // 통합 API 타입
   Rack, // 랙 타입 추가
+  RackInventoryItem, // 랙 재고 타입 추가
 } from './api';
 import { useMemo } from 'react';
 import type { Company } from '@/components/company/company-list';
@@ -246,6 +248,16 @@ export function useRacks() {
     queryKey: ['racks'],
     queryFn: fetchRacks,
     staleTime: 10 * 60 * 1000, // 10분 캐시 (랙 정보는 자주 변경되지 않음)
+    retry: 2,
+  });
+}
+
+export function useRackInventory(rackCode: string | null) {
+  return useQuery({
+    queryKey: ['rackInventory', rackCode],
+    queryFn: () => fetchRackInventory(rackCode!),
+    enabled: !!rackCode, // rackCode가 있을 때만 실행
+    staleTime: 1 * 60 * 1000, // 1분 캐시 (재고는 자주 변경될 수 있음)
     retry: 2,
   });
 }

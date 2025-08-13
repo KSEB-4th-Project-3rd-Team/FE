@@ -250,17 +250,33 @@ export async function deleteCompany(id: string): Promise<void> {
 // --- Racks ---
 export interface Rack {
   id: number;
-  rack_code: string; // A001~T012
+  rackCode: string; // A001~T012
   section: string; // A~T
   position: number; // 1~12
   description?: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  inventories?: RackInventoryItem[]; // 랙에 포함된 재고 아이템들
 }
 
 export async function fetchRacks(): Promise<Rack[]> {
   const response = await apiClient.get('/api/racks');
+  return handleResponse(response);
+}
+
+export interface RackInventoryItem {
+  id: number;
+  rackCode: string;
+  itemId: number;
+  itemCode: string;
+  itemName: string;
+  quantity: number;
+  lastUpdated: string;
+}
+
+export async function fetchRackInventory(rackCode: string): Promise<RackInventoryItem[]> {
+  const response = await apiClient.get(`/api/racks/${rackCode}/inventory`);
   return handleResponse(response);
 }
 
