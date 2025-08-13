@@ -65,6 +65,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
   const [expandedMenus, setExpandedMenus] = useState({
     basicInfo: false,
     inoutManagement: false,
+    inventoryManagement: false,
     systemManagement: false,
   })
 
@@ -208,7 +209,18 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                   </div>
                 )}
               </div>
-              <Button asChild variant={isActive("/inventory") ? "default" : "ghost"} className="w-full justify-start text-sm hover:bg-blue-50 hover:text-blue-700"><Link href="/inventory"><Package className="w-4 h-4 mr-2" /><span>재고 관리</span></Link></Button>
+              <div>
+                <Button variant="ghost" className="w-full justify-between text-sm hover:bg-blue-50 hover:text-blue-700" onClick={() => toggleMenu("inventoryManagement")}>
+                  <div className="flex items-center"><Package className="w-4 h-4 mr-4" /><span>재고 관리</span></div>
+                  {expandedMenus.inventoryManagement ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </Button>
+                {expandedMenus.inventoryManagement && (
+                  <div className="ml-6 mt-1 space-y-1">
+                    <Button asChild variant={isActive("/inventory") ? "default" : "ghost"} size="sm" className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"><Link href="/inventory"><span className="mr-2">•</span>재고 현황</Link></Button>
+                    <Button asChild variant={isActive("/warehouse-map") ? "default" : "ghost"} size="sm" className="w-full justify-start text-xs pl-4 hover:bg-blue-50 hover:text-blue-700"><Link href="/warehouse-map"><span className="mr-2">•</span>창고 현황</Link></Button>
+                  </div>
+                )}
+              </div>
               <div>
                 <Button variant="ghost" className="w-full justify-between text-sm hover:bg-blue-50 hover:text-blue-700" onClick={() => toggleMenu("basicInfo")}>
                   <div className="flex items-center"><Building2 className="w-4 h-4 mr-4" /><span>기초 정보</span></div>

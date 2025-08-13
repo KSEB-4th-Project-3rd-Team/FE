@@ -10,6 +10,7 @@ import {
   fetchUsers,
   fetchDashboardSummary,
   fetchDashboardAll, // 통합 대시보드 API
+  fetchRacks, // 랙 API 추가
   createCompany,
   createItem,
   createInboundOrder,
@@ -21,6 +22,7 @@ import {
   updateOrderStatus,
   cancelInOutOrder,
   DashboardData, // 통합 API 타입
+  Rack, // 랙 타입 추가
 } from './api';
 import { useMemo } from 'react';
 import type { Company } from '@/components/company/company-list';
@@ -235,6 +237,17 @@ export function useInOutData() {
     data: enrichedInOut,
     ...inOutQuery
   };
+}
+
+// ===== 랙 관련 =====
+
+export function useRacks() {
+  return useQuery({
+    queryKey: ['racks'],
+    queryFn: fetchRacks,
+    staleTime: 10 * 60 * 1000, // 10분 캐시 (랙 정보는 자주 변경되지 않음)
+    retry: 2,
+  });
 }
 
 // ===== 스케줄 관련 =====

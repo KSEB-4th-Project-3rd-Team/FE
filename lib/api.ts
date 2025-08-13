@@ -247,6 +247,23 @@ export async function deleteCompany(id: string): Promise<void> {
   await apiClient.delete(`/api/companies/${numericId}`);
 }
 
+// --- Racks ---
+export interface Rack {
+  id: number;
+  rack_code: string; // A001~T012
+  section: string; // A~T
+  position: number; // 1~12
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function fetchRacks(): Promise<Rack[]> {
+  const response = await apiClient.get('/api/racks');
+  return handleResponse(response);
+}
+
 
 // --- Items ---
 export async function fetchItems(): Promise<Item[]> {
