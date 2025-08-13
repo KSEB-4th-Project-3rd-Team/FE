@@ -57,6 +57,7 @@
     "react-draggable": "^4.5.0",
     "react-hook-form": "latest",
     "react-resizable-panels": "latest",
+    "react-unity-webgl": "^10.1.5",
     "recharts": "latest",
     "sonner": "latest",
     "tailwind-merge": "^2.5.5",

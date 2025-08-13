@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Play, Pause, RotateCcw, Eye, ExternalLink } from "lucide-react"
 import AGVStatusModal from "./agv-status-modal"
 import type { AGV } from "./agv-status-modal"
+import UnityPlayer from "@/components/unity/UnityPlayer"
 
 // TODO: Fetch warehouse layout data from API
 const warehouseLayout = {
@@ -193,46 +194,7 @@ export default function WarehouseSimulation() {
           <div className="flex items-center justify-between">
             <CardTitle>AMR 작동 현황</CardTitle>
             <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3 text-sm">
-                <div className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded border border-blue-200">
-                  <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                  <span className="font-semibold text-blue-700">{agvStats.total}</span>
-                  <span className="text-blue-600">총 AGV</span>
-                </div>
-                <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded border border-green-200">
-                  <div className="w-3 h-3 bg-green-500 rounded"></div>
-                  <span className="font-semibold text-green-700">{agvStats.idle}</span>
-                  <span className="text-green-600">대기중</span>
-                </div>
-                <div className="flex items-center gap-1 bg-orange-50 px-2 py-1 rounded border border-orange-200">
-                  <div className="w-3 h-3 bg-orange-500 rounded"></div>
-                  <span className="font-semibold text-orange-700">{agvStats.moving}</span>
-                  <span className="text-orange-600">이동중</span>
-                </div>
-                <div className="flex items-center gap-1 bg-purple-50 px-2 py-1 rounded border border-purple-200">
-                  <div className="w-3 h-3 bg-purple-500 rounded"></div>
-                  <span className="font-semibold text-purple-700">{agvStats.working}</span>
-                  <span className="text-purple-600">작업중</span>
-                </div>
-              </div>
-              <Button
-                onClick={() => setShowWebView(!showWebView)}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 bg-transparent"
-              >
-                <ExternalLink className="w-4 h-4" />
-                {showWebView ? "시뮬레이션 보기" : "웹뷰 보기"}
-              </Button>
-              <Button
-                onClick={() => setIsStatusModalOpen(true)}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 bg-transparent"
-              >
-                <Eye className="w-4 h-4" />
-                전체 AGV 상태
-              </Button>
+              
               {!showWebView && (
                 <div className="flex gap-1">
                   {!isRunning ? (
@@ -268,12 +230,7 @@ export default function WarehouseSimulation() {
         <CardContent className="h-full pb-6 bg-white">
           {showWebView ? (
             <div className="border rounded-lg overflow-hidden bg-white mb-4 h-full">
-              <iframe
-                src="https://2hyeoksang.github.io/Web_Build_Test/"
-                className="w-full h-full border-0"
-                title="AMR 작동 현황 웹뷰"
-                style={{ minHeight: "600px" }}
-              />
+              <UnityPlayer />
             </div>
           ) : (
             <>
