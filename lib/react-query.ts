@@ -4,8 +4,8 @@ import { QueryClient } from '@tanstack/react-query';
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // 기본 5분 캐시 (데이터 변경 빈도가 낮음)
-      staleTime: 5 * 60 * 1000,
+      // staleTime을 0으로 설정하여 포커스 변경 시 항상 refetch
+      staleTime: 0,
       // 30분 가비지 컬렉션 시간 (메모리 효율성)
       gcTime: 30 * 60 * 1000,
       // 스마트 에러 재시도
@@ -21,8 +21,8 @@ export const queryClient = new QueryClient({
         // 네트워크 에러시만 최대 2번 재시도
         return failureCount < 2;
       },
-      // 성능 최적화: 불필요한 refetch 방지
-      refetchOnWindowFocus: false,
+      // 창 포커스 시 자동 refetch 활성화
+      refetchOnWindowFocus: true,
       refetchOnMount: true,
       refetchOnReconnect: 'always',
       // 백그라운드 자동 업데이트 비활성화 (성능 최적화)

@@ -144,12 +144,12 @@ export function useInventoryData() {
     return rawInventory.map((backendItem, index) => {
       const item = items.find(i => i.itemId === backendItem.itemId);
       
-      // Calculate scheduled quantities from pending/in-progress inout data
+      // 'pending'을 제외하고 실제 예약된 수량만 계산
       const inboundScheduled = inOutData
         ?.filter(record => 
           record.type === 'inbound' && 
           record.sku === item?.itemCode &&
-          ['pending', 'scheduled', 'in_progress'].includes(record.status)
+          ['scheduled', 'in_progress'].includes(record.status)
         )
         .reduce((sum, record) => sum + record.quantity, 0) || 0;
       
@@ -157,7 +157,7 @@ export function useInventoryData() {
         ?.filter(record => 
           record.type === 'outbound' && 
           record.sku === item?.itemCode &&
-          ['pending', 'scheduled', 'in_progress'].includes(record.status)
+          ['scheduled', 'in_progress'].includes(record.status)
         )
         .reduce((sum, record) => sum + record.quantity, 0) || 0;
 
