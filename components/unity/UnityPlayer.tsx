@@ -7,10 +7,10 @@ const UnityPlayer = () => {
   const { unityProvider, isLoaded, loadingProgression } = useUnityContext({
     // ✅ 중요: 아래 파일 이름들은 Unity 빌드 설정에 따라 달라질 수 있습니다.
     // KSEB-Web/public/unity/Build/ 폴더에 있는 실제 파일명으로 수정해주세요.
-    loaderUrl: "/unity/Build/build.loader.js",
-    dataUrl: "/unity/Build/build.data",
-    frameworkUrl: "/unity/Build/build.framework.js",
-    codeUrl: "/unity/Build/build.wasm",
+    loaderUrl: "/unity/Build/WMS_Simul.loader.js",
+    dataUrl: "/unity/Build/WMS_Simul.data",
+    frameworkUrl: "/unity/Build/WMS_Simul.framework.js",
+    codeUrl: "/unity/Build/WMS_Simul.wasm",
   });
 
   // 로딩 진행률을 표시합니다.

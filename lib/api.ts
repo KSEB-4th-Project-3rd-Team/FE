@@ -420,6 +420,20 @@ export async function updateOrderStatus(orderId: string, status: string): Promis
   return handleResponse(response);
 }
 
+// 승인대기 주문 조회 API 추가
+export async function fetchPendingOrders(): Promise<InOutOrderResponse[]> {
+  const response = await apiClient.get('/api/inout/orders?status=PENDING');
+  const result = await handleResponse(response);
+  return Array.isArray(result) ? result : [];
+}
+
+// 예약된 주문 조회 API 추가  
+export async function fetchReservedOrders(): Promise<InOutOrderResponse[]> {
+  const response = await apiClient.get('/api/inout/orders?status=RESERVED');
+  const result = await handleResponse(response);
+  return Array.isArray(result) ? result : [];
+}
+
 export async function cancelInOutOrder(orderId: string | number): Promise<any> {
   const numericOrderId = typeof orderId === 'string' 
     ? Number(orderId.split('-')[0])

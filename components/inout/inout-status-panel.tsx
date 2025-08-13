@@ -15,9 +15,10 @@ import { Badge } from "@/components/ui/badge"
 interface InOutStatusPanelProps {
   showSearch: boolean;
   data: InOutRecord[];
+  onReserveOrder?: (order: InOutRecord) => void; // Unity 연동용 콜백 추가
 }
 
-export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelProps) {
+export default function InOutStatusPanel({ showSearch, data, onReserveOrder }: InOutStatusPanelProps) {
   const updateStatusMutation = useUpdateOrderStatus();
 
   const [filters, setFilters] = useState({
@@ -33,9 +34,23 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
     (item) => item.status === "pending" || item.status === "scheduled"
   ), [data]);
 
-  const handleStatusChange = async (recordId: string, newStatus: OrderStatus) => {
+  const handleStatusChange = async (record: InOutRecord, newStatus: OrderStatus) => {
     try {
-      await updateStatusMutation.mutateAsync({ orderId: recordId, status: newStatus });
+      // Unity 연동: 예약 상태로 변경할 때 Unity에 작업 전송
+      if (newStatus === 'scheduled') {
+        console.log('[Unity] Sending order to Unity:', record);
+        
+        // 콜백이 있으면 콜백 사용, 없으면 전역 함수 사용
+        if (onReserveOrder) {
+          onReserveOrder(record);
+        } else if ((window as any).unityReserveOrder) {
+          (window as any).unityReserveOrder(record);
+        } else {
+          console.warn('[Unity] No Unity reserve function available');
+        }
+      }
+      
+      await updateStatusMutation.mutateAsync({ orderId: record.id, status: newStatus });
       toast.success(`주문 상태가 ${ORDER_STATUS_CONFIG[newStatus].label}(으)로 변경되었습니다.`);
     } catch (error) {
       toast.error("상태 변경 중 오류가 발생했습니다.");
@@ -126,7 +141,7 @@ export default function InOutStatusPanel({ showSearch, data }: InOutStatusPanelP
               key={targetStatus}
               size="sm"
               variant={variant}
-              onClick={() => handleStatusChange(record.id, targetStatus)}
+              onClick={() => handleStatusChange(record, targetStatus)}
               disabled={updateStatusMutation.isPending}
               className="h-7 px-2 text-xs"
               title={`${config.label}로 변경`}

@@ -52,10 +52,13 @@ type AmrStatus = "moving" | "charging" | "idle" | "error";
 interface Amr { id: string; name: string; status: AmrStatus; battery: number; location: string; currentTask: string | null; }
 const mockAmrData: Amr[] = [
   { id: "AMR-001", name: "Pioneer 1", status: "moving", battery: 82, location: "A-3", currentTask: "Order #1234" },
-  { id: "AMR-002", name: "Pioneer 2", status: "charging", battery: 34, location: "Charging Bay 1", currentTask: null },
-  { id: "AMR-003", name: "Scout 1", status: "idle", battery: 95, location: "Home Base", currentTask: null },
-  { id: "AMR-004", name: "Pioneer 3", status: "moving", battery: 65, location: "B-1", currentTask: "Order #1235" },
-  { id: "AMR-005", name: "Scout 2", status: "error", battery: 5, location: "C-4", currentTask: "Order #1236" },
+  { id: "AMR-002", name: "Pioneer 2", status: "moving", battery: 91, location: "B-1", currentTask: "Order #1235" },
+  { id: "AMR-003", name: "Scout 1", status: "moving", battery: 76, location: "C-2", currentTask: "Order #1236" },
+  { id: "AMR-004", name: "Pioneer 3", status: "moving", battery: 65, location: "D-4", currentTask: "Order #1237" },
+  { id: "AMR-005", name: "Scout 2", status: "moving", battery: 88, location: "A-1", currentTask: "Order #1238" },
+  { id: "AMR-006", name: "Trailblazer 1", status: "moving", battery: 79, location: "B-3", currentTask: "Order #1239" },
+  { id: "AMR-007", name: "Trailblazer 2", status: "moving", battery: 95, location: "C-4", currentTask: "Order #1240" },
+  { id: "AMR-008", name: "Explorer 1", status: "moving", battery: 85, location: "D-1", currentTask: "Order #1241" },
 ];
 
 type MetricItem = {
@@ -364,10 +367,19 @@ export function UnifiedDashboard() {
 
   const amrAnalysis = useMemo(() => {
     const amrStatusKorean: { [key in AmrStatus]: string } = { moving: '이동 중', charging: '충전 중', idle: '대기 중', error: '오류' };
+    const allStatuses: AmrStatus[] = ['moving', 'charging', 'idle', 'error'];
     const totalAmrs = mockAmrData.length;
     const activeAmrs = mockAmrData.filter(amr => amr.status === 'moving').length;
     const errorAmrs = mockAmrData.filter(amr => amr.status === 'error').length;
-    const statusDistribution = mockAmrData.reduce((acc, amr) => { acc[amr.status] = (acc[amr.status] || 0) + 1; return acc; }, {} as Record<AmrStatus, number>);
+    const statusDistribution = allStatuses.reduce((acc, status) => {
+      acc[status] = 0;
+      return acc;
+    }, {} as Record<AmrStatus, number>);
+    mockAmrData.forEach(amr => {
+      if (statusDistribution.hasOwnProperty(amr.status)) {
+        statusDistribution[amr.status]++;
+      }
+    });
     const chartData = Object.entries(statusDistribution).map(([name, value]) => ({ name, displayName: amrStatusKorean[name as AmrStatus] || name, value, fill: `var(--color-${name})` }));
     return { totalAmrs, activeAmrs, errorAmrs, chartData };
   }, []);

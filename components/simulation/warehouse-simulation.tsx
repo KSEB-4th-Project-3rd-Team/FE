@@ -9,6 +9,10 @@ import { Play, Pause, RotateCcw, Eye, ExternalLink } from "lucide-react"
 import AGVStatusModal from "./agv-status-modal"
 import type { AGV } from "./agv-status-modal"
 import UnityPlayer from "@/components/unity/UnityPlayer"
+import { useUnityContext } from "react-unity-webgl"
+import { useUpdateOrderStatus, usePendingOrders, useReservedOrders, useReserveOrder, useInOutData } from "@/lib/queries" // Unity 연동 훅들
+import InOutStatusPanel from "@/components/inout/inout-status-panel"
+import type { InOutRecord } from "@/components/utils"
 
 // TODO: Fetch warehouse layout data from API
 const warehouseLayout = {
@@ -37,6 +41,103 @@ export default function WarehouseSimulation() {
   const [selectedAGV, setSelectedAGV] = useState<string | null>(null)
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
   const [showWebView, setShowWebView] = useState(true)
+  const { 
+    unityProvider, 
+    sendMessage,
+    addEventListener,
+    removeEventListener,
+  } = useUnityContext({
+    loaderUrl: "/unity/Build/build.loader.js",
+    dataUrl: "/unity/Build/build.data",
+    frameworkUrl: "/unity/Build/build.framework.js",
+    codeUrl: "/unity/Build/build.wasm",
+  });
+
+  // Unity로 작업을 보내는 함수 (TaskBridge 규격)
+  const assignTaskToAmr = useCallback((taskType: 'inbound' | 'outbound', rackId: string, orderId?: string) => {
+    if (!sendMessage) {
+      console.error('[Unity] sendMessage not available');
+      return false;
+    }
+
+    const taskData = {
+      type: taskType,                              // "inbound" | "outbound"
+      rackId: rackId,                             // "B003" 등
+      taskId: orderId || crypto.randomUUID?.() || String(Date.now()), // Unity 개발자 규격
+      ts: Date.now()                              // 타임스탬프
+    };
+
+    try {
+      // Unity TaskBridge 규격에 맞춰 호출
+      sendMessage("TaskBridge", "AssignTaskFromJson", JSON.stringify(taskData));
+      console.log('[Unity] Task sent successfully:', taskData);
+      return true;
+    } catch (error) {
+      console.error('[Unity] Failed to send task:', error, taskData);
+      return false;
+    }
+  }, [sendMessage]);
+
+  const { mutate: updateStatus } = useUpdateOrderStatus();
+  const { mutate: reserveOrder } = useReserveOrder();
+  
+  // Unity 연동용 데이터 조회 - 실제 InOutRecord 형태로 가져오기
+  const { data: inOutData = [] } = useInOutData(); // 기존 입출고 데이터 사용
+
+  // 주문 예약 시 Unity로 작업 전송하는 핸들러
+  const handleReserveOrder = useCallback((order: InOutRecord) => {
+    console.log('[Unity] Reserving order:', order);
+    
+    const success = assignTaskToAmr(
+      order.type,                    // "inbound" | "outbound"
+      order.locationCode || 'B003',  // 랙 ID (locationCode 사용)
+      order.id                       // 주문 ID를 taskId로 전달
+    );
+
+    if (success) {
+      console.log(`[Unity] Order ${order.id} sent to Unity successfully`);
+    } else {
+      console.error(`[Unity] Failed to send order ${order.id} to Unity`);
+    }
+  }, [assignTaskToAmr]);
+
+  // Unity 연동 함수를 전역으로 등록 (사이드 패널에서 사용)
+  useEffect(() => {
+    (window as any).unityReserveOrder = handleReserveOrder;
+    return () => {
+      delete (window as any).unityReserveOrder;
+    };
+  }, [handleReserveOrder]);
+
+  // Unity에서 "TaskCompleted" 이벤트가 발생했을 때 실행될 함수 (개선)
+  const handleTaskCompleted = useCallback((taskId: string) => {
+    console.log(`[Unity] Task completed: ${taskId}`);
+    
+    try {
+      // 백엔드에 상태 업데이트 요청
+      updateStatus({ 
+        orderId: taskId, 
+        status: 'COMPLETED' 
+      });
+
+      // 성공 알림 표시
+      console.log(`[Unity] Order ${taskId} marked as completed`);
+      
+      // TODO: Toast 알림 추가 가능
+      // toast.success(`작업 완료: ${taskId}`);
+      
+    } catch (error) {
+      console.error('[Unity] Failed to update order status:', error);
+    }
+  }, [updateStatus]);
+
+  // Unity 이벤트 리스너 등록 (useEffect 사용)
+  useEffect(() => {
+    addEventListener("TaskCompleted", handleTaskCompleted);
+    return () => {
+      removeEventListener("TaskCompleted", handleTaskCompleted);
+    };
+  }, [addEventListener, removeEventListener, handleTaskCompleted]);
 
   useEffect(() => {
     const unsubscribe = agvSimulation.subscribe(setAGVs)

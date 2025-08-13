@@ -22,6 +22,8 @@ import {
   deleteItem,
   updateOrderStatus,
   cancelInOutOrder,
+  fetchPendingOrders,  // 승인대기 주문 API 추가
+  fetchReservedOrders, // 예약된 주문 API 추가
   DashboardData, // 통합 API 타입
   Rack, // 랙 타입 추가
   RackInventoryItem, // 랙 재고 타입 추가
@@ -383,6 +385,46 @@ export function useCancelInOutOrder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
+    },
+  });
+}
+
+// ===== 🚀 Unity 연동용 주문 상태 Query 훅들 =====
+
+// 승인대기 주문 조회
+export function usePendingOrders() {
+  return useQuery({
+    queryKey: ['pendingOrders'],
+    queryFn: fetchPendingOrders,
+    staleTime: 30 * 1000, // 30초 캐시 (자주 변경됨)
+    refetchOnWindowFocus: false, // 포커스 시 자동 새로고침 비활성화
+    retry: 2,
+  });
+}
+
+// 예약된 주문 조회 (Unity 작업 진행중)
+export function useReservedOrders() {
+  return useQuery({
+    queryKey: ['reservedOrders'],
+    queryFn: fetchReservedOrders,
+    staleTime: 30 * 1000, // 30초 캐시 (자주 변경됨)
+    refetchOnWindowFocus: false,
+    retry: 2,
+  });
+}
+
+// 주문 예약 Mutation (승인대기 → 예약으로 상태 변경)
+export function useReserveOrder() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (orderId: string) => updateOrderStatus(orderId, 'RESERVED'),
+    onSuccess: () => {
+      // 관련 캐시들을 무효화하여 실시간 동기화
+      queryClient.invalidateQueries({ queryKey: ['pendingOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['reservedOrders'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
     },
   });
 }
