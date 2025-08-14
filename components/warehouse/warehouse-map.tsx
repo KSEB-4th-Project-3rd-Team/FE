@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, MapPin, BarChart3, Zap, ZapOff } from "lucide-react"
 import { InventoryItem } from "@/components/utils"
 import { useQueryData } from "@/contexts/query-data-context"
-import { useRacks, useRackInventory } from "@/lib/queries"
-import type { Rack, RackInventoryItem } from "@/lib/api"
+import { useRacksForMap, useRackInventory } from "@/lib/queries"
+import type { RackMapResponse, RackInventoryItem } from "@/lib/api"
 
 interface RackPosition {
   section: string // A~T
@@ -76,7 +76,7 @@ interface WarehouseMapProps {
 
 export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
   const { inventory } = useQueryData()
-  const { data: racks = [], isLoading: racksLoading } = useRacks()
+  const { data: racks = [], isLoading: racksLoading } = useRacksForMap()
   const [selectedRack, setSelectedRack] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(false)
   
@@ -87,28 +87,24 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
   const items = inventoryData || inventory?.data || []
 
   // 랙 코드로 랙 정보 찾기 (예: "A001")
-  const getRackInfo = (section: string, position: number): Rack | undefined => {
+  const getRackInfo = (section: string, position: number): RackMapResponse | undefined => {
     const rackCode = `${section}${position.toString().padStart(3, '0')}` // A001 형태
     return racks.find(rack => rack.rackCode === rackCode)
   }
 
-  // 랙에 재고가 있는지 확인 (실제 백엔드 Rack 데이터에서 inventories 배열 확인)
+  // 랙에 재고가 있는지 확인 (최적화된 hasInventory 필드 사용)
   const hasRackInventory = (section: string, position: number): boolean => {
     const rackInfo = getRackInfo(section, position)
-    return rackInfo ? (rackInfo.inventories?.length ?? 0) > 0 : false
+    return rackInfo ? rackInfo.hasInventory : false
   }
 
   // 실제 활성 랙과 비활성 랙 계산
-  const activeRacks = racks.filter(rack => (rack.inventories?.length ?? 0) > 0)
-  const inactiveRacks = racks.filter(rack => (rack.inventories?.length ?? 0) === 0)
+  const activeRacks = racks.filter(rack => rack.hasInventory)
+  const inactiveRacks = racks.filter(rack => !rack.hasInventory)
   
-  // 전체 재고 계산
-  const totalInventoryItems = racks.reduce((total, rack) => 
-    total + (rack.inventories?.length ?? 0), 0
-  )
-  const totalQuantity = racks.reduce((total, rack) => 
-    total + (rack.inventories?.reduce((sum, inv) => sum + inv.quantity, 0) ?? 0), 0
-  )
+  // 전체 재고 계산 (경량화된 API에서는 개수 정보가 없으므로 재고 있는 랙의 수만 표시)
+  const totalInventoryRacks = activeRacks.length
+  const totalEmptyRacks = inactiveRacks.length
 
   const handleRackClick = (section: string, position: number) => {
     const rackCode = `${section}${position.toString().padStart(3, '0')}`
@@ -116,7 +112,7 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
     setShowModal(true)
   }
 
-  // 선택된 랙 정보
+  // 선택된 랙 정보 (경량화된 API에서는 기본 정보만 제공)
   const selectedRackInfo = selectedRack ? racks.find(r => r.rackCode === selectedRack) : null
   // 백엔드에서 가져온 실제 랙 재고 데이터 사용
   const selectedRackInventory = rackInventoryItems
@@ -164,9 +160,9 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
           <CardContent className="p-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-blue-600">
-                {totalInventoryItems}
+                {totalInventoryRacks}
               </div>
-              <div className="text-sm text-muted-foreground">총 재고품목</div>
+              <div className="text-sm text-muted-foreground">재고 있는 랙</div>
             </div>
           </CardContent>
         </Card>
@@ -174,9 +170,9 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
           <CardContent className="p-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-orange-600">
-                {totalQuantity}
+                {racks.length}
               </div>
-              <div className="text-sm text-muted-foreground">총 수량</div>
+              <div className="text-sm text-muted-foreground">총 랙 수</div>
             </div>
           </CardContent>
         </Card>
@@ -219,7 +215,6 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
               const rackInfo = getRackInfo(rackPos.section, rackPos.position)
               const hasItems = hasRackInventory(rackPos.section, rackPos.position)
               const rackCode = `${rackPos.section}${rackPos.position.toString().padStart(3, '0')}`
-              const inventoryCount = rackInfo?.inventories?.length ?? 0
               
               return (
                 <div
@@ -240,7 +235,7 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
                     height: `${rackPos.height}%`,
                   }}
                   onClick={() => handleRackClick(rackPos.section, rackPos.position)}
-                  title={`랙 ${rackCode} - ${hasItems ? `${inventoryCount}개 아이템` : '재고 없음'}`}
+                  title={`랙 ${rackCode} - ${hasItems ? '재고 있음' : '재고 없음'}`}
                 >
                   {/* 기본 상태: 섹션과 위치 번호 표시 */}
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -253,7 +248,7 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-slate-800/95 rounded-md flex flex-col items-center justify-center">
                     <div className="text-[10px] font-bold text-white">{rackCode}</div>
                     {hasItems && (
-                      <div className="text-[8px] text-emerald-300 font-medium">{inventoryCount}개</div>
+                      <div className="text-[8px] text-emerald-300 font-medium">재고 있음</div>
                     )}
                     {!hasItems && (
                       <div className="text-[8px] text-gray-400">빈 랙</div>
@@ -313,11 +308,12 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
                         {selectedRackInfo.isActive ? "활성" : "비활성"}
                       </Badge>
                     </div>
-                    {selectedRackInfo.description && (
-                      <div className="col-span-2">
-                        <span className="font-medium">설명:</span> {selectedRackInfo.description}
-                      </div>
-                    )}
+                    <div>
+                      <span className="font-medium">재고 유무:</span> 
+                      <Badge variant={selectedRackInfo.hasInventory ? "default" : "secondary"} className="ml-2">
+                        {selectedRackInfo.hasInventory ? "재고 있음" : "재고 없음"}
+                      </Badge>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

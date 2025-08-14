@@ -11,6 +11,7 @@ import {
   fetchDashboardSummary,
   fetchDashboardAll, // 통합 대시보드 API
   fetchRacks, // 랙 API 추가
+  fetchRacksForMap, // 창고맵용 최적화된 랙 API 추가
   fetchRackInventory, // 랙 재고 API 추가
   createCompany,
   createItem,
@@ -26,6 +27,7 @@ import {
   fetchReservedOrders, // 예약된 주문 API 추가
   DashboardData, // 통합 API 타입
   Rack, // 랙 타입 추가
+  RackMapResponse, // 창고맵용 경량화된 랙 타입 추가
   RackInventoryItem, // 랙 재고 타입 추가
 } from './api';
 import { useMemo } from 'react';
@@ -250,6 +252,16 @@ export function useRacks() {
     queryKey: ['racks'],
     queryFn: fetchRacks,
     staleTime: 10 * 60 * 1000, // 10분 캐시 (랙 정보는 자주 변경되지 않음)
+    retry: 2,
+  });
+}
+
+// 창고맵을 위한 최적화된 랙 정보 조회
+export function useRacksForMap() {
+  return useQuery({
+    queryKey: ['racks-map'],
+    queryFn: fetchRacksForMap,
+    staleTime: 10 * 60 * 1000, // 10분 캐시 (랙 위치 정보는 거의 변경되지 않음)
     retry: 2,
   });
 }

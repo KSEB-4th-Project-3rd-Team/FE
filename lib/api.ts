@@ -260,8 +260,24 @@ export interface Rack {
   inventories?: RackInventoryItem[]; // 랙에 포함된 재고 아이템들
 }
 
+// 창고맵을 위한 경량화된 Rack 타입
+export interface RackMapResponse {
+  id: number;
+  rackCode: string; // A001~T012
+  section: string; // A~T
+  position: number; // 1~12
+  isActive: boolean;
+  hasInventory: boolean; // 재고 유무만 표시
+}
+
 export async function fetchRacks(): Promise<Rack[]> {
   const response = await apiClient.get('/api/racks');
+  return handleResponse(response);
+}
+
+// 창고맵을 위한 최적화된 랙 정보 조회 (빠른 로딩)
+export async function fetchRacksForMap(): Promise<RackMapResponse[]> {
+  const response = await apiClient.get('/api/racks/map');
   return handleResponse(response);
 }
 
