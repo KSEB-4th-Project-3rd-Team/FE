@@ -1,15 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useEffect } from "react"
 import Image from "next/image"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Package, MapPin, BarChart3, Zap, ZapOff } from "lucide-react"
+import { Package, MapPin, BarChart3, Zap, ZapOff, RefreshCw } from "lucide-react"
 import { InventoryItem } from "@/components/utils"
 import { useQueryData } from "@/contexts/query-data-context"
-import { useRacksForMap, useRackInventory } from "@/lib/queries"
-import type { RackMapResponse, RackInventoryItem } from "@/lib/api"
+import { useRawInventoryData, useRawInOutData } from "@/lib/queries"
 
 interface RackPosition {
   section: string // A~T
@@ -75,40 +74,190 @@ interface WarehouseMapProps {
 }
 
 export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
-  const { inventory } = useQueryData()
-  const { data: racks = [], isLoading: racksLoading } = useRacksForMap()
+  const { inventoryData: contextInventory } = useQueryData()
+  const { data: rawInventoryData = [], isLoading: rawInventoryLoading, refetch: refetchInventory } = useRawInventoryData()
+  const { data: rawInOutData = [], isLoading: inOutLoading, refetch: refetchInOut } = useRawInOutData()
+  
+  // 30초마다 자동 새로고침
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('창고맵 자동 새로고침 실행...')
+      refetchInventory()
+      refetchInOut()
+    }, 30000) // 30초
+    
+    return () => clearInterval(interval)
+  }, [refetchInventory, refetchInOut])
   const [selectedRack, setSelectedRack] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(false)
   
-  // 선택된 랙의 재고 정보 가져오기 (백엔드 API 사용)
-  const { data: rackInventoryItems = [], isLoading: rackInventoryLoading } = useRackInventory(selectedRack)
+  console.log('=== 창고맵 입출고 기반 재고 계산 ===')
+  console.log('전체 입출고 데이터:', rawInOutData.length, '개')
+  console.log('현재 시간:', new Date().toLocaleTimeString(), '- 창고맵 리렌더링됨')
   
+  // status별 개수 확인
+  const statusCounts = rawInOutData.reduce((acc, order) => {
+    acc[order.status] = (acc[order.status] || 0) + 1
+    return acc
+  }, {} as Record<string, number>)
+  console.log('status별 개수:', statusCounts)
   
-  // 재고 데이터 사용 (props가 있으면 props 사용, 없으면 context에서 가져오기)
-  const items = inventoryData || inventory?.data || []
+  const isLoading = rawInventoryLoading || inOutLoading
 
-  // 랙 코드로 랙 정보 찾기 (예: "A001")
-  const getRackInfo = (section: string, position: number): RackMapResponse | undefined => {
-    const rackCode = `${section}${position.toString().padStart(3, '0')}` // A001 형태
-    return racks.find(rack => rack.rackCode === rackCode)
-  }
-
-  // 랙에 재고가 있는지 확인 (inventories 배열 사용)
-  const hasRackInventory = (section: string, position: number): boolean => {
-    const rackInfo = getRackInfo(section, position)
-    if (!rackInfo) return false
+  // 입출고 내역을 기반으로 현재 재고 위치 계산
+  const rackInventoryMap = useMemo(() => {
+    const map: Record<string, any[]> = {}
     
-    // inventories 배열이 있고 비어있지 않으면 재고 있음
-    return rackInfo.inventories && rackInfo.inventories.length > 0
+    console.log('=== 입출고 기반 재고 계산 ===')
+    
+    // 완료된 입출고 내역만 필터링 (대소문자 구분 없이)
+    const completedInOut = rawInOutData.filter(order => 
+      order.status?.toLowerCase() === 'completed'
+    )
+    console.log('완료된 입출고 주문 수:', completedInOut.length)
+    
+    // 방금 완료된 주문들 (최근 10개) 확인
+    const recentOrders = completedInOut.slice(-10)
+    console.log('최근 완료된 10개 주문의 locationCode:')
+    recentOrders.forEach(order => {
+      console.log(`주문 ${order.orderId}: locationCode="${order.locationCode}", 타입=${order.type}`)
+    })
+    
+    // 모든 완료된 주문의 locationCode들 확인
+    const allLocationCodes = completedInOut.map(order => order.locationCode).filter(Boolean)
+    const uniqueLocationCodes = [...new Set(allLocationCodes)]
+    console.log('완료된 주문의 모든 locationCode들:', uniqueLocationCodes)
+    
+    // I009의 모든 상태별 주문 확인
+    const i009AllOrders = rawInOutData.filter(order => order.locationCode === 'I009')
+    console.log('I009의 모든 주문들 (상태별):')
+    const i009StatusCounts = i009AllOrders.reduce((acc, order) => {
+      const key = `${order.status}-${order.type}`
+      acc[key] = (acc[key] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    console.log('I009 상태별 개수:', i009StatusCounts)
+    
+    // 가장 최근 I009 주문들 보기
+    const recentI009Orders = i009AllOrders.slice(-5)
+    console.log('I009의 최근 5개 주문:')
+    recentI009Orders.forEach(order => {
+      console.log(`주문 ${order.orderId}: ${order.type} - ${order.status}`)
+    })
+    
+    // 각 품목별 랙 위치별 재고 계산
+    const rackItemQuantities: Record<string, Record<number, number>> = {} // rackCode -> {itemId: quantity}
+    
+    completedInOut.forEach(order => {
+      const locationCode = order.locationCode || ''
+      let rackCode = locationCode.replace('-', '').toUpperCase()
+      
+      // 패딩 처리: I9 → I009
+      if (rackCode.match(/^[A-T]\d{1,2}$/)) {
+        const section = rackCode.charAt(0)
+        const position = rackCode.slice(1).padStart(3, '0')
+        rackCode = `${section}${position}`
+      }
+      
+      // I009 관련 주문만 특별히 로그
+      if (rackCode === 'I009' || locationCode.includes('I009') || locationCode.includes('I9')) {
+        console.log(`🔍 I009 관련 주문 발견! 주문 ${order.orderId}: locationCode="${locationCode}" → rackCode="${rackCode}"`)
+        console.log('이 주문의 타입:', order.type, '상태:', order.status)
+        console.log('이 주문의 아이템들:', order.items)
+      }
+      
+      if (!rackCode) {
+        return
+      }
+      
+      order.items?.forEach(item => {
+        if (!rackItemQuantities[rackCode]) {
+          rackItemQuantities[rackCode] = {}
+        }
+        
+        const currentQty = rackItemQuantities[rackCode][item.itemId] || 0
+        
+        if (order.type === 'INBOUND') {
+          // 입고: 수량 증가
+          rackItemQuantities[rackCode][item.itemId] = currentQty + item.requestedQuantity
+        } else if (order.type === 'OUTBOUND') {
+          // 출고: 수량 감소
+          rackItemQuantities[rackCode][item.itemId] = Math.max(0, currentQty - item.requestedQuantity)
+        }
+        
+        // I009 관련된 수량 변경만 특별히 로그
+        if (rackCode === 'I009') {
+          console.log(`🔍 I009 수량 변경: ${order.type} - 품목 ${item.itemName}, ${currentQty} → ${rackItemQuantities[rackCode][item.itemId]}`)
+        }
+      })
+    })
+    
+    console.log('랙별 품목 수량 맵:', rackItemQuantities)
+    
+    // 최종 랙 맵 생성 (수량이 0보다 큰 것만)
+    Object.entries(rackItemQuantities).forEach(([rackCode, itemQuantities]) => {
+      Object.entries(itemQuantities).forEach(([itemIdStr, quantity]) => {
+        if (quantity > 0) {
+          const itemId = parseInt(itemIdStr)
+          const completedOrder = completedInOut.find(order => 
+            order.items?.some(item => item.itemId === itemId)
+          )
+          const itemData = completedOrder?.items?.find(item => item.itemId === itemId)
+          
+          if (itemData) {
+            if (!map[rackCode]) {
+              map[rackCode] = []
+            }
+            map[rackCode].push({
+              itemId,
+              itemName: itemData.itemName,
+              quantity,
+              locationCode: rackCode,
+              lastUpdated: completedOrder.updatedAt || completedOrder.createdAt
+            })
+          }
+        }
+      })
+    })
+    
+    console.log('최종 입출고 기반 랙 맵:', map)
+    console.log('활성 랙 수:', Object.keys(map).length)
+    console.log('활성 랙 목록:', Object.keys(map))
+    
+    // I009 랙 특별히 확인
+    if (map['I009']) {
+      console.log('I009 랙 재고:', map['I009'])
+    } else {
+      console.log('I009 랙에 재고가 없음')
+    }
+    
+    return map
+  }, [rawInOutData])
+
+  // 랙에 재고가 있는지 확인
+  const hasRackInventory = (section: string, position: number): boolean => {
+    const rackCode = `${section}${position.toString().padStart(3, '0')}`
+    const rackItems = rackInventoryMap[rackCode] || []
+    const hasInventory = rackItems.length > 0 && rackItems.some(item => item.quantity > 0)
+    
+    // I009 랙 특별히 디버그
+    if (rackCode === 'I009') {
+      console.log(`I009 랙 체크: rackItems=${rackItems.length}개, hasInventory=${hasInventory}`)
+      console.log('I009 rackItems:', rackItems)
+    }
+    
+    return hasInventory
   }
 
-  // 실제 활성 랙과 비활성 랙 계산 (inventories 배열 기준)
-  const activeRacks = racks.filter(rack => rack.inventories && rack.inventories.length > 0)
-  const inactiveRacks = racks.filter(rack => !rack.inventories || rack.inventories.length === 0)
+  // 활성/비활성 랙 계산
+  const activeRackCodes = Object.keys(rackInventoryMap).filter(rackCode => {
+    const items = rackInventoryMap[rackCode] || []
+    return items.some(item => item.quantity > 0)
+  })
   
-  // 전체 재고 계산 (경량화된 API에서는 개수 정보가 없으므로 재고 있는 랙의 수만 표시)
-  const totalInventoryRacks = activeRacks.length
-  const totalEmptyRacks = inactiveRacks.length
+  const totalRacks = 20 * 12 // A~T (20개) * 1~12 (12개) = 240개
+  const totalInventoryRacks = activeRackCodes.length
+  const totalEmptyRacks = totalRacks - totalInventoryRacks
 
   const handleRackClick = (section: string, position: number) => {
     const rackCode = `${section}${position.toString().padStart(3, '0')}`
@@ -116,20 +265,18 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
     setShowModal(true)
   }
 
-  // 선택된 랙 정보 (경량화된 API에서는 기본 정보만 제공)
-  const selectedRackInfo = selectedRack ? racks.find(r => r.rackCode === selectedRack) : null
-  // 백엔드에서 가져온 실제 랙 재고 데이터 사용
-  const selectedRackInventory = rackInventoryItems
+  // 선택된 랙의 재고 정보 (rackInventoryMap에서 직접 가져오기)
+  const selectedRackInventory = selectedRack ? (rackInventoryMap[selectedRack] || []) : []
   const selectedRackTotalQuantity = selectedRackInventory.reduce((sum, item) => sum + item.quantity, 0)
   const selectedRackTotalItems = selectedRackInventory.length
 
-  if (racksLoading) {
+  if (isLoading) {
     return (
       <Card>
         <CardContent className="p-6">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-            <p className="mt-2 text-muted-foreground">랙 정보를 불러오는 중...</p>
+            <p className="mt-2 text-muted-foreground">재고 정보를 불러오는 중...</p>
           </div>
         </CardContent>
       </Card>
@@ -144,7 +291,7 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
           <CardContent className="p-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600">
-                {activeRacks.length}
+                {totalInventoryRacks}
               </div>
               <div className="text-sm text-muted-foreground">활성 랙</div>
             </div>
@@ -154,7 +301,7 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
           <CardContent className="p-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-gray-600">
-                {inactiveRacks.length}
+                {totalEmptyRacks}
               </div>
               <div className="text-sm text-muted-foreground">비활성 랙</div>
             </div>
@@ -174,7 +321,7 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
           <CardContent className="p-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-orange-600">
-                {racks.length}
+                {totalRacks}
               </div>
               <div className="text-sm text-muted-foreground">총 랙 수</div>
             </div>
@@ -216,7 +363,6 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
             
             {/* 클릭 가능한 랙 영역들 */}
             {RACK_POSITIONS.map((rackPos) => {
-              const rackInfo = getRackInfo(rackPos.section, rackPos.position)
               const hasItems = hasRackInventory(rackPos.section, rackPos.position)
               const rackCode = `${rackPos.section}${rackPos.position.toString().padStart(3, '0')}`
               
@@ -293,29 +439,27 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
           
           <div className="space-y-4">
             {/* 랙 정보 */}
-            {selectedRackInfo && (
+            {selectedRack && (
               <Card>
                 <CardContent className="p-4">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="font-medium">랙 코드:</span> {selectedRackInfo.rackCode}
+                      <span className="font-medium">랙 코드:</span> {selectedRack}
                     </div>
                     <div>
-                      <span className="font-medium">섹션:</span> {selectedRackInfo.section}
+                      <span className="font-medium">섹션:</span> {selectedRack?.charAt(0)}
                     </div>
                     <div>
-                      <span className="font-medium">위치:</span> {selectedRackInfo.position}
+                      <span className="font-medium">위치:</span> {selectedRack?.slice(1)}
                     </div>
                     <div>
                       <span className="font-medium">상태:</span> 
-                      <Badge variant={selectedRackInfo.isActive ? "default" : "secondary"} className="ml-2">
-                        {selectedRackInfo.isActive ? "활성" : "비활성"}
-                      </Badge>
+                      <Badge variant="default" className="ml-2">활성</Badge>
                     </div>
                     <div>
                       <span className="font-medium">재고 유무:</span> 
-                      <Badge variant={selectedRackInfo.hasInventory ? "default" : "secondary"} className="ml-2">
-                        {selectedRackInfo.hasInventory ? "재고 있음" : "재고 없음"}
+                      <Badge variant={selectedRackInventory.length > 0 ? "default" : "secondary"} className="ml-2">
+                        {selectedRackInventory.length > 0 ? "재고 있음" : "재고 없음"}
                       </Badge>
                     </div>
                   </div>
@@ -365,12 +509,7 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
             {/* 상세 재고 목록 */}
             <div>
               <h3 className="text-lg font-semibold mb-3">상세 재고 목록</h3>
-              {rackInventoryLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-                  <p className="mt-2 text-muted-foreground">재고 정보를 불러오는 중...</p>
-                </div>
-              ) : selectedRackInventory.length > 0 ? (
+              {selectedRackInventory.length > 0 ? (
                 <div className="border rounded-lg overflow-hidden">
                   <div className="grid grid-cols-5 gap-4 p-3 bg-gray-50 font-medium text-sm">
                     <div>품목명</div>
@@ -380,11 +519,11 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
                     <div>최종 업데이트</div>
                   </div>
                   {selectedRackInventory.map((item, index) => (
-                    <div key={item.id} className={`grid grid-cols-5 gap-4 p-3 text-sm ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                    <div key={`${item.itemId}-${index}`} className={`grid grid-cols-5 gap-4 p-3 text-sm ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                       <div className="font-medium">{item.itemName}</div>
-                      <div className="text-muted-foreground">{item.itemCode}</div>
+                      <div className="text-muted-foreground">SKU-{item.itemId}</div>
                       <div className="font-medium">{item.quantity}개</div>
-                      <div className="text-blue-600">{item.rackCode}</div>
+                      <div className="text-blue-600">{item.locationCode}</div>
                       <div className="text-muted-foreground">
                         {new Date(item.lastUpdated).toLocaleDateString('ko-KR')}
                       </div>
