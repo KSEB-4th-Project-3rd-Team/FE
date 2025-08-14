@@ -32,7 +32,9 @@ const UnityPlayer = ({ unityProvider, isLoaded, loadingProgression }: UnityPlaye
           visibility: isLoaded ? "visible" : "hidden",
           width: '100%',
           height: '100%',
+          imageSmoothing: false,
         }}
+        devicePixelRatio={Math.min(window.devicePixelRatio || 1, 2)}
       />
     </div>
   );

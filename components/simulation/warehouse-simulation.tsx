@@ -35,6 +35,15 @@ export default function WarehouseSimulation() {
     dataUrl: "/unity/Build/R9_WMS_Simul.data",
     frameworkUrl: "/unity/Build/R9_WMS_Simul.framework.js",
     codeUrl: "/unity/Build/R9_WMS_Simul.wasm",
+    webglContextAttributes: {
+      powerPreference: "high-performance",
+      antialias: false,
+      alpha: false,
+      depth: true,
+      stencil: false,
+      premultipliedAlpha: false,
+      preserveDrawingBuffer: false
+    }
   });
 
   // Unity로 작업 전송 (TaskBridge 규격)
@@ -122,15 +131,15 @@ export default function WarehouseSimulation() {
   }, [addEventListener, removeEventListener, handleTaskCompleted])
 
   return (
-    <div className="h-full bg-white">
-      <Card className="h-full border-0 shadow-none">
-        <CardHeader className="bg-white border-b">
+    <div className="h-full bg-white flex flex-col">
+      <Card className="h-full border-0 shadow-none flex flex-col">
+        <CardHeader className="bg-white border-b flex-shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle>AMR 작동 현황</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="h-full pb-6 bg-white">
-          <div className="border rounded-lg overflow-hidden bg-white mb-4 h-full">
+        <CardContent className="p-2 bg-white flex-1 flex flex-col justify-center pt-10">
+          <div className="border rounded-lg overflow-hidden bg-white w-full flex-1">
             <UnityPlayer 
               unityProvider={unityProvider}
               isLoaded={isLoaded}
