@@ -120,9 +120,12 @@ export const api = {
 
 // 환경별 baseURL 설정
 const getBaseURL = () => {
-  if (typeof window === 'undefined') return 'http://43.203.237.110'; // SSR - EC2 IP
+  // 환경변수에서 백엔드 URL 가져오기 (Vercel 환경변수 사용)
+  const backendURL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://43.203.237.110';
+  
+  if (typeof window === 'undefined') return backendURL; // SSR
   if (process.env.NODE_ENV === 'development') return ''; // 개발환경: Next.js rewrites 사용
-  return 'http://43.203.237.110'; // 프로덕션: EC2 IP 직접 사용
+  return backendURL; // 프로덕션: 환경변수 또는 기본값
 };
 
 const apiClient = axios.create({
