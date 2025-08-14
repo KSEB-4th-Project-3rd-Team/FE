@@ -119,10 +119,8 @@ export const api = {
 };
 
 const apiClient = axios.create({
-  baseURL: '/api', // vercel.json 리라이트 규칙을 타도록 변경
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: '/api', // EC2 주소 절대 쓰지 않음
+  headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
 });
 
