@@ -62,7 +62,7 @@ const nextConfig = {
       return [
         {
           source: "/api/:path*",
-          destination: "http://localhost:8081/api/:path*", // 포트 8081로 변경
+          destination: "http://localhost:8080/api/:path*", // 포트 8080로 변경
         },
       ];
     }
