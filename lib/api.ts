@@ -405,17 +405,28 @@ export async function createInboundOrder(orderData: { itemId: number; quantity: 
   return result;
 }
 
-export async function createOutboundOrder(orderData: { itemId: number; quantity: number; companyId?: number; expectedDate?: string; notes?: string; locationCode?: string }): Promise<any> {
+export async function createOutboundOrder(orderData: { 
+  companyId: number; 
+  expectedDate: string; 
+  notes?: string;
+  type: string;
+  status: string;
+  items: Array<{
+    itemId: number;
+    requestedQuantity: number;
+    locationCode: string;
+  }>
+}): Promise<any> {
   const requestData: Omit<InOutOrderRequest, 'destination'> = {
     type: 'OUTBOUND',
-    companyId: orderData.companyId || 1, // Default company if not provided
-    expectedDate: orderData.expectedDate || new Date().toISOString().split('T')[0],
-    locationCode: orderData.locationCode || 'A-01', // 기본값 설정
+    companyId: orderData.companyId,
+    expectedDate: orderData.expectedDate,
+    locationCode: orderData.items[0]?.locationCode || 'A-01', // 첫 번째 품목의 위치 사용
     notes: orderData.notes,
-    items: [{
-      itemId: orderData.itemId,
-      quantity: orderData.quantity
-    }]
+    items: orderData.items.map(item => ({
+      itemId: item.itemId,
+      quantity: item.requestedQuantity
+    }))
   };
   
   // Create the order

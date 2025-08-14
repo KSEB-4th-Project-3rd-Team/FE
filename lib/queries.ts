@@ -251,8 +251,12 @@ export function useRacks() {
   return useQuery({
     queryKey: ['racks'],
     queryFn: fetchRacks,
-    staleTime: 10 * 60 * 1000, // 10분 캐시 (랙 정보는 자주 변경되지 않음)
+    staleTime: 60 * 60 * 1000, // 1시간 캐시 (랙 정보는 거의 변경되지 않음)
+    gcTime: 2 * 60 * 60 * 1000, // 2시간 가비지 컬렉션
     retry: 2,
+    refetchOnWindowFocus: false, // 포커스 시 새로고침 비활성화로 성능 향상
+    refetchOnMount: false, // 마운트 시 새로고침 비활성화 (캐시된 데이터 우선 사용)
+    networkMode: 'online', // 온라인일 때만 네트워크 요청
   });
 }
 

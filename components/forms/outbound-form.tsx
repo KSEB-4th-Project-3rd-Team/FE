@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { useMemo } from "react"
 import { useFieldArray, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -35,21 +36,30 @@ type OutboundFormValues = z.infer<typeof formSchema>
 
 interface OutboundFormProps {
   onClose: () => void;
+  racksData?: any[];
+  racksLoading?: boolean;
 }
 
-export default function OutboundForm({ onClose }: OutboundFormProps) {
+export default function OutboundForm({ onClose, racksData: propsRacksData, racksLoading: propsRacksLoading }: OutboundFormProps) {
   const { data: itemsData } = useItems();
   const { data: companiesData } = useCompanies();
-  const { data: racksData } = useRacks();
+  // props로 받은 데이터가 있으면 사용, 없으면 직접 호출 (fallback)
+  const { data: fallbackRacksData, isLoading: fallbackRacksLoading } = useRacks();
+  const racksData = propsRacksData || fallbackRacksData;
+  const racksLoading = propsRacksLoading ?? fallbackRacksLoading;
   const createOrderMutation = useCreateOutboundOrder();
 
-  // useRacks 데이터를 출고 폼에 맞는 형태로 가공
-  const allInventoryLocations = racksData?.flatMap(rack => 
-    rack.inventories?.map(inv => ({
-      ...inv,
-      locationCode: rack.rackCode // 각 재고 항목에 랙 코드를 명시적으로 추가
-    })) || []
-  ) || [];
+  // useRacks 데이터를 출고 폼에 맞는 형태로 가공 (useMemo로 최적화)
+  const allInventoryLocations = useMemo(() => {
+    if (!racksData) return [];
+    
+    return racksData.flatMap(rack => 
+      rack.inventories?.map(inv => ({
+        ...inv,
+        locationCode: rack.rackCode // 각 재고 항목에 랙 코드를 명시적으로 추가
+      })) || []
+    );
+  }, [racksData]);
 
   const form = useForm<OutboundFormValues>({
     resolver: zodResolver(formSchema),
@@ -188,16 +198,18 @@ export default function OutboundForm({ onClose }: OutboundFormProps) {
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
-                            disabled={!selectedItemId || availableLocations.length === 0}
+                            disabled={!selectedItemId || racksLoading || availableLocations.length === 0}
                           >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder={
-                                  !selectedItemId 
-                                    ? "품목을 먼저 선택하세요" 
-                                    : availableLocations.length === 0
-                                      ? "사용 가능한 재고 없음"
-                                      : "위치를 선택하세요"
+                                  racksLoading
+                                    ? "재고 위치 로딩 중..."
+                                    : !selectedItemId 
+                                      ? "품목을 먼저 선택하세요" 
+                                      : availableLocations.length === 0
+                                        ? "사용 가능한 재고 없음"
+                                        : "위치를 선택하세요"
                                 } />
                               </SelectTrigger>
                             </FormControl>

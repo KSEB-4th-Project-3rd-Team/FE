@@ -7,12 +7,15 @@ import OutboundForm from "@/components/forms/outbound-form"
 import InOutHistoryTable from "@/components/inout/inout-history-table"
 import { Plus } from "lucide-react"
 import { useQueryData } from "@/contexts/query-data-context"
+import { useRacks } from "@/lib/queries"
 import InOutHistoryTableSkeleton from "@/components/inout/inout-history-table-skeleton"
 import ErrorMessage from "@/components/ui/error-message"
 
 export default function OutboundRegistrationPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { inOutData, isLoading: loading, hasError: error } = useQueryData()
+  // 페이지 로드 시 랙 데이터 미리 캐싱하여 모달 열기 성능 향상
+  const { data: racksData, isLoading: racksLoading } = useRacks()
 
   if (loading) return <InOutHistoryTableSkeleton />
   if (error) return <ErrorMessage message="데이터 로딩 오류" onRetry={() => window.location.reload()} />
@@ -37,6 +40,8 @@ export default function OutboundRegistrationPage() {
             </DialogHeader>
             <OutboundForm 
               onClose={() => setIsModalOpen(false)}
+              racksData={racksData}
+              racksLoading={racksLoading}
             />
           </DialogContent>
         </Dialog>
