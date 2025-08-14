@@ -118,20 +118,31 @@ export const api = {
   }
 };
 
+// 환경별 baseURL 설정
+const getBaseURL = () => {
+  if (typeof window === 'undefined') return 'https://smart-wms-be.p-e.kr'; // SSR
+  if (process.env.NODE_ENV === 'development') return ''; // 개발환경: Next.js rewrites 사용
+  return 'https://smart-wms-be.p-e.kr'; // 프로덕션: 절대 URL
+};
+
 const apiClient = axios.create({
-  baseURL: 'https://smart-wms-be.p-e.kr/swagger-ui', // EC2 주소 절대 쓰지 않음
-  headers: { 'Content-Type': 'application/json' },
+  baseURL: getBaseURL(),
+  headers: { 
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
   withCredentials: true,
+  timeout: 10000,
 });
 
-// Add a request interceptor to include the token and prevent caching
+// Request interceptor: 토큰 추가 및 캐시 방지
 apiClient.interceptors.request.use((config) => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   
-  // Add timestamp to prevent caching
+  // 캐시 방지용 타임스탬프
   if (config.params) {
     config.params._t = Date.now();
   } else {
@@ -140,6 +151,22 @@ apiClient.interceptors.request.use((config) => {
   
   return config;
 });
+
+// Response interceptor: 401 에러 시 토큰/세션 정리
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // 토큰 정리
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+        // 필요시 로그인 페이지로 리다이렉트
+        // window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 
 // Helper function to handle API responses

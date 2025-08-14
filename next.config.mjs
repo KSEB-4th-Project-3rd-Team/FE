@@ -57,12 +57,16 @@ const nextConfig = {
     minimumCacheTTL: 86400,
   },
   async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "http://localhost:8080/:path*", // Local backend server
-      },
-    ];
+    // 개발환경에서만 백엔드로 프록시
+    if (process.env.NODE_ENV === 'development') {
+      return [
+        {
+          source: "/api/:path*",
+          destination: "http://localhost:8081/api/:path*", // 포트 8081로 변경
+        },
+      ];
+    }
+    return [];
   },
 }
 

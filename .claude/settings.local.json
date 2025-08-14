@@ -1,5 +1,9 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(git add:*)"
+    ],
     "defaultMode": "acceptEdits"
   }
 }
