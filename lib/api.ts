@@ -119,7 +119,7 @@ export const api = {
 };
 
 const apiClient = axios.create({
-  baseURL: 'https://3.36.79.189', // Use root path
+  baseURL: '/api', // vercel.json 리라이트 규칙을 타도록 변경
   headers: {
     'Content-Type': 'application/json',
   },
