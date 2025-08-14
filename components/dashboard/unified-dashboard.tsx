@@ -388,7 +388,8 @@ export function UnifiedDashboard() {
     const salesData = inOutData.filter(item => {
         const itemDate = new Date(item.date);
         if (!salesDateRange?.from || !salesDateRange?.to) return true;
-        return item.type === 'outbound' && itemDate >= salesDateRange.from && itemDate <= salesDateRange.to;
+        const status = item.status.toLowerCase();
+        return item.type === 'outbound' && status === 'completed' && itemDate >= salesDateRange.from && itemDate <= salesDateRange.to;
     });
     const totalSalesAmount = salesData.reduce((sum, item) => sum + (item.quantity * (itemPriceMap[item.sku] || 0)), 0);
     const totalSalesCount = salesData.length;
