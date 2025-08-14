@@ -119,7 +119,7 @@ export const api = {
 };
 
 const apiClient = axios.create({
-  baseURL: 'http://3.36.79.189', // Use root path
+  baseURL: 'https://3.36.79.189', // Use root path
   headers: {
     'Content-Type': 'application/json',
   },
