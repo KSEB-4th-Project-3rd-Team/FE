@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useCallback } from "react"
+import { useEffect, useCallback, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import UnityPlayer from "@/components/unity/UnityPlayer"
 import { useUnityContext } from "react-unity-webgl"
@@ -31,10 +31,10 @@ const asNumericTaskIdOrUndefined = (s?: string | number) => {
 
 export default function WarehouseSimulation() {
   const { unityProvider, sendMessage, addEventListener, removeEventListener, isLoaded, loadingProgression } = useUnityContext({
-    loaderUrl: "/unity/Build/R9_WMS_Simul.loader.js",
-    dataUrl: "/unity/Build/R9_WMS_Simul.data",
-    frameworkUrl: "/unity/Build/R9_WMS_Simul.framework.js",
-    codeUrl: "/unity/Build/R9_WMS_Simul.wasm",
+    loaderUrl: "/unity/Build/R20_WMS_Simul.loader.js",
+    dataUrl: "/unity/Build/R20_WMS_Simul.data",
+    frameworkUrl: "/unity/Build/R20_WMS_Simul.framework.js",
+    codeUrl: "/unity/Build/R20_WMS_Simul.wasm",
     webglContextAttributes: {
       powerPreference: "high-performance",
       antialias: false,
@@ -65,6 +65,7 @@ export default function WarehouseSimulation() {
         ts: Date.now(),
       }
       const numericTaskId = asNumericTaskIdOrUndefined(orderId)
+      console.log(`[Unity] Original orderId: ${orderId}, extracted taskId: ${numericTaskId}`)
       if (numericTaskId) payload.taskId = numericTaskId
 
       const sender =
@@ -90,13 +91,30 @@ export default function WarehouseSimulation() {
     [sendMessage]
   )
 
-  const { mutate: updateStatus } = useUpdateOrderStatus()
+  const { mutate: updateStatus } = useUpdateOrderStatus({
+    onSuccess: (data, variables) => {
+      console.log(`[Web] Task status updated successfully:`, variables)
+    },
+    onError: (error, variables) => {
+      console.error(`[Web] Failed to update task status:`, error, variables)
+    }
+  })
+
+  const updateStatusRef = useRef(updateStatus);
+  useEffect(() => {
+    updateStatusRef.current = updateStatus;
+  }, [updateStatus]);
 
   // 주문 예약 시 Unity로 작업 전송
   const handleReserveOrder = useCallback(
     (order: InOutRecord) => {
       console.log("[Unity] Reserving order:", order)
-      const ok = assignTaskToAmr(order.type as "inbound" | "outbound", order.location ?? "", order.id)
+      
+      // order.id에서 숫자 부분만 추출 ("1-0" → "1")
+      const numericOrderId = order.id.split('-')[0]
+      console.log(`[Unity] Original order.id: ${order.id}, extracted orderId: ${numericOrderId}`)
+      
+      const ok = assignTaskToAmr(order.type as "inbound" | "outbound", order.location ?? "", numericOrderId)
       if (!ok) {
         console.error(`[Unity] Failed to send order ${order.id} to Unity`)
       }
@@ -112,23 +130,26 @@ export default function WarehouseSimulation() {
     }
   }, [handleReserveOrder])
 
-  // Unity → Web 이벤트 (예: 작업 완료)
-  const handleTaskCompleted = useCallback(
-    (taskId: string) => {
-      console.log(`[Unity] Task completed: ${taskId}`)
-      try {
-        updateStatus({ orderId: taskId, status: "COMPLETED" })
-      } catch (error) {
-        console.error("[Unity] Failed to update order status:", error)
-      }
-    },
-    [updateStatus]
-  )
-
   useEffect(() => {
-    addEventListener("TaskCompleted", handleTaskCompleted)
-    return () => removeEventListener("TaskCompleted", handleTaskCompleted)
-  }, [addEventListener, removeEventListener, handleTaskCompleted])
+    console.log("[Web] Registering 'window.onUnityTaskCompleted' function.");
+    // 전역 window 객체에 핸들러 함수를 직접 할당
+    (window as any).onUnityTaskCompleted = (detail: any) => {
+      try {
+        const taskId = detail?.taskId;
+        if (taskId) {
+          updateStatusRef.current({ orderId: String(taskId), status: "COMPLETED" });
+        }
+      } catch (e) {
+        console.error("[Web] An error occurred inside onUnityTaskCompleted:", e);
+      }
+    };
+
+    // 컴포넌트가 언마운트될 때 전역 핸들러를 정리
+    return () => {
+      console.log("[Web] Removing 'window.onUnityTaskCompleted' function.");
+      delete (window as any).onUnityTaskCompleted;
+    };
+  }, []); // 의존성 배열을 비워서 마운트/언마운트 시 한 번만 실행
 
   return (
     <div className="h-full bg-white flex flex-col">

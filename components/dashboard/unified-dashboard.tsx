@@ -340,28 +340,38 @@ export function UnifiedDashboard() {
   }, [inventoryData]);
 
   const inOutAnalysis = useMemo(() => {
-    const filteredData = inOutData.filter(item => {
+    const filteredByDate = inOutData.filter(item => {
         const itemDate = new Date(item.date);
         if (!dateRange?.from || !dateRange?.to) return true;
         return itemDate >= dateRange.from && itemDate <= dateRange.to;
     });
-    const totalInbound = filteredData.filter(d => d.type === 'inbound').reduce((sum, item) => sum + item.quantity, 0);
-    const totalOutbound = filteredData.filter(d => d.type === 'outbound').reduce((sum, item) => sum + item.quantity, 0);
-    const completedCount = filteredData.filter(d => d.status === '완료').length;
-    const completionRate = filteredData.length > 0 ? (completedCount / filteredData.length) * 100 : 0;
+
+    // 'completed' 상태의 데이터만 필터링하여 입출고 분석에 사용 (소문자로 안전하게 비교)
+    const completedData = filteredByDate.filter(d => (d.status || '').toLowerCase() === 'completed');
+
+    const totalInbound = completedData.filter(d => d.type === 'inbound').reduce((sum, item) => sum + item.quantity, 0);
+    const totalOutbound = completedData.filter(d => d.type === 'outbound').reduce((sum, item) => sum + item.quantity, 0);
+    
+    // 전체 데이터 대비 완료된 데이터의 비율 계산
+    const completedCount = completedData.length;
+    const completionRate = filteredByDate.length > 0 ? (completedCount / filteredByDate.length) * 100 : 0;
+    
     const getGroupKey = (date: Date) => {
         if (filterType === 'monthly') return format(date, 'yyyy-MM');
         if (filterType === 'weekly') return format(startOfWeek(date, { weekStartsOn: 0 }), 'yy/MM/dd');
         return format(date, 'yyyy-MM-dd');
     };
-    const chartData = filteredData.reduce((acc, item) => {
+    
+    const chartData = completedData.reduce((acc, item) => {
         const key = getGroupKey(new Date(item.date));
         if (!acc[key]) { acc[key] = { date: key, inbound: 0, outbound: 0 }; }
         if (item.type === 'inbound') { acc[key].inbound += item.quantity; } 
         else { acc[key].outbound += item.quantity; }
         return acc;
     }, {} as Record<string, { date: string; inbound: number; outbound: number }>);
+    
     const getSortableDate = (dateString: string) => dateString.includes('/') ? new Date(`20${dateString}`) : new Date(dateString);
+    
     return { totalInbound, totalOutbound, completionRate, chartData: Object.values(chartData).sort((a, b) => getSortableDate(a.date).getTime() - getSortableDate(b.date).getTime()) };
   }, [inOutData, dateRange, filterType]);
 

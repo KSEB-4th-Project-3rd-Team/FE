@@ -83,6 +83,7 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
   // 선택된 랙의 재고 정보 가져오기 (백엔드 API 사용)
   const { data: rackInventoryItems = [], isLoading: rackInventoryLoading } = useRackInventory(selectedRack)
   
+  
   // 재고 데이터 사용 (props가 있으면 props 사용, 없으면 context에서 가져오기)
   const items = inventoryData || inventory?.data || []
 
@@ -92,15 +93,18 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
     return racks.find(rack => rack.rackCode === rackCode)
   }
 
-  // 랙에 재고가 있는지 확인 (최적화된 hasInventory 필드 사용)
+  // 랙에 재고가 있는지 확인 (inventories 배열 사용)
   const hasRackInventory = (section: string, position: number): boolean => {
     const rackInfo = getRackInfo(section, position)
-    return rackInfo ? rackInfo.hasInventory : false
+    if (!rackInfo) return false
+    
+    // inventories 배열이 있고 비어있지 않으면 재고 있음
+    return rackInfo.inventories && rackInfo.inventories.length > 0
   }
 
-  // 실제 활성 랙과 비활성 랙 계산
-  const activeRacks = racks.filter(rack => rack.hasInventory)
-  const inactiveRacks = racks.filter(rack => !rack.hasInventory)
+  // 실제 활성 랙과 비활성 랙 계산 (inventories 배열 기준)
+  const activeRacks = racks.filter(rack => rack.inventories && rack.inventories.length > 0)
+  const inactiveRacks = racks.filter(rack => !rack.inventories || rack.inventories.length === 0)
   
   // 전체 재고 계산 (경량화된 API에서는 개수 정보가 없으므로 재고 있는 랙의 수만 표시)
   const totalInventoryRacks = activeRacks.length

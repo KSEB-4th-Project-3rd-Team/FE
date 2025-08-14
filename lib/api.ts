@@ -277,7 +277,7 @@ export async function fetchRacks(): Promise<Rack[]> {
 
 // 창고맵을 위한 최적화된 랙 정보 조회 (빠른 로딩)
 export async function fetchRacksForMap(): Promise<RackMapResponse[]> {
-  const response = await apiClient.get('/api/racks/map');
+  const response = await apiClient.get('/api/racks');
   return handleResponse(response);
 }
 

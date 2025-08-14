@@ -135,6 +135,7 @@ export function useRawInventoryData() {
     queryKey: queryKeys.inventory,
     queryFn: fetchRawInventoryData,
     staleTime: 30 * 1000, // 30초 캐시 (자주 바뀜)
+    refetchInterval: 30 * 1000, // 30초마다 자동 새로고침
   });
 }
 
@@ -362,11 +363,20 @@ export function useCreateOutboundOrder() {
 export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ orderId, status }: { orderId: string; status: string }) => 
-      updateOrderStatus(orderId, status),
-    onSuccess: () => {
+    mutationFn: ({ orderId, status }: { orderId: string; status: string }) => {
+      console.log(`[API] Calling updateOrderStatus with orderId: ${orderId}, status: ${status}`);
+      return updateOrderStatus(orderId, status);
+    },
+    onSuccess: (data, variables) => {
+      console.log(`[API] updateOrderStatus SUCCESS for orderId: ${variables.orderId}`);
+      console.log('[API] Invalidating queries: inOutData, inventory, dashboard-all, racks-map');
       queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory });
       queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
+      queryClient.invalidateQueries({ queryKey: ['racks-map'] });
+    },
+    onError: (error, variables) => {
+      console.error(`[API] updateOrderStatus FAILED for orderId: ${variables.orderId}:`, error);
     },
   });
 }

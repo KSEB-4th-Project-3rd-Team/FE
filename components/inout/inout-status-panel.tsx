@@ -28,10 +28,10 @@ export default function InOutStatusPanel({ showSearch, data, onReserveOrder }: I
     date: "",
   })
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 5;
 
   const statusData: InOutRecord[] = useMemo(() => data.filter(
-    (item) => item.status === "pending" || item.status === "scheduled"
+    (item) => item.status === "pending" || item.status === "scheduled" || item.status === "completed"
   ), [data]);
 
   const handleStatusChange = async (record: InOutRecord, newStatus: OrderStatus) => {
@@ -83,6 +83,23 @@ export default function InOutStatusPanel({ showSearch, data, onReserveOrder }: I
     )
   }).sort((a, b) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime()), [statusData, filters]);
 
+  // 상태별 개수 계산
+  const statusCounts = useMemo(() => {
+    const counts = {
+      pending: 0,
+      scheduled: 0,
+      completed: 0
+    };
+    
+    statusData.forEach(item => {
+      if (item.status === 'pending') counts.pending++;
+      else if (item.status === 'scheduled') counts.scheduled++;
+      else if (item.status === 'completed') counts.completed++;
+    });
+    
+    return counts;
+  }, [statusData]);
+
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
@@ -115,7 +132,7 @@ export default function InOutStatusPanel({ showSearch, data, onReserveOrder }: I
     }
 
     return (
-      <div className="mt-2 pt-2 border-t border-gray-200 flex justify-end gap-2">
+      <div className="flex justify-end gap-2">
         {possibleTransitions.map((targetStatus) => {
           const config = ORDER_STATUS_CONFIG[targetStatus];
           let icon = null;
@@ -174,30 +191,38 @@ export default function InOutStatusPanel({ showSearch, data, onReserveOrder }: I
             />
           </div>
         )}
-        <div className="flex items-center gap-1">
-          <Button variant={filters.type === "all" && filters.status === "all" ? "default" : "outline"} size="sm" onClick={() => { setFilters({ type: 'all', status: 'all', productName: '', date: ''}); setCurrentPage(1); }}>전체</Button>
-          <Separator orientation="vertical" className="h-6" />
-          <Button variant={filters.type === "inbound" ? "default" : "outline"} size="sm" onClick={() => handleToggleFilter("type", "inbound")}>입고</Button>
-          <Button variant={filters.type === "outbound" ? "default" : "outline"} size="sm" onClick={() => handleToggleFilter("type", "outbound")}>출고</Button>
-          <Separator orientation="vertical" className="h-6" />
-          <Button variant={filters.status === "pending" ? "default" : "outline"} size="sm" onClick={() => handleToggleFilter("status", "pending")}>승인대기</Button>
-          <Button variant={filters.status === "scheduled" ? "default" : "outline"} size="sm" onClick={() => handleToggleFilter("status", "scheduled")}>예약</Button>
+        <div className="space-y-2">
+          <div className="grid grid-cols-3 gap-1">
+            <Button variant={filters.type === "all" && filters.status === "all" ? "default" : "outline"} size="sm" onClick={() => { setFilters({ type: 'all', status: 'all', productName: '', date: ''}); setCurrentPage(1); }} className="h-8 text-xs">전체</Button>
+            <Button variant={filters.type === "inbound" ? "default" : "outline"} size="sm" onClick={() => handleToggleFilter("type", "inbound")} className="h-8 text-xs">입고</Button>
+            <Button variant={filters.type === "outbound" ? "default" : "outline"} size="sm" onClick={() => handleToggleFilter("type", "outbound")} className="h-8 text-xs">출고</Button>
+          </div>
+          <div className="grid grid-cols-3 gap-1">
+            <Button variant={filters.status === "pending" ? "default" : "outline"} size="sm" onClick={() => handleToggleFilter("status", "pending")} className="h-8 text-xs">승인대기</Button>
+            <Button variant={filters.status === "scheduled" ? "default" : "outline"} size="sm" onClick={() => handleToggleFilter("status", "scheduled")} className="h-8 text-xs">예약</Button>
+            <Button variant={filters.status === "completed" ? "default" : "outline"} size="sm" onClick={() => handleToggleFilter("status", "completed")} className="h-8 text-xs">완료</Button>
+          </div>
+        </div>
+        
+        {/* 상태별 개수 표시 */}
+        <div className="text-xs text-gray-600 space-y-1">
+          <div className="flex justify-center gap-8">
+            <span>📋 승인대기 {statusCounts.pending}개</span>
+            <span>📅 예약 {statusCounts.scheduled}개</span>
+          </div>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-2 pr-2 mt-4">
         {paginatedData.length > 0 ? (
           paginatedData.map((item) => (
-            <div key={item.id} className="p-3 rounded-lg border bg-gray-50 hover:bg-gray-100 transition-colors">
+            <div key={item.id} className="h-24 p-3 rounded-lg border bg-gray-50 hover:bg-gray-100 transition-colors flex flex-col justify-between">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
                   <div className="mt-1">{getTypeIcon(item.type)}</div>
                   <div>
                     <p className="font-semibold text-sm text-gray-800 break-words truncate">{item.productName}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      {getStatusBadge(item.status as OrderStatus)}
-                      <span className="text-xs text-gray-600 font-medium">{item.quantity}개</span>
-                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5">{item.individualCode}</p>
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0 ml-2">
@@ -205,7 +230,13 @@ export default function InOutStatusPanel({ showSearch, data, onReserveOrder }: I
                   <p className="text-xs text-gray-500">{item.time}</p>
                 </div>
               </div>
-              {renderActionButtons(item)}
+              <div className="flex items-center justify-between flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  {getStatusBadge(item.status as OrderStatus)}
+                  <span className="text-xs text-gray-600 font-medium">{item.quantity}개</span>
+                </div>
+                <div>{renderActionButtons(item)}</div>
+              </div>
             </div>
           ))
         ) : (
