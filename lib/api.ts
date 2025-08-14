@@ -120,9 +120,9 @@ export const api = {
 
 // 환경별 baseURL 설정
 const getBaseURL = () => {
-  if (typeof window === 'undefined') return 'https://smart-wms-be.p-e.kr'; // SSR
+  if (typeof window === 'undefined') return 'http://43.203.237.110'; // SSR - EC2 IP
   if (process.env.NODE_ENV === 'development') return ''; // 개발환경: Next.js rewrites 사용
-  return 'https://smart-wms-be.p-e.kr'; // 프로덕션: 절대 URL
+  return 'http://43.203.237.110'; // 프로덕션: EC2 IP 직접 사용
 };
 
 const apiClient = axios.create({
