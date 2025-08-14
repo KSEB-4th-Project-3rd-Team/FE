@@ -1,19 +1,16 @@
 "use client";
 
 import React from "react";
-import { Unity, useUnityContext } from "react-unity-webgl";
+import { Unity } from "react-unity-webgl";
+import type { UnityProvider } from "react-unity-webgl/distribution/types/unity-provider";
 
-const UnityPlayer = () => {
-  const { unityProvider, isLoaded, loadingProgression } = useUnityContext({
-    // ✅ 중요: 아래 파일 이름들은 Unity 빌드 설정에 따라 달라질 수 있습니다.
-    // KSEB-Web/public/unity/Build/ 폴더에 있는 실제 파일명으로 수정해주세요.
-    loaderUrl: "/unity/Build/WMS_Simul.loader.js",
-    dataUrl: "/unity/Build/WMS_Simul.data",
-    frameworkUrl: "/unity/Build/WMS_Simul.framework.js",
-    codeUrl: "/unity/Build/WMS_Simul.wasm",
-  });
+interface UnityPlayerProps {
+  unityProvider: UnityProvider;
+  isLoaded: boolean;
+  loadingProgression: number;
+}
 
-  // 로딩 진행률을 표시합니다.
+const UnityPlayer = ({ unityProvider, isLoaded, loadingProgression }: UnityPlayerProps) => {
   const loadingPercentage = Math.round(loadingProgression * 100);
 
   return (
