@@ -95,7 +95,7 @@ const UnityPlayer = ({ unityProvider, isLoaded, loadingProgression }: UnityPlaye
           height: '100%',
           imageSmoothing: false,
         }}
-        devicePixelRatio={Math.min(window.devicePixelRatio || 1, 2)}
+        devicePixelRatio={typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2) : 1}
       />
       
       {/* 로딩 완료 후 페이드인 효과 */}

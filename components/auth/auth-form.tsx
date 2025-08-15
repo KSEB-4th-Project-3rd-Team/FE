@@ -86,7 +86,7 @@ export default function AuthForm() {
               <Warehouse className="w-8 h-8 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-blue-600">AGV WMS</CardTitle>
+          <CardTitle className="text-2xl font-bold text-blue-600">Smart WMS</CardTitle>
           <p className="text-gray-600">창고 관리 시스템</p>
         </CardHeader>
         <CardContent>

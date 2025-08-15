@@ -46,6 +46,39 @@ export default function WarehouseSimulation() {
     }
   });
 
+  // Unity 에러 억제
+  useEffect(() => {
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    
+    console.error = (...args) => {
+      const message = args.join(' ');
+      // Unity WebGL 관련 에러는 무시
+      if (message.includes('still waiting on run dependencies') ||
+          message.includes('dependency: wasm-instantiate') ||
+          message.includes('(end of list)') ||
+          message.includes('printErr')) {
+        return;
+      }
+      originalError.apply(console, args);
+    };
+
+    console.warn = (...args) => {
+      const message = args.join(' ');
+      // Unity WebGL 관련 경고는 무시
+      if (message.includes('wasm-instantiate') ||
+          message.includes('run dependencies')) {
+        return;
+      }
+      originalWarn.apply(console, args);
+    };
+
+    return () => {
+      console.error = originalError;
+      console.warn = originalWarn;
+    };
+  }, []);
+
   // Unity로 작업 전송 (TaskBridge 규격)
   const assignTaskToAmr = useCallback(
     (taskType: "inbound" | "outbound", rackIdRaw: string, orderId?: string | number) => {
