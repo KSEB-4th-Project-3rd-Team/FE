@@ -118,28 +118,9 @@ export const api = {
   }
 };
 
-const apiClient = axios.create({
-  baseURL: '/api', // EC2 주소 절대 쓰지 않음
-  headers: { 'Content-Type': 'application/json' },
-  withCredentials: true,
-});
+import http from './http';
 
-// Add a request interceptor to include the token and prevent caching
-apiClient.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  
-  // Add timestamp to prevent caching
-  if (config.params) {
-    config.params._t = Date.now();
-  } else {
-    config.params = { _t: Date.now() };
-  }
-  
-  return config;
-});
+const apiClient = http;
 
 
 // Helper function to handle API responses

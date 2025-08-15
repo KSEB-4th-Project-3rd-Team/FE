@@ -57,12 +57,17 @@ const nextConfig = {
     minimumCacheTTL: 86400,
   },
   async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "http://localhost:8080/:path*", // Local backend server
-      },
-    ];
+    // Only use proxy in development
+    if (process.env.NODE_ENV === 'development') {
+      return [
+        {
+          source: "/api/:path*",
+          destination: "http://localhost:8080/:path*", // Local backend server
+        },
+      ];
+    }
+    // In production, use direct API calls
+    return [];
   },
 }
 

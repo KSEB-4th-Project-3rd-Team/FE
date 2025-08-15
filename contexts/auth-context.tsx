@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, FC } from 'react';
 import { User } from '@/app/(main)/layout';
 import { login as apiLogin, signup as apiSignup, checkSession as apiCheckSession, logout as apiLogout } from '@/lib/api';
+import { useApi } from '@/hooks/use-api';
 
 interface AuthContextType {
   user: User | null;
@@ -21,6 +22,14 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        // 토큰이 있을 때만 세션 체크
+        const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+        if (!token) {
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+        
         const response = await apiCheckSession();
         if (response.user) {
           setUser(response.user);
@@ -28,6 +37,10 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       } catch (error) {
         console.log("No active session found");
         setUser(null);
+        // 토큰이 유효하지 않으면 삭제
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('authToken');
+        }
       } finally {
         setIsLoading(false);
       }
