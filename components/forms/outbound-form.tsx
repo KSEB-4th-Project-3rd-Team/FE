@@ -15,7 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import { cn } from "@/components/utils"
-import { useCompanies, useCreateOutboundOrder, useItems, useRacks } from "@/lib/queries"
+import { useCompanies, useCreateOutboundOrder, useItems, useRacks, useRawInOutData, useRawInventoryData } from "@/lib/queries"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
 import { toast } from "sonner"
@@ -43,23 +43,91 @@ interface OutboundFormProps {
 export default function OutboundForm({ onClose, racksData: propsRacksData, racksLoading: propsRacksLoading }: OutboundFormProps) {
   const { data: itemsData } = useItems();
   const { data: companiesData } = useCompanies();
+  const { data: rawInOutData } = useRawInOutData();
+  const { data: rawInventoryData } = useRawInventoryData();
   // props로 받은 데이터가 있으면 사용, 없으면 직접 호출 (fallback)
   const { data: fallbackRacksData, isLoading: fallbackRacksLoading } = useRacks();
   const racksData = propsRacksData || fallbackRacksData;
   const racksLoading = propsRacksLoading ?? fallbackRacksLoading;
   const createOrderMutation = useCreateOutboundOrder();
 
-  // useRacks 데이터를 출고 폼에 맞는 형태로 가공 (useMemo로 최적화)
+  // 입출고 데이터 기반으로 랙별 정확한 재고 계산 (백엔드 API는 전체 수량만 제공)
   const allInventoryLocations = useMemo(() => {
-    if (!racksData) return [];
+    console.log('=== 출고폼 재고 위치 계산 ===');
     
-    return racksData.flatMap(rack => 
-      rack.inventories?.map(inv => ({
-        ...inv,
-        locationCode: rack.rackCode // 각 재고 항목에 랙 코드를 명시적으로 추가
-      })) || []
+    if (!rawInOutData || !itemsData) return [];
+    
+    console.log('🔄 입출고 데이터 기반 랙별 재고 계산');
+    console.log('입출고 데이터:', rawInOutData.length, '개');
+    
+    // 완료된 입출고 내역만 필터링
+    const completedInOut = rawInOutData.filter(order => 
+      order.status?.toLowerCase() === 'completed'
     );
-  }, [racksData]);
+    console.log('완료된 입출고 주문 수:', completedInOut.length);
+    
+    // 각 품목별 랙 위치별 재고 계산
+    const rackItemQuantities: Record<string, Record<number, number>> = {}; // rackCode -> {itemId: quantity}
+    
+    completedInOut.forEach(order => {
+      // 주문 레벨의 locationCode 사용 (백엔드가 품목별 위치를 지원하지 않음)
+      const locationCode = order.locationCode || '';
+      let rackCode = locationCode.replace('-', '').toUpperCase();
+      
+      // 패딩 처리: J5 → J005
+      if (rackCode.match(/^[A-T]\d{1,2}$/)) {
+        const section = rackCode.charAt(0);
+        const position = rackCode.slice(1).padStart(3, '0');
+        rackCode = `${section}${position}`;
+      }
+      
+      if (!rackCode) return;
+      
+      order.items?.forEach(item => {
+        if (!rackItemQuantities[rackCode]) {
+          rackItemQuantities[rackCode] = {};
+        }
+        
+        const currentQty = rackItemQuantities[rackCode][item.itemId] || 0;
+        
+        if (order.type === 'INBOUND') {
+          // 입고: 수량 증가
+          rackItemQuantities[rackCode][item.itemId] = currentQty + item.requestedQuantity;
+        } else if (order.type === 'OUTBOUND') {
+          // 출고: 수량 감소
+          rackItemQuantities[rackCode][item.itemId] = Math.max(0, currentQty - item.requestedQuantity);
+        }
+      });
+    });
+    
+    // 출고 가능한 재고 목록 생성 (수량이 0보다 큰 것만)
+    const inventoryLocations: any[] = [];
+    
+    Object.entries(rackItemQuantities).forEach(([rackCode, itemQuantities]) => {
+      Object.entries(itemQuantities).forEach(([itemIdStr, quantity]) => {
+        if (quantity > 0) {
+          const itemId = parseInt(itemIdStr);
+          const item = itemsData.find(item => item.itemId === itemId);
+          
+          if (item) {
+            inventoryLocations.push({
+              itemId,
+              itemName: item.itemName,
+              itemCode: item.itemCode,
+              quantity,
+              locationCode: rackCode,
+              rackCode: rackCode
+            });
+          }
+        }
+      });
+    });
+    
+    console.log('랙별 재고 위치:', inventoryLocations.length, '개');
+    console.log('재고 위치 목록:', inventoryLocations.map(loc => `${loc.locationCode}: ${loc.itemName} (${loc.quantity}개)`));
+    
+    return inventoryLocations;
+  }, [rawInOutData, itemsData]);
 
   const form = useForm<OutboundFormValues>({
     resolver: zodResolver(formSchema),
@@ -198,18 +266,16 @@ export default function OutboundForm({ onClose, racksData: propsRacksData, racks
                           <Select
                             onValueChange={field.onChange}
                             value={field.value}
-                            disabled={!selectedItemId || racksLoading || availableLocations.length === 0}
+                            disabled={!selectedItemId || availableLocations.length === 0}
                           >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder={
-                                  racksLoading
-                                    ? "재고 위치 로딩 중..."
-                                    : !selectedItemId 
-                                      ? "품목을 먼저 선택하세요" 
-                                      : availableLocations.length === 0
-                                        ? "사용 가능한 재고 없음"
-                                        : "위치를 선택하세요"
+                                  !selectedItemId 
+                                    ? "품목을 먼저 선택하세요" 
+                                    : availableLocations.length === 0
+                                      ? "사용 가능한 재고 없음"
+                                      : "위치를 선택하세요"
                                 } />
                               </SelectTrigger>
                             </FormControl>

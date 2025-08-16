@@ -110,11 +110,42 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
     
     console.log('=== 입출고 기반 재고 계산 ===')
     
+    // 모든 주문의 상태 확인
+    const statusCounts = rawInOutData.reduce((acc, order) => {
+      const key = `${order.type}_${order.status}`;
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    console.log('📊 주문 상태별 개수:', statusCounts);
+    
+    // 출고 주문만 따로 확인 - 특히 locationCode 중점 확인
+    const outboundOrders = rawInOutData.filter(order => order.type === 'OUTBOUND');
+    console.log('📤 총 출고 주문 수:', outboundOrders.length);
+    console.log('🔍 출고 주문들의 locationCode 상세 분석:');
+    outboundOrders.forEach(order => {
+      console.log(`출고 주문 ${order.orderId}:`);
+      console.log(`  상태: ${order.status}`);
+      console.log(`  주문레벨 locationCode: "${order.locationCode}"`);
+      console.log(`  품목별 정보:`);
+      order.items?.forEach((item, idx) => {
+        console.log(`    품목${idx+1}: ${item.itemName} - ${item.requestedQuantity}개`);
+        console.log(`    품목별 locationCode: "${(item as any).locationCode || 'undefined'}"`);
+      });
+      console.log('---');
+    });
+    
     // 완료된 입출고 내역만 필터링 (대소문자 구분 없이)
     const completedInOut = rawInOutData.filter(order => 
       order.status?.toLowerCase() === 'completed'
     )
     console.log('완료된 입출고 주문 수:', completedInOut.length)
+    
+    // 완료된 출고 주문만 확인
+    const completedOutbound = completedInOut.filter(order => order.type === 'OUTBOUND');
+    console.log('✅ 완료된 출고 주문 수:', completedOutbound.length);
+    completedOutbound.forEach(order => {
+      console.log(`완료된 출고 ${order.orderId}: 위치=${order.locationCode}, 품목=${order.items?.map(i => `${i.itemName}(${i.requestedQuantity}개)`).join(', ')}`);
+    });
     
     // 방금 완료된 주문들 (최근 10개) 확인
     const recentOrders = completedInOut.slice(-10)
@@ -149,26 +180,23 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
     const rackItemQuantities: Record<string, Record<number, number>> = {} // rackCode -> {itemId: quantity}
     
     completedInOut.forEach(order => {
+      // 주문 레벨의 locationCode 사용 (품목별이 없으므로)
       const locationCode = order.locationCode || ''
       let rackCode = locationCode.replace('-', '').toUpperCase()
       
-      // 패딩 처리: I9 → I009
+      // 패딩 처리: J9 → J009
       if (rackCode.match(/^[A-T]\d{1,2}$/)) {
         const section = rackCode.charAt(0)
         const position = rackCode.slice(1).padStart(3, '0')
         rackCode = `${section}${position}`
       }
       
-      // I009 관련 주문만 특별히 로그
-      if (rackCode === 'I009' || locationCode.includes('I009') || locationCode.includes('I9')) {
-        console.log(`🔍 I009 관련 주문 발견! 주문 ${order.orderId}: locationCode="${locationCode}" → rackCode="${rackCode}"`)
-        console.log('이 주문의 타입:', order.type, '상태:', order.status)
-        console.log('이 주문의 아이템들:', order.items)
-      }
-      
       if (!rackCode) {
+        console.log(`⚠️ 주문 ${order.orderId}에 locationCode가 없음, 건너뜀`)
         return
       }
+      
+      console.log(`🔄 주문 ${order.orderId} (${order.type}) 처리: ${locationCode} → ${rackCode}`)
       
       order.items?.forEach(item => {
         if (!rackItemQuantities[rackCode]) {
@@ -176,18 +204,18 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
         }
         
         const currentQty = rackItemQuantities[rackCode][item.itemId] || 0
+        let newQty = currentQty
         
         if (order.type === 'INBOUND') {
           // 입고: 수량 증가
-          rackItemQuantities[rackCode][item.itemId] = currentQty + item.requestedQuantity
+          newQty = currentQty + item.requestedQuantity
+          rackItemQuantities[rackCode][item.itemId] = newQty
+          console.log(`  ➕ ${item.itemName}: ${currentQty} + ${item.requestedQuantity} = ${newQty}`)
         } else if (order.type === 'OUTBOUND') {
           // 출고: 수량 감소
-          rackItemQuantities[rackCode][item.itemId] = Math.max(0, currentQty - item.requestedQuantity)
-        }
-        
-        // I009 관련된 수량 변경만 특별히 로그
-        if (rackCode === 'I009') {
-          console.log(`🔍 I009 수량 변경: ${order.type} - 품목 ${item.itemName}, ${currentQty} → ${rackItemQuantities[rackCode][item.itemId]}`)
+          newQty = Math.max(0, currentQty - item.requestedQuantity)
+          rackItemQuantities[rackCode][item.itemId] = newQty
+          console.log(`  ➖ ${item.itemName}: ${currentQty} - ${item.requestedQuantity} = ${newQty}`)
         }
       })
     })

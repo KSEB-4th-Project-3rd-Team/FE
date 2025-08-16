@@ -354,6 +354,7 @@ export async function fetchInOutData(): Promise<InOutRecord[]> {
 export interface InOutOrderItem {
   itemId: number;
   quantity: number;
+  locationCode?: string; // 출고 시 필요한 위치 정보
 }
 
 export interface InOutOrderRequest {
@@ -404,7 +405,8 @@ export async function createOutboundOrder(orderData: {
     notes: orderData.notes,
     items: orderData.items.map(item => ({
       itemId: item.itemId,
-      quantity: item.requestedQuantity
+      quantity: item.requestedQuantity,
+      locationCode: item.locationCode // 각 품목별 위치 정보 포함
     }))
   };
   
