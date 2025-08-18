@@ -7,20 +7,15 @@ const baseURL =
 
 export const http = axios.create({
   baseURL,
-  withCredentials: false,
+  withCredentials: true,  // 쿠키 기반 인증을 위해 필수
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor to include auth token and prevent caching
+// Request interceptor - localStorage 토큰 체크 제거
 http.interceptors.request.use((config) => {
-  const token = typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  
   // Add timestamp to prevent caching
   if (config.params) {
     config.params._t = Date.now();
@@ -31,17 +26,20 @@ http.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor for error handling and retry logic
+// Response interceptor for error handling and retry logic  
 http.interceptors.response.use(
   (response) => response,
   async (error) => {
     const status = error?.response?.status;
     
-    if (status === 401) {
-      // Clear token and redirect to login
+    if (status === 401 || status === 500) {
+      // 인증 실패시 로그인 페이지로 리다이렉트 (window.location 사용 안 함)
+      console.error("Authentication failed, redirecting to login");
       if (typeof window !== "undefined") {
-        localStorage.removeItem("authToken");
-        window.location.href = "/login";
+        // 현재 페이지가 로그인 페이지가 아닐 때만 리다이렉트
+        if (!window.location.pathname.includes('/login')) {
+          window.location.replace('/login');
+        }
       }
     } else if (status === 403) {
       console.error("Forbidden: You don't have permission to access this resource");

@@ -19,14 +19,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://kseb-smart-wms.vercel.app'),
+  metadataBase: new URL('https://smart-wms-fe.vercel.app'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: 'KSEB Smart WMS - 스마트 창고 관리 시스템',
     description: 'Unity 3D 시뮬레이션과 AMR 로봇을 활용한 차세대 창고 관리 시스템. 실시간 재고 추적, 자동화된 입출고 관리, 직관적인 대시보드를 제공합니다.',
-    url: 'https://kseb-smart-wms.vercel.app',
+    url: 'https://smart-wms-fe.vercel.app',
     siteName: 'KSEB Smart WMS',
     images: [
       {
@@ -108,6 +108,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
+      <head>
+        <meta httpEquiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://smart-wms-be.p-e.kr; font-src 'self' data:; frame-src 'none';" />
+        <meta httpEquiv="X-Frame-Options" content="DENY" />
+        <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
+        <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://smart-wms-fe.vercel.app" />
+      </head>
       <body>{children}</body>
     </html>
   )
