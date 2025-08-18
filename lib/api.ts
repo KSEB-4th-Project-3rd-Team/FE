@@ -335,7 +335,7 @@ export async function fetchInOutData(): Promise<InOutRecord[]> {
         individualCode: `ORDER-${record.orderId}-${item.itemId}`,
         specification: item.specification || 'N/A',
         quantity: item.requestedQuantity || 0,
-        location: 'A-01',
+        location: record.locationCode || '미지정', // 하드코딩된 위치 수정
         company: record.companyName || 'N/A',
         companyCode: record.companyCode || 'N/A',
         status: record.status === 'COMPLETED' ? '완료' : '진행 중',
