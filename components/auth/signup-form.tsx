@@ -20,7 +20,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { api } from '@/lib/api'; // Assuming api.ts handles backend calls
+import { api } from '@/lib/api';
 
 interface SignUpFormProps extends React.HTMLAttributes<HTMLDivElement> {}
 
@@ -47,26 +47,25 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
     },
   });
 
-  async function onSubmit(data: SignUpFormValues) {
+  async function onSubmit(data: SignUpFormValues, e?: React.BaseSyntheticEvent) {
+    e?.preventDefault();
     setIsLoading(true);
     try {
-      // Assuming a signup API call in lib/api.ts
-      const response = await api.post('/api/users', {
+      const response = await api.post('/users', {
         username: data.username,
         email: data.email,
         password: data.password,
         fullName: data.fullName,
-        role: 'USER', // Default role for new sign-ups
+        role: 'USER',
       });
 
-      if (response.status === 201) {
+      if (response.status === 201 || response.status === 200) {
         toast({
           title: 'Sign Up Successful',
           description: 'Your account has been created. You can now log in.',
         });
-        router.push('/login'); // Redirect to login page after successful sign-up
+        router.push('/login');
       } else {
-        // Handle other success status codes if necessary
         toast({
           title: 'Sign Up Failed',
           description: response.data?.message || 'An unexpected error occurred.',
@@ -96,7 +95,11 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
                 <FormItem>
                   <FormLabel>Username</FormLabel>
                   <FormControl>
-                    <Input placeholder="Your username" {...field} />
+                    <Input 
+                      placeholder="Your username" 
+                      autoComplete="username"
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -109,7 +112,12 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="name@example.com" type="email" {...field} />
+                    <Input 
+                      placeholder="name@example.com" 
+                      type="email"
+                      autoComplete="email"
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -122,7 +130,12 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input placeholder="••••••••" type="password" {...field} />
+                    <Input 
+                      placeholder="••••••••" 
+                      type="password"
+                      autoComplete="new-password"
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -135,13 +148,17 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
                 <FormItem>
                   <FormLabel>Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Your full name" {...field} />
+                    <Input 
+                      placeholder="Your full name"
+                      autoComplete="name"
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <button className={cn(buttonVariants())} disabled={isLoading}>
+            <button className={cn(buttonVariants())} disabled={isLoading} type="submit">
               {isLoading && <Icons.Spinner className="mr-2 h-4 w-4 animate-spin" />}
               Sign Up
             </button>

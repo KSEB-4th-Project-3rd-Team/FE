@@ -4,6 +4,7 @@ import { Company } from '@/components/company/company-list';
 import { Item } from '@/components/item/item-list';
 import { InOutRecord, InOutRequest, InventoryItem } from '@/components/utils';
 import { User } from '@/app/(main)/layout';
+import axios from 'axios';
 
 // --- Types ---
 // 타입을 한 곳에서 관리하여 재사용성을 높입니다.
@@ -65,8 +66,8 @@ export interface InventoryResponse {
 export interface ScheduleResponse {
   scheduleId: number;
   title: string;
-  startTime: string;
-  endTime: string;
+  startTime: string; // ISO 8601 format
+  endTime: string; // ISO 8601 format
   type: "INBOUND" | "OUTBOUND" | "INVENTORY_CHECK" | "MEETING" | "ETC";
 }
 
@@ -88,40 +89,26 @@ export interface DashboardData {
   totalLoadTime: number;
 }
 
-
-// import { Schedule } from '@/app/(main)/schedule/page';
-// import { DashboardSummary } from '@/components/dashboard/unified-dashboard'; // Import DashboardSummary type
 type DashboardSummary = any;
-import axios from 'axios';
+
+// Unified axios instance with proper configuration
+export const api = axios.create({
+  baseURL: "https://smart-wms-be.p-e.kr/api",
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json"
+  }
+});
+
+// Legacy support - keeping apiClient for existing code compatibility
+import http from './http';
+const apiClient = http;
 
 // --- Dashboard ---
 export async function fetchDashboardSummary(): Promise<DashboardSummary> {
-  const response = await apiClient.get('/api/dashboard/summary');
-  return handleResponse(response);
+  const response = await api.get('/dashboard/summary');
+  return response.data;
 }
-
-/*
-export async function fetchDashboardAll(): Promise<DashboardData> {
-  const response = await apiClient.get('/api/dashboard/all');
-  return handleResponse(response);
-}
-*/
-
-export const api = {
-  post: async (url: string, data: any) => {
-    const response = await apiClient.post(url, data);
-    return response.data;
-  },
-  get: async (url: string) => {
-    const response = await apiClient.get(url);
-    return response.data;
-  }
-};
-
-import http from './http';
-
-const apiClient = http;
-
 
 // Helper function to handle API responses
 async function handleResponse<T>(response: { data: T }): Promise<T> {
@@ -130,7 +117,7 @@ async function handleResponse<T>(response: { data: T }): Promise<T> {
 
 // --- Auth ---
 export async function login(username: string, password: string): Promise<{ user: User; message: string }> {
-  const response = await apiClient.post('/api/auth/login', { username, password });
+  const response = await api.post('/auth/login', { username, password });
   const backendData = response.data;
   
   return {
@@ -149,14 +136,14 @@ export async function login(username: string, password: string): Promise<{ user:
 }
 
 export async function signup(userData: { username: string; password: string; fullName: string; email: string }): Promise<User> {
-  const response = await apiClient.post('/api/users', {
+  const response = await api.post('/users', {
     username: userData.username,
     password: userData.password,
     fullName: userData.fullName,
     email: userData.email,
     role: 'USER'
   });
-  const backendUser = await handleResponse(response);
+  const backendUser = response.data;
   
   return {
     id: backendUser.userId,
@@ -177,7 +164,7 @@ export async function signup(userData: { username: string; password: string; ful
 }
 
 export async function checkSession(): Promise<{ user: User }> {
-  const response = await apiClient.get('/api/auth/me');
+  const response = await api.get('/auth/me');
   const backendData = response.data;
   
   return {
@@ -195,18 +182,18 @@ export async function checkSession(): Promise<{ user: User }> {
 }
 
 export async function logout() {
-  await apiClient.post('/api/auth/logout');
+  await api.post('/auth/logout', {});
 }
 
 // --- Companies ---
 export async function fetchCompanies(): Promise<Company[]> {
-  const response = await apiClient.get('/api/companies');
-  return handleResponse(response);
+  const response = await api.get('/companies');
+  return response.data;
 }
 
 export async function createCompany(companyData: Omit<Company, 'companyId'>): Promise<Company> {
-  const response = await apiClient.post('/api/companies', companyData);
-  return handleResponse(response);
+  const response = await api.post('/companies', companyData);
+  return response.data;
 }
 
 export async function updateCompany(id: string, companyData: Partial<Company>): Promise<Company> {
@@ -214,8 +201,8 @@ export async function updateCompany(id: string, companyData: Partial<Company>): 
   if (isNaN(numericId)) {
     throw new Error("Invalid company ID provided for update.");
   }
-  const response = await apiClient.put(`/api/companies/${numericId}`, companyData);
-  return handleResponse(response);
+  const response = await api.put(`/companies/${numericId}`, companyData);
+  return response.data;
 }
 
 export async function deleteCompany(id: string): Promise<void> {
@@ -223,7 +210,7 @@ export async function deleteCompany(id: string): Promise<void> {
   if (isNaN(numericId)) {
     throw new Error("Invalid company ID provided for delete.");
   }
-  await apiClient.delete(`/api/companies/${numericId}`);
+  await api.delete(`/companies/${numericId}`);
 }
 
 // --- Racks ---
@@ -250,14 +237,14 @@ export interface RackMapResponse {
 }
 
 export async function fetchRacks(): Promise<Rack[]> {
-  const response = await apiClient.get('/api/racks');
-  return handleResponse(response);
+  const response = await api.get('/racks');
+  return response.data;
 }
 
 // 창고맵을 위한 최적화된 랙 정보 조회 (빠른 로딩)
 export async function fetchRacksForMap(): Promise<RackMapResponse[]> {
-  const response = await apiClient.get('/api/racks');
-  return handleResponse(response);
+  const response = await api.get('/racks');
+  return response.data;
 }
 
 export interface RackInventoryItem {
@@ -271,20 +258,20 @@ export interface RackInventoryItem {
 }
 
 export async function fetchRackInventory(rackCode: string): Promise<RackInventoryItem[]> {
-  const response = await apiClient.get(`/api/racks/${rackCode}/inventory`);
-  return handleResponse(response);
+  const response = await api.get(`/racks/${rackCode}/inventory`);
+  return response.data;
 }
 
 
 // --- Items ---
 export async function fetchItems(): Promise<Item[]> {
-  const response = await apiClient.get('/api/items');
-  return handleResponse(response);
+  const response = await api.get('/items');
+  return response.data;
 }
 
 export async function createItem(itemData: Omit<Item, 'itemId'>): Promise<Item> {
-  const response = await apiClient.post('/api/items', itemData);
-  return handleResponse(response);
+  const response = await api.post('/items', itemData);
+  return response.data;
 }
 
 export async function updateItem(id: string, itemData: Partial<Item>): Promise<Item> {
@@ -292,8 +279,8 @@ export async function updateItem(id: string, itemData: Partial<Item>): Promise<I
   if (isNaN(numericId)) {
     throw new Error("Invalid item ID provided for update.");
   }
-  const response = await apiClient.put(`/api/items/${numericId}`, itemData);
-  return handleResponse(response);
+  const response = await api.put(`/items/${numericId}`, itemData);
+  return response.data;
 }
 
 export async function deleteItem(id: string | number): Promise<void> {
@@ -301,15 +288,15 @@ export async function deleteItem(id: string | number): Promise<void> {
   if (isNaN(numericId) || numericId <= 0) {
     throw new Error(`Invalid item ID provided for delete: ${id}`);
   }
-  await apiClient.delete(`/api/items/${numericId}`);
+  await api.delete(`/items/${numericId}`);
 }
 
 
 // --- InOut ---
 // 원시 API 데이터만 반환 (중복 호출 제거)
 export async function fetchRawInOutData(): Promise<any[]> {
-  const response = await apiClient.get('/api/inout/orders');
-  return handleResponse(response);
+  const response = await api.get('/inout/orders');
+  return response.data;
 }
 
 // 기존 함수는 호환성 유지를 위해 유지하되, 단순화
@@ -379,10 +366,8 @@ export async function createInboundOrder(orderData: { itemId: number; quantity: 
   };
   
   // Create the order
-  const response = await apiClient.post('/api/inout/orders', requestData);
-  const result = await handleResponse(response);
-  
-  return result;
+  const response = await api.post('/inout/orders', requestData);
+  return response.data;
 }
 
 export async function createOutboundOrder(orderData: { 
@@ -411,10 +396,8 @@ export async function createOutboundOrder(orderData: {
   };
   
   // Create the order
-  const response = await apiClient.post('/api/inout/orders', requestData);
-  const result = await handleResponse(response);
-  
-  return result;
+  const response = await api.post('/inout/orders', requestData);
+  return response.data;
 }
 
 export async function updateOrderStatus(orderId: string, status: string): Promise<any> {
@@ -422,23 +405,23 @@ export async function updateOrderStatus(orderId: string, status: string): Promis
   if (isNaN(numericOrderId)) {
     throw new Error("Invalid order ID provided for status update.");
   }
-  const response = await apiClient.put(`/api/inout/orders/${numericOrderId}/status`, {
+  const response = await api.put(`/inout/orders/${numericOrderId}/status`, {
     status: status.toUpperCase()
   });
-  return handleResponse(response);
+  return response.data;
 }
 
 // 승인대기 주문 조회 API 추가
 export async function fetchPendingOrders(): Promise<InOutOrderResponse[]> {
-  const response = await apiClient.get('/api/inout/orders?status=PENDING');
-  const result = await handleResponse(response);
+  const response = await api.get('/inout/orders?status=PENDING');
+  const result = response.data;
   return Array.isArray(result) ? result : [];
 }
 
 // 예약된 주문 조회 API 추가  
 export async function fetchReservedOrders(): Promise<InOutOrderResponse[]> {
-  const response = await apiClient.get('/api/inout/orders?status=RESERVED');
-  const result = await handleResponse(response);
+  const response = await api.get('/inout/orders?status=RESERVED');
+  const result = response.data;
   return Array.isArray(result) ? result : [];
 }
 
@@ -451,8 +434,8 @@ export async function cancelInOutOrder(orderId: string | number): Promise<any> {
     throw new Error("Invalid order ID provided for cancellation.");
   }
   
-  const response = await apiClient.put(`/api/inout/orders/${numericOrderId}/cancel`);
-  return handleResponse(response);
+  const response = await api.put(`/inout/orders/${numericOrderId}/cancel`);
+  return response.data;
 }
 
 export async function updateInOutRecord(id: string, recordData: Partial<InOutRecord>): Promise<InOutRecord> {
@@ -466,18 +449,18 @@ export async function updateInOutRecord(id: string, recordData: Partial<InOutRec
   
   // 여러 가능한 엔드포인트와 메서드 시도
   try {
-    // 1. PUT /api/inout/orders/{id}/status (원래 스펙대로)
-    const response = await apiClient.put(`/api/inout/orders/${numericOrderId}/status`, recordData);
-    return handleResponse(response);
+    // 1. PUT /inout/orders/{id}/status (원래 스펙대로)
+    const response = await api.put(`/inout/orders/${numericOrderId}/status`, recordData);
+    return response.data;
   } catch (error: any) {
     if (error?.response?.status === 405) {
       try {
-        const response = await apiClient.patch(`/api/inout/orders/${numericOrderId}`, recordData);
-        return handleResponse(response);
+        const response = await api.patch(`/inout/orders/${numericOrderId}`, recordData);
+        return response.data;
       } catch (error2: any) {
         if (error2?.response?.status === 405) {
-          const response = await apiClient.put(`/api/inout/orders/${numericOrderId}`, recordData);
-          return handleResponse(response);
+          const response = await api.put(`/inout/orders/${numericOrderId}`, recordData);
+          return response.data;
         }
         throw error2;
       }
@@ -498,8 +481,8 @@ export interface BackendInventoryResponse {
 
 // 원시 재고 데이터만 반환 (중복 호출 제거)
 export async function fetchRawInventoryData(): Promise<BackendInventoryResponse[]> {
-  const response = await apiClient.get('/api/inventory');
-  return handleResponse(response);
+  const response = await api.get('/inventory');
+  return response.data;
 }
 
 // 기존 함수는 호환성 유지하되 중복 호출 제거
@@ -560,13 +543,13 @@ export async function fetchSchedules(startDate?: string, endDate?: string): Prom
   if (startDate) params.start_date = startDate;
   if (endDate) params.end_date = endDate;
 
-  const response = await apiClient.get('/api/schedules', { params });
-  return handleResponse(response);
+  const response = await api.get('/schedules', { params });
+  return response.data;
 }
 
 export async function createSchedule(scheduleData: CreateScheduleRequest): Promise<Schedule> {
-  const response = await apiClient.post('/api/schedules', scheduleData);
-  return handleResponse(response);
+  const response = await api.post('/schedules', scheduleData);
+  return response.data;
 }
 
 export async function deleteSchedule(id: string | number): Promise<void> {
@@ -574,13 +557,13 @@ export async function deleteSchedule(id: string | number): Promise<void> {
   if (isNaN(numericId) || numericId <= 0) {
     throw new Error(`Invalid schedule ID provided for delete: ${id}`);
   }
-  await apiClient.delete(`/api/schedules/${numericId}`);
+  await api.delete(`/schedules/${numericId}`);
 }
 
 // --- Users ---
 export async function fetchUsers(): Promise<User[]> {
-    const response = await apiClient.get('/api/users');
-    const backendUsers = await handleResponse(response);
+    const response = await api.get('/users');
+    const backendUsers = response.data;
     
     return backendUsers.map((user: any) => ({
         id: user.userId,
@@ -601,14 +584,14 @@ export async function fetchUsers(): Promise<User[]> {
 }
 
 export async function createUser(userData: Omit<User, 'id'>): Promise<User> {
-  const response = await apiClient.post('/api/users', {
+  const response = await api.post('/users', {
     username: userData.username,
     email: userData.email,
     fullName: userData.fullName,
     password: 'defaultPassword123',
     role: userData.role
   });
-  const backendUser = await handleResponse(response);
+  const backendUser = response.data;
   
   return {
     id: backendUser.userId,
@@ -641,8 +624,8 @@ export async function updateUser(id: string, userData: Partial<User>): Promise<U
   if (userData.role) updateData.role = userData.role;
   if (userData.status) updateData.status = userData.status;
   
-  const response = await apiClient.put(`/api/users/${numericId}`, updateData);
-  const backendUser = await handleResponse(response);
+  const response = await api.put(`/users/${numericId}`, updateData);
+  const backendUser = response.data;
   
   return {
     id: backendUser.userId,
@@ -667,7 +650,7 @@ export async function deleteUser(id: string): Promise<void> {
   if (isNaN(numericId)) {
     throw new Error("Invalid user ID provided for delete.");
   }
-  await apiClient.delete(`/api/users/${numericId}`);
+  await api.delete(`/users/${numericId}`);
 }
 
 // ===== 통합 대시보드 API =====
@@ -693,23 +676,13 @@ export interface BackendInOutOrderResponse {
   }[];
 }
 
-export interface DashboardData {
-  items: ItemResponse[];
-  users: UserResponse[];
-  orders: BackendInOutOrderResponse[];
-  inventory: BackendInventoryResponse[];
-  schedules: Schedule[];
-  summary: DashboardSummaryResponse;
-  totalLoadTime: number;
-}
-
 export async function fetchDashboardAll(): Promise<DashboardData> {
   console.log('🚀 통합 대시보드 API 호출 시작...');
   const startTime = Date.now();
   
   try {
-    const response = await apiClient.get('/api/dashboard/all');
-    const data = await handleResponse(response);
+    const response = await api.get('/dashboard/all');
+    const data = response.data;
     
     const loadTime = Date.now() - startTime;
     console.log(`✅ 통합 API 호출 완료: ${loadTime}ms`);
@@ -753,7 +726,9 @@ async function fetchDashboardAllFallback(): Promise<DashboardData> {
         email: u.email,
         fullName: u.fullName,
         role: u.role,
-        status: u.status
+        status: u.status,
+        lastLogin: u.lastLogin,
+        joinedAt: u.createdAt
       })),
       orders,
       inventory,
@@ -767,4 +742,3 @@ async function fetchDashboardAllFallback(): Promise<DashboardData> {
     throw error;
   }
 }
-
