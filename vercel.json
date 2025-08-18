@@ -1,8 +1,30 @@
 {
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://smart-wms-be.p-e.kr; font-src 'self' data:; frame-src 'none';"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/api/api/:path*", "destination": "http://3.36.79.189/api/:path*" },
     { "source": "/api/:path*",     "destination": "http://3.36.79.189/api/:path*" },
-    { "source": "/v3/:path*",      "destination": "http://3.36.79.189/v3/:path*" },
-    { "source": "/swagger-ui/:path*", "destination": "http://3.36.79.189/swagger-ui/:path*" }
+    { "source": "/v3/:path*",      "destination": "http://3.36.79.189/v3/:path*" }
   ]
 }

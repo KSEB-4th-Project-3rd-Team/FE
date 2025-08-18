@@ -118,7 +118,7 @@ export default function ApiConsolePage() {
           프로덕션 백엔드 API 엔드포인트 테스트 콘솔
         </p>
         <p className="text-sm text-blue-600 mt-2">
-          Base URL: {process.env.NEXT_PUBLIC_API_BASE || "https://smart-wms-be.p-e.kr"}
+          Base URL: {process.env.NEXT_PUBLIC_API_BASE || "API_BASE_FROM_ENV"}
         </p>
       </div>
 

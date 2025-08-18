@@ -99,12 +99,30 @@ export default function AuthForm() {
             )}
             <div>
               <Label htmlFor="username">아이디</Label>
-              <Input id="username" name="username" type="text" value={formData.username} onChange={handleInputChange} placeholder="아이디를 입력하세요" disabled={isLoading} />
+              <Input 
+                id="username" 
+                name="username" 
+                type="text" 
+                value={formData.username} 
+                onChange={handleInputChange} 
+                placeholder="아이디를 입력하세요" 
+                disabled={isLoading}
+                autoComplete="username"
+              />
             </div>
             <div>
               <Label htmlFor="password">비밀번호</Label>
               <div className="relative">
-                <Input id="password" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleInputChange} placeholder="비밀번호를 입력하세요" disabled={isLoading} />
+                <Input 
+                  id="password" 
+                  name="password" 
+                  type={showPassword ? "text" : "password"} 
+                  value={formData.password} 
+                  onChange={handleInputChange} 
+                  placeholder="비밀번호를 입력하세요" 
+                  disabled={isLoading}
+                  autoComplete={isLogin ? "current-password" : "new-password"}
+                />
                 <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)} disabled={isLoading}>
                   {showPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
                 </Button>
@@ -113,7 +131,16 @@ export default function AuthForm() {
             {!isLogin && (
               <div>
                 <Label htmlFor="confirmPassword">비밀번호 확인</Label>
-                <Input id="confirmPassword" name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleInputChange} placeholder="비밀번호를 다시 입력하세요" disabled={isLoading} />
+                <Input 
+                  id="confirmPassword" 
+                  name="confirmPassword" 
+                  type="password" 
+                  value={formData.confirmPassword} 
+                  onChange={handleInputChange} 
+                  placeholder="비밀번호를 다시 입력하세요" 
+                  disabled={isLoading}
+                  autoComplete="new-password"
+                />
               </div>
             )}
             {error && <div className="text-red-600 text-sm text-center bg-red-50 p-2 rounded">{error}</div>}
