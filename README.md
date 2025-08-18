@@ -5,15 +5,6 @@
   <h1 align="center">KSEB Smart WMS</h1>
   <p align="center">
     Next.js 기반의 스마트 창고 관리 시스템(WMS) 프론트엔드
-    <br />
-    <a href="https://your-project-link.com/docs"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://your-project-demo.com">View Demo</a>
-    ·
-    <a href="https://github.com/your-username/KSEB-Web/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/your-username/KSEB-Web/issues">Request Feature</a>
   </p>
 </div>
 
@@ -66,39 +57,8 @@
 
 - **Node.js:** `v18.x` 이상
 - **Package Manager:** `npm` 또는 `pnpm`
-- **Backend Server:** 백엔드 서버가 `http://localhost:8080`에서 실행 중이어야 합니다.
+- **Backend Server:** 백엔드 서버에서 실행 중이어야 합니다.
 
-### ⚙️ 설치 및 실행
-
-<details>
-<summary><strong>자세한 설치 및 실행 방법 보기</strong></summary>
-
-1.  **프로젝트 저장소 복제:**
-    ```bash
-    git clone https://github.com/your-username/KSEB-Web.git
-    ```
-
-2.  **프로젝트 디렉토리로 이동:**
-    ```bash
-    cd KSEB-Web
-    ```
-
-3.  **의존성 패키지 설치:**
-    ```bash
-    npm install
-    ```
-
-4.  **개발 서버 실행:**
-    ```bash
-    npm run dev
-    ```
-
-5.  **브라우저에서 확인:**
-    웹 브라우저를 열고 [http://localhost:3000](http://localhost:3000)으로 접속하세요.
-
-</details>
-
----
 
 ## 📂 프로젝트 구조
 
@@ -133,21 +93,7 @@
 
 - **API 통신:** 모든 백엔드 API 요청은 `lib/api.ts`에 정의된 함수를 통해 이루어집니다.
 - **서버 상태 관리:** `TanStack Query`를 사용하여 서버 데이터를 효율적으로 `fetching`, `caching`, `synchronizing`, `updating` 합니다.
-- **API 프록시:** 개발 환경의 CORS 문제를 해결하기 위해 `next.config.mjs`에 API 프록시가 설정되어 있습니다. `/api`로 시작하는 모든 요청은 백엔드 서버(`http://localhost:8080`)로 전달됩니다.
+- **API 프록시:** 개발 환경의 CORS 문제를 해결하기 위해 `next.config.mjs`에 API 프록시가 설정되어 있습니다. `/api`로 시작하는 모든 요청은 백엔드 서버로 전달됩니다.
 - **API 명세:** 자세한 API 엔드포인트 및 데이터 구조는 `backend_api_spec.md` 문서를 참고하세요.
 
----
 
-## 📦 빌드 및 배포
-
-프로덕션 환경에 배포하기 위한 스크립트입니다.
-
-1.  **프로덕션 빌드 생성:**
-    ```bash
-    npm run build
-    ```
-
-2.  **프로덕션 서버 시작:**
-    ```bash
-    npm run start
-    ```
