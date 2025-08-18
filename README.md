@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://your-project-link.com">
-    <img src="public/images/obtimized/page-logo.png" alt="Logo" width="80" height="80">
+    <img src="public/images/obtimized/OpenGraph.png" alt="Logo" width="80" height="80">
   </a>
   <h1 align="center">KSEB Smart WMS</h1>
   <p align="center">
