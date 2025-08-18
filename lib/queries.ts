@@ -124,6 +124,7 @@ export function useRawInOutData() {
     queryKey: queryKeys.inOutData,
     queryFn: fetchRawInOutData,
     staleTime: 30 * 1000, // 30초 캐시 (자주 바뀜)
+    refetchInterval: 5000, // 5초마다 자동 새로고침
   });
 }
 
@@ -153,12 +154,12 @@ export function useInventoryData() {
     return rawInventory.map((backendItem, index) => {
       const item = items.find(i => i.itemId === backendItem.itemId);
       
-      // 'pending'을 제외하고 실제 예약된 수량만 계산
+      // 'scheduled' 상태의 주문만 집계
       const inboundScheduled = inOutData
         ?.filter(record => 
           record.type === 'inbound' && 
           record.sku === item?.itemCode &&
-          ['scheduled', 'in_progress'].includes(record.status)
+          record.status === 'scheduled'
         )
         .reduce((sum, record) => sum + record.quantity, 0) || 0;
       
@@ -166,7 +167,7 @@ export function useInventoryData() {
         ?.filter(record => 
           record.type === 'outbound' && 
           record.sku === item?.itemCode &&
-          ['scheduled', 'in_progress'].includes(record.status)
+          record.status === 'scheduled'
         )
         .reduce((sum, record) => sum + record.quantity, 0) || 0;
 

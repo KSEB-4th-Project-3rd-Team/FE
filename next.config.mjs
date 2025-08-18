@@ -53,7 +53,6 @@ const nextConfig = {
         port: '8080',
       },
     ],
-    formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 86400,
   },
   async rewrites() {
