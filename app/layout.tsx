@@ -30,16 +30,10 @@ export const metadata: Metadata = {
     siteName: 'KSEB Smart WMS',
     images: [
       {
-        url: '/images/optimized/page-logo.png',
+        url: '/images/optimazed/OpenGraph.png',
         width: 1200,
         height: 630,
         alt: 'KSEB Smart WMS - 스마트 창고 관리 시스템',
-      },
-      {
-        url: '/images/optimized/page-logo.png',
-        width: 1800,
-        height: 1600,
-        alt: 'KSEB Smart WMS Dashboard',
       },
     ],
     locale: 'ko_KR',
@@ -49,7 +43,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'KSEB Smart WMS - 스마트 창고 관리 시스템',
     description: 'Unity 3D 시뮬레이션과 AMR 로봇을 활용한 차세대 창고 관리 시스템',
-    images: ['/images/optimized/page-logo.png'],
+    images: ['/images/optimazed/OpenGraph.png'],
     creator: '@KSEB',
   },
   robots: {
