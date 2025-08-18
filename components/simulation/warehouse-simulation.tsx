@@ -31,10 +31,10 @@ const asNumericTaskIdOrUndefined = (s?: string | number) => {
 
 export default function WarehouseSimulation() {
   const { unityProvider, sendMessage, addEventListener, removeEventListener, isLoaded, loadingProgression } = useUnityContext({
-    loaderUrl: "/unity/Build/R20_WMS_Simul.loader.js",
-    dataUrl: "/unity/Build/R20_WMS_Simul.data",
-    frameworkUrl: "/unity/Build/R20_WMS_Simul.framework.js",
-    codeUrl: "/unity/Build/R20_WMS_Simul.wasm",
+    loaderUrl: "/unity/Build/R21_WMS_Simul.loader.js",
+    dataUrl: "/unity/Build/R21_WMS_Simul.data",
+    frameworkUrl: "/unity/Build/R21_WMS_Simul.framework.js",
+    codeUrl: "/unity/Build/R21_WMS_Simul.wasm",
     webglContextAttributes: {
       powerPreference: "high-performance",
       antialias: false,
