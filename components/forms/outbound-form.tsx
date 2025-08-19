@@ -50,18 +50,13 @@ export default function OutboundForm({ onClose, racksData: propsRacksData, racks
 
   // 입출고 데이터 기반으로 랙별 정확한 재고 계산 (백엔드 API는 전체 수량만 제공)
   const allInventoryLocations = useMemo(() => {
-    console.log('=== 출고폼 재고 위치 계산 ===');
     
     if (!rawInOutData || !itemsData) return [];
-    
-    console.log('🔄 입출고 데이터 기반 랙별 재고 계산');
-    console.log('입출고 데이터:', rawInOutData.length, '개');
     
     // 완료된 입출고 내역만 필터링
     const completedInOut = rawInOutData.filter(order => 
       order.status?.toLowerCase() === 'completed'
     );
-    console.log('완료된 입출고 주문 수:', completedInOut.length);
     
     // 각 품목별 랙 위치별 재고 계산
     const rackItemQuantities: Record<string, Record<number, number>> = {}; // rackCode -> {itemId: quantity}
@@ -71,7 +66,6 @@ export default function OutboundForm({ onClose, racksData: propsRacksData, racks
       const locationCode = order.locationCode || '';
       let rackCode = locationCode.replace('-', '').toUpperCase();
       
-      // 패딩 처리: J5 → J005
       if (rackCode.match(/^[A-T]\d{1,2}$/)) {
         const section = rackCode.charAt(0);
         const position = rackCode.slice(1).padStart(3, '0');
@@ -97,7 +91,6 @@ export default function OutboundForm({ onClose, racksData: propsRacksData, racks
       });
     });
     
-    // 출고 가능한 재고 목록 생성 (수량이 0보다 큰 것만)
     const inventoryLocations: any[] = [];
     
     Object.entries(rackItemQuantities).forEach(([rackCode, itemQuantities]) => {
@@ -120,8 +113,6 @@ export default function OutboundForm({ onClose, racksData: propsRacksData, racks
       });
     });
     
-    console.log('랙별 재고 위치:', inventoryLocations.length, '개');
-    console.log('재고 위치 목록:', inventoryLocations.map(loc => `${loc.locationCode}: ${loc.itemName} (${loc.quantity}개)`));
     
     return inventoryLocations;
   }, [rawInOutData, itemsData]);

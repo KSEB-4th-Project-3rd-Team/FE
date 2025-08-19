@@ -38,15 +38,11 @@ export default function InOutStatusPanel({ showSearch, data, onReserveOrder }: I
     try {
       // Unity 연동: 예약 상태로 변경할 때 Unity에 작업 전송
       if (newStatus === 'scheduled') {
-        console.log('[Unity] Sending order to Unity:', record);
-        
         // 콜백이 있으면 콜백 사용, 없으면 전역 함수 사용
         if (onReserveOrder) {
           onReserveOrder(record);
         } else if ((window as any).unityReserveOrder) {
           (window as any).unityReserveOrder(record);
-        } else {
-          console.warn('[Unity] No Unity reserve function available');
         }
       }
       
@@ -54,7 +50,6 @@ export default function InOutStatusPanel({ showSearch, data, onReserveOrder }: I
       toast.success(`주문 상태가 ${ORDER_STATUS_CONFIG[newStatus].label}(으)로 변경되었습니다.`);
     } catch (error) {
       toast.error("상태 변경 중 오류가 발생했습니다.");
-      console.error('Status change failed:', error);
     }
   };
 

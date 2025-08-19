@@ -34,7 +34,6 @@ http.interceptors.response.use(
     
     if (status === 401 || status === 500) {
       // 인증 실패시 로그인 페이지로 리다이렉트 (window.location 사용 안 함)
-      console.error("Authentication failed, redirecting to login");
       if (typeof window !== "undefined") {
         // 현재 페이지가 로그인 페이지가 아닐 때만 리다이렉트
         if (!window.location.pathname.includes('/login')) {
@@ -42,7 +41,6 @@ http.interceptors.response.use(
         }
       }
     } else if (status === 403) {
-      console.error("Forbidden: You don't have permission to access this resource");
     } else if (status >= 500) {
       // Retry 5xx errors once
       const config = error.config;
@@ -51,7 +49,6 @@ http.interceptors.response.use(
         try {
           return await http.request(config);
         } catch (retryError) {
-          console.error("Retry failed:", retryError);
         }
       }
     }

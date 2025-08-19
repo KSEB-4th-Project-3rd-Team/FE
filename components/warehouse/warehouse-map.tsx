@@ -32,7 +32,6 @@ const generateRackPositions = (): RackPosition[] => {
   // warehouse.png처럼 통로가 있는 세로로 긴 랙 구조, 개별 랙 유지
   RACK_SECTIONS.forEach((sectionPair, colIndex) => {
     sectionPair.forEach((section, sectionIndex) => {
-      // 각 섹션에 12개 위치 (1~12)를 개별 랙으로 생성
       for (let position = 1; position <= 12; position++) {
         const rackWidth = 2.8 // 랙 너비를 줄임
         const rackHeight = 5 // 각 개별 랙의 높이
@@ -81,7 +80,6 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
   // 30초마다 자동 새로고침
   useEffect(() => {
     const interval = setInterval(() => {
-      console.log('창고맵 자동 새로고침 실행...')
       refetchInventory()
       refetchInOut()
     }, 30000) // 30초
@@ -91,16 +89,11 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
   const [selectedRack, setSelectedRack] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(false)
   
-  console.log('=== 창고맵 입출고 기반 재고 계산 ===')
-  console.log('전체 입출고 데이터:', rawInOutData.length, '개')
-  console.log('현재 시간:', new Date().toLocaleTimeString(), '- 창고맵 리렌더링됨')
-  
   // status별 개수 확인
   const statusCounts = rawInOutData.reduce((acc, order) => {
     acc[order.status] = (acc[order.status] || 0) + 1
     return acc
   }, {} as Record<string, number>)
-  console.log('status별 개수:', statusCounts)
   
   const isLoading = rawInventoryLoading || inOutLoading
 
@@ -108,73 +101,41 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
   const rackInventoryMap = useMemo(() => {
     const map: Record<string, any[]> = {}
     
-    console.log('=== 입출고 기반 재고 계산 ===')
-    
     // 모든 주문의 상태 확인
     const statusCounts = rawInOutData.reduce((acc, order) => {
       const key = `${order.type}_${order.status}`;
       acc[key] = (acc[key] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
-    console.log('📊 주문 상태별 개수:', statusCounts);
     
     // 출고 주문만 따로 확인 - 특히 locationCode 중점 확인
     const outboundOrders = rawInOutData.filter(order => order.type === 'OUTBOUND');
-    console.log('📤 총 출고 주문 수:', outboundOrders.length);
-    console.log('🔍 출고 주문들의 locationCode 상세 분석:');
-    outboundOrders.forEach(order => {
-      console.log(`출고 주문 ${order.orderId}:`);
-      console.log(`  상태: ${order.status}`);
-      console.log(`  주문레벨 locationCode: "${order.locationCode}"`);
-      console.log(`  품목별 정보:`);
-      order.items?.forEach((item, idx) => {
-        console.log(`    품목${idx+1}: ${item.itemName} - ${item.requestedQuantity}개`);
-        console.log(`    품목별 locationCode: "${(item as any).locationCode || 'undefined'}"`);
-      });
-      console.log('---');
-    });
     
     // 완료된 입출고 내역만 필터링 (대소문자 구분 없이)
     const completedInOut = rawInOutData.filter(order => 
       order.status?.toLowerCase() === 'completed'
     )
-    console.log('완료된 입출고 주문 수:', completedInOut.length)
     
     // 완료된 출고 주문만 확인
     const completedOutbound = completedInOut.filter(order => order.type === 'OUTBOUND');
-    console.log('✅ 완료된 출고 주문 수:', completedOutbound.length);
-    completedOutbound.forEach(order => {
-      console.log(`완료된 출고 ${order.orderId}: 위치=${order.locationCode}, 품목=${order.items?.map(i => `${i.itemName}(${i.requestedQuantity}개)`).join(', ')}`);
-    });
     
     // 방금 완료된 주문들 (최근 10개) 확인
     const recentOrders = completedInOut.slice(-10)
-    console.log('최근 완료된 10개 주문의 locationCode:')
-    recentOrders.forEach(order => {
-      console.log(`주문 ${order.orderId}: locationCode="${order.locationCode}", 타입=${order.type}`)
-    })
     
     // 모든 완료된 주문의 locationCode들 확인
     const allLocationCodes = completedInOut.map(order => order.locationCode).filter(Boolean)
     const uniqueLocationCodes = [...new Set(allLocationCodes)]
-    console.log('완료된 주문의 모든 locationCode들:', uniqueLocationCodes)
     
     // I009의 모든 상태별 주문 확인
     const i009AllOrders = rawInOutData.filter(order => order.locationCode === 'I009')
-    console.log('I009의 모든 주문들 (상태별):')
     const i009StatusCounts = i009AllOrders.reduce((acc, order) => {
       const key = `${order.status}-${order.type}`
       acc[key] = (acc[key] || 0) + 1
       return acc
     }, {} as Record<string, number>)
-    console.log('I009 상태별 개수:', i009StatusCounts)
     
     // 가장 최근 I009 주문들 보기
     const recentI009Orders = i009AllOrders.slice(-5)
-    console.log('I009의 최근 5개 주문:')
-    recentI009Orders.forEach(order => {
-      console.log(`주문 ${order.orderId}: ${order.type} - ${order.status}`)
-    })
     
     // 각 품목별 랙 위치별 재고 계산
     const rackItemQuantities: Record<string, Record<number, number>> = {} // rackCode -> {itemId: quantity}
@@ -184,7 +145,6 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
       const locationCode = order.locationCode || ''
       let rackCode = locationCode.replace('-', '').toUpperCase()
       
-      // 패딩 처리: J9 → J009
       if (rackCode.match(/^[A-T]\d{1,2}$/)) {
         const section = rackCode.charAt(0)
         const position = rackCode.slice(1).padStart(3, '0')
@@ -192,11 +152,8 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
       }
       
       if (!rackCode) {
-        console.log(`⚠️ 주문 ${order.orderId}에 locationCode가 없음, 건너뜀`)
         return
       }
-      
-      console.log(`🔄 주문 ${order.orderId} (${order.type}) 처리: ${locationCode} → ${rackCode}`)
       
       order.items?.forEach(item => {
         if (!rackItemQuantities[rackCode]) {
@@ -210,19 +167,14 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
           // 입고: 수량 증가
           newQty = currentQty + item.requestedQuantity
           rackItemQuantities[rackCode][item.itemId] = newQty
-          console.log(`  ➕ ${item.itemName}: ${currentQty} + ${item.requestedQuantity} = ${newQty}`)
         } else if (order.type === 'OUTBOUND') {
           // 출고: 수량 감소
           newQty = Math.max(0, currentQty - item.requestedQuantity)
           rackItemQuantities[rackCode][item.itemId] = newQty
-          console.log(`  ➖ ${item.itemName}: ${currentQty} - ${item.requestedQuantity} = ${newQty}`)
         }
       })
     })
     
-    console.log('랙별 품목 수량 맵:', rackItemQuantities)
-    
-    // 최종 랙 맵 생성 (수량이 0보다 큰 것만)
     Object.entries(rackItemQuantities).forEach(([rackCode, itemQuantities]) => {
       Object.entries(itemQuantities).forEach(([itemIdStr, quantity]) => {
         if (quantity > 0) {
@@ -248,15 +200,12 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
       })
     })
     
-    console.log('최종 입출고 기반 랙 맵:', map)
-    console.log('활성 랙 수:', Object.keys(map).length)
-    console.log('활성 랙 목록:', Object.keys(map))
     
     // I009 랙 특별히 확인
     if (map['I009']) {
-      console.log('I009 랙 재고:', map['I009'])
+      // I009 랙 재고 있음
     } else {
-      console.log('I009 랙에 재고가 없음')
+      // I009 랙에 재고가 없음
     }
     
     return map
@@ -270,8 +219,7 @@ export default function WarehouseMap({ inventoryData }: WarehouseMapProps) {
     
     // I009 랙 특별히 디버그
     if (rackCode === 'I009') {
-      console.log(`I009 랙 체크: rackItems=${rackItems.length}개, hasInventory=${hasInventory}`)
-      console.log('I009 rackItems:', rackItems)
+      // I009 랙 체크
     }
     
     return hasInventory

@@ -7,7 +7,6 @@ import { User } from '@/app/(main)/layout';
 import axios from 'axios';
 
 // --- Types ---
-// 타입을 한 곳에서 관리하여 재사용성을 높입니다.
 
 // Response-specific types
 export interface ItemResponse {
@@ -110,7 +109,6 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
   return response.data;
 }
 
-// Helper function to handle API responses
 async function handleResponse<T>(response: { data: T }): Promise<T> {
   return response.data;
 }
@@ -226,7 +224,6 @@ export interface Rack {
   inventories?: RackInventoryItem[]; // 랙에 포함된 재고 아이템들
 }
 
-// 창고맵을 위한 경량화된 Rack 타입
 export interface RackMapResponse {
   id: number;
   rackCode: string; // A001~T012
@@ -307,7 +304,6 @@ export async function fetchInOutData(): Promise<InOutRecord[]> {
   // Filter for completed records only
   const completedData = allData.filter(record => record.status === 'COMPLETED');
   
-  // Transform data to match InOutRecord interface (프론트에서 조합)
   const transformedData = completedData.flatMap(record => {
     return record.items.map((item, itemIndex) => {
       const dateTime = record.createdAt || record.updatedAt || new Date().toISOString();
@@ -491,7 +487,6 @@ export async function fetchInventoryData(): Promise<InventoryItem[]> {
   
   // If no inventory data exists, return empty array
   if (!backendData || backendData.length === 0) {
-    console.log('No inventory data found in backend');
     return [];
   }
   
@@ -656,7 +651,6 @@ export async function deleteUser(id: string): Promise<void> {
 // ===== 통합 대시보드 API =====
 // 5개 개별 API 호출을 1개로 통합하여 75% 성능 향상
 
-// 백엔드 입출고 주문 데이터 타입 정의
 export interface BackendInOutOrderResponse {
   orderId: number;
   type: string;
@@ -677,7 +671,6 @@ export interface BackendInOutOrderResponse {
 }
 
 export async function fetchDashboardAll(): Promise<DashboardData> {
-  console.log('🚀 통합 대시보드 API 호출 시작...');
   const startTime = Date.now();
   
   try {
@@ -685,7 +678,6 @@ export async function fetchDashboardAll(): Promise<DashboardData> {
     const data = response.data;
     
     const loadTime = Date.now() - startTime;
-    console.log(`✅ 통합 API 호출 완료: ${loadTime}ms`);
     
     return {
       ...data,
@@ -693,10 +685,8 @@ export async function fetchDashboardAll(): Promise<DashboardData> {
     };
   } catch (error) {
     const loadTime = Date.now() - startTime;
-    console.error(`❌ 통합 API 호출 실패: ${loadTime}ms`, error);
     
     // Fallback: 개별 API 호출
-    console.log('🔄 개별 API 호출로 fallback 시작...');
     return await fetchDashboardAllFallback();
   }
 }
@@ -716,7 +706,6 @@ async function fetchDashboardAllFallback(): Promise<DashboardData> {
     ]);
     
     const loadTime = Date.now() - startTime;
-    console.log(`✅ Fallback API 호출 완료: ${loadTime}ms`);
     
     return {
       items,
@@ -738,7 +727,6 @@ async function fetchDashboardAllFallback(): Promise<DashboardData> {
     };
   } catch (error) {
     const loadTime = Date.now() - startTime;
-    console.error(`❌ Fallback API 호출도 실패: ${loadTime}ms`, error);
     throw error;
   }
 }

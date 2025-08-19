@@ -27,7 +27,6 @@ import { useCancelInOutOrder, useUpdateOrderStatus } from "@/lib/queries"
 import { toast } from "@/hooks/use-toast"
 
 type DisplayUnit = "개수" | "set"
-// 새로운 상태 타입 사용
 type InOutStatus = OrderStatus;
 
 type InOutHistoryTableProps = {
@@ -146,7 +145,6 @@ export default function InOutHistoryTable({ historyType, data }: InOutHistoryTab
         description: "상태 변경 중 오류가 발생했습니다.",
         variant: "destructive",
       });
-      console.error('Status change failed:', error);
     }
   };
 

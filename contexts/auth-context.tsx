@@ -29,7 +29,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
           setUser(response.user);
         }
       } catch (error) {
-        console.log("No active session found");
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -45,7 +44,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
       // 로그인 성공 시 대시보드로 이동
       router.push('/dashboard');
     } catch (error) {
-      console.error("Login failed:", error);
       throw new Error("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
     }
   };
@@ -54,8 +52,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     try {
       await apiSignup(userData);
     } catch (error: any) {
-      console.error("Signup failed:", error);
-      console.error("Error response:", error.response?.data);
       const errorMessage = error.response?.data?.message || "회원가입에 실패했습니다. 입력된 정보를 확인해주세요.";
       throw new Error(errorMessage);
     }
@@ -65,7 +61,6 @@ export const AuthProvider: FC<{ children: ReactNode }> = ({ children }) => {
     try {
       await apiLogout();
     } catch (error) {
-      console.error("Logout failed:", error);
     } finally {
       setUser(null);
       // 로그아웃 시 로그인 페이지로 이동

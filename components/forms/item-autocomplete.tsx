@@ -30,10 +30,6 @@ interface ItemAutocompleteProps {
 export function ItemAutocomplete({ id, items, value, onValueChange }: ItemAutocompleteProps) {
   const [open, setOpen] = React.useState(false)
   
-  // console.log("ItemAutocomplete rendered:");
-  // console.log("- value:", value, "(type:", typeof value, ")");
-  // console.log("- items count:", items.length);
-  // console.log("- first item:", items[0]);
 
   const itemOptions = React.useMemo(() => items.map(item => ({
     id: item.itemId,
@@ -50,7 +46,6 @@ export function ItemAutocomplete({ id, items, value, onValueChange }: ItemAutoco
     return false;
   }), [itemOptions, value]);
 
-  // console.log("ItemAutocomplete render - open:", open, "value:", value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -90,18 +85,13 @@ export function ItemAutocomplete({ id, items, value, onValueChange }: ItemAutoco
               <CommandItem
                 key={item.id || `item-${index}`}
                 value={String(item.id)}
-                // onMouseEnter={() => console.log("Item onMouseEnter:", item.id)}
                 onClick={() => {
-                  console.log("Item onClick triggered! itemId:", item.id, "prevValue:", value);
                   const newValue = item.id === value ? null : item.id;
-                  console.log("Calling onValueChange with:", newValue, "(type:", typeof newValue, ")");
                   onValueChange(newValue);
                   setOpen(false)
                 }}
                 onSelect={(selectedValue) => {
-                  console.log("Item onSelect triggered! selectedValue:", selectedValue, "itemId:", item.id, "prevValue:", value);
                   const newValue = item.id === value ? null : item.id;
-                  console.log("Calling onValueChange with:", newValue, "(type:", typeof newValue, ")");
                   onValueChange(newValue);
                   setOpen(false)
                 }}

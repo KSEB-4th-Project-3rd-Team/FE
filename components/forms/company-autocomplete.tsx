@@ -30,10 +30,6 @@ interface CompanyAutocompleteProps {
 export function CompanyAutocomplete({ id, value, onValueChange, companies }: CompanyAutocompleteProps) {
   const [open, setOpen] = React.useState(false)
   
-  // console.log("CompanyAutocomplete rendered:");
-  // console.log("- value:", value, "(type:", typeof value, ")");
-  // console.log("- companies count:", companies.length);
-  // console.log("- first company:", companies[0]);
 
   const companyOptions = React.useMemo(() => Array.isArray(companies) ? companies.map(company => ({
     id: company.companyId,
@@ -50,7 +46,6 @@ export function CompanyAutocomplete({ id, value, onValueChange, companies }: Com
     return false;
   }), [companyOptions, value]);
 
-  // console.log("CompanyAutocomplete render - open:", open, "value:", value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -90,18 +85,13 @@ export function CompanyAutocomplete({ id, value, onValueChange, companies }: Com
               <CommandItem
                 key={company.id || `company-${index}`}
                 value={String(company.id)}
-                // onMouseEnter={() => console.log("Company onMouseEnter:", company.id)}
                 onClick={() => {
-                  console.log("Company onClick triggered! companyId:", company.id, "prevValue:", value);
                   const newValue = company.id === value ? null : company.id;
-                  console.log("Calling onValueChange with:", newValue, "(type:", typeof newValue, ")");
                   onValueChange(newValue);
                   setOpen(false)
                 }}
                 onSelect={(selectedValue) => {
-                  console.log("Company onSelect triggered! selectedValue:", selectedValue, "companyId:", company.id, "prevValue:", value);
                   const newValue = company.id === value ? null : company.id;
-                  console.log("Calling onValueChange with:", newValue, "(type:", typeof newValue, ")");
                   onValueChange(newValue);
                   setOpen(false)
                 }}

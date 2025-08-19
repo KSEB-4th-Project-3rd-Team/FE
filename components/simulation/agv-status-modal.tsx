@@ -3,9 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { X, Zap, MapPin } from "lucide-react"
-// import type { AGV } from "@/lib/agv-simulation" // Removed for Spring backend integration
 
-// Temporary AGV type until API is connected
 export type AGV = {
   id: string
   name: string

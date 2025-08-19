@@ -56,7 +56,6 @@ export default function InboundRegistrationPage() {
         setIsModalOpen(false);
       },
       onError: (error: any) => {
-        console.error("Failed to submit inbound order:", error);
         toast.error("입고 등록에 실패했습니다.");
       }
     });

@@ -109,7 +109,6 @@ export default function InOutHistory({ data }: { data: InOutRecord[] }) {
   }
 
   const handleRegistrationSubmit = () => {
-    console.log("등록할 항목들:", registrationItems)
     setIsRegistrationModalOpen(false)
     setRegistrationItems([])
   }

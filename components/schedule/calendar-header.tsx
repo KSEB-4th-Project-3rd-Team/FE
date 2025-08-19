@@ -18,7 +18,6 @@ export default function CalendarHeader({ currentDate, onDateChange }: CalendarHe
   const currentYear = currentDate.getFullYear()
   const currentMonth = currentDate.getMonth()
 
-  // 현재 연도를 중심으로 -10년부터 +10년 범위의 연도 생성
   const years = Array.from({ length: 21 }, (_, i) => currentYear - 10 + i)
 
   const previousMonth = () => {

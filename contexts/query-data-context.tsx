@@ -11,7 +11,6 @@ import {
   useDashboardSummary,
 } from '@/lib/queries';
 
-// 컨텍스트 타입 정의
 interface QueryDataContextType {
   // 기본 데이터
   companies: ReturnType<typeof useCompanies>;
@@ -33,7 +32,6 @@ interface QueryDataContextType {
 
 const QueryDataContext = createContext<QueryDataContextType | undefined>(undefined);
 
-// Provider 컴포넌트
 export function QueryDataProvider({ children }: { children: ReactNode }) {
   // 모든 쿼리 훅들 호출
   const companies = useCompanies();

@@ -83,12 +83,10 @@ export default function WarehouseSimulation() {
   const assignTaskToAmr = useCallback(
     (taskType: "inbound" | "outbound", rackIdRaw: string, orderId?: string | number) => {
       if (!isValidType(taskType)) {
-        console.error(`[Unity] Invalid type: ${taskType}`)
         return false
       }
       const rackId = normalizeRackId(rackIdRaw)
       if (!rackId) {
-        console.error(`[Unity] Invalid rackId: ${rackIdRaw}`)
         return false
       }
 
@@ -98,7 +96,6 @@ export default function WarehouseSimulation() {
         ts: Date.now(),
       }
       const numericTaskId = asNumericTaskIdOrUndefined(orderId)
-      console.log(`[Unity] Original orderId: ${orderId}, extracted taskId: ${numericTaskId}`)
       if (numericTaskId) payload.taskId = numericTaskId
 
       const sender =
@@ -108,16 +105,13 @@ export default function WarehouseSimulation() {
           : null)
 
       if (!sender) {
-        console.error("[Unity] sendMessage not available")
         return false
       }
 
       try {
         sender("TaskManager", "AssignTaskFromJson", JSON.stringify(payload))
-        console.log("[Unity] Task sent:", payload)
         return true
       } catch (e) {
-        console.error("[Unity] Failed to send task:", e, payload)
         return false
       }
     },
@@ -126,10 +120,10 @@ export default function WarehouseSimulation() {
 
   const { mutate: updateStatus } = useUpdateOrderStatus({
     onSuccess: (data, variables) => {
-      console.log(`[Web] Task status updated successfully:`, variables)
+      // Task status updated successfully
     },
     onError: (error, variables) => {
-      console.error(`[Web] Failed to update task status:`, error, variables)
+      // Failed to update task status
     }
   })
 
@@ -141,15 +135,12 @@ export default function WarehouseSimulation() {
   // 주문 예약 시 Unity로 작업 전송
   const handleReserveOrder = useCallback(
     (order: InOutRecord) => {
-      console.log("[Unity] Reserving order:", order)
       
-      // order.id에서 숫자 부분만 추출 ("1-0" → "1")
       const numericOrderId = order.id.split('-')[0]
-      console.log(`[Unity] Original order.id: ${order.id}, extracted orderId: ${numericOrderId}`)
       
       const ok = assignTaskToAmr(order.type as "inbound" | "outbound", order.location ?? "", numericOrderId)
       if (!ok) {
-        console.error(`[Unity] Failed to send order ${order.id} to Unity`)
+        // Failed to send order to Unity
       }
     },
     [assignTaskToAmr]
@@ -164,7 +155,6 @@ export default function WarehouseSimulation() {
   }, [handleReserveOrder])
 
   useEffect(() => {
-    console.log("[Web] Registering 'window.onUnityTaskCompleted' function.");
     // 전역 window 객체에 핸들러 함수를 직접 할당
     (window as any).onUnityTaskCompleted = (detail: any) => {
       try {
@@ -173,13 +163,11 @@ export default function WarehouseSimulation() {
           updateStatusRef.current({ orderId: String(taskId), status: "COMPLETED" });
         }
       } catch (e) {
-        console.error("[Web] An error occurred inside onUnityTaskCompleted:", e);
+        // An error occurred inside onUnityTaskCompleted
       }
     };
 
-    // 컴포넌트가 언마운트될 때 전역 핸들러를 정리
     return () => {
-      console.log("[Web] Removing 'window.onUnityTaskCompleted' function.");
       delete (window as any).onUnityTaskCompleted;
     };
   }, []); // 의존성 배열을 비워서 마운트/언마운트 시 한 번만 실행

@@ -35,8 +35,6 @@ import type { Company } from '@/components/company/company-list';
 import type { Item } from '@/components/item/item-list';
 import type { InOutRecord, InventoryItem } from '@/components/utils';
 
-// ===== 🚀 통합 대시보드 Query 훅 (5 API → 1 API) =====
-// 75% 성능 향상을 위한 통합 API 사용
 
 export function useDashboardAll() {
   return useQuery({
@@ -365,19 +363,16 @@ export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ orderId, status }: { orderId: string; status: string }) => {
-      console.log(`[API] Calling updateOrderStatus with orderId: ${orderId}, status: ${status}`);
       return updateOrderStatus(orderId, status);
     },
     onSuccess: (data, variables) => {
-      console.log(`[API] updateOrderStatus SUCCESS for orderId: ${variables.orderId}`);
-      console.log('[API] Invalidating queries: inOutData, inventory, dashboard-all, racks-map');
       queryClient.invalidateQueries({ queryKey: queryKeys.inOutData });
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory });
       queryClient.invalidateQueries({ queryKey: ['dashboard-all'] });
       queryClient.invalidateQueries({ queryKey: ['racks-map'] });
     },
     onError: (error, variables) => {
-      console.error(`[API] updateOrderStatus FAILED for orderId: ${variables.orderId}:`, error);
+      // Error handling logic can be added here if needed
     },
   });
 }
@@ -416,7 +411,6 @@ export function useCancelInOutOrder() {
   });
 }
 
-// ===== 🚀 Unity 연동용 주문 상태 Query 훅들 =====
 
 // 승인대기 주문 조회
 export function usePendingOrders() {
@@ -440,7 +434,6 @@ export function useReservedOrders() {
   });
 }
 
-// 주문 예약 Mutation (승인대기 → 예약으로 상태 변경)
 export function useReserveOrder() {
   const queryClient = useQueryClient();
   

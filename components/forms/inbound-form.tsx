@@ -25,10 +25,9 @@ interface InboundFormData {
 interface InboundFormProps {
   onSubmit: (data: InboundFormData) => void;
   onClose: () => void;
-  items: any[]; // Will be replaced with proper Item type
+  items: any[];
 }
 
-// 구역 생성 함수 (A~T)
 const generateAreas = () => {
   const areas = [];
   for (let letter = 'A'.charCodeAt(0); letter <= 'T'.charCodeAt(0); letter++) {
@@ -38,7 +37,6 @@ const generateAreas = () => {
   return areas;
 };
 
-// 번호 생성 함수 (1~12번)
 const generateNumbers = () => {
   const numbers = [];
   for (let number = 1; number <= 12; number++) {
@@ -149,7 +147,6 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
           items={propsItems}
           value={formData.itemId}
           onValueChange={(value) => {
-            console.log("InboundForm received itemId:", value, "(type:", typeof value, ")");
             handleValueChange("itemId", value);
           }}
         />
@@ -176,7 +173,6 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
           companies={companies.data || []}
           value={formData.companyId}
           onValueChange={(value) => {
-            console.log("InboundForm received companyId:", value, "(type:", typeof value, ")");
             handleValueChange("companyId", value);
           }}
         />

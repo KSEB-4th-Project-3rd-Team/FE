@@ -22,10 +22,8 @@ import { ORDER_STATUS_CONFIG, type OrderStatus } from '@/lib/order-status';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const AnyPie = Pie as any;
 
-// Helper function to format numbers with commas
 const formatNumber = (num: number) => num.toLocaleString();
 
-// Helper function to get inventory card border colors
 const getInventoryCardBorder = (id: string) => {
   switch (id) {
     case 'totalItems': return 'border-l-blue-500';
@@ -36,7 +34,6 @@ const getInventoryCardBorder = (id: string) => {
   }
 };
 
-// Helper function to get icon backgrounds
 const getIconBackground = (id: string) => {
   switch (id) {
     case 'totalItems': return 'bg-blue-100';
@@ -88,7 +85,6 @@ interface ActiveShapeProps {
 }
 
 export function UnifiedDashboard() {
-  // 🚀 통합 API 호출로 5개 API → 1개 API (75% 성능 향상)
   const { data: dashboardData, isLoading, error } = useDashboardAll();
   
   // 통합 데이터에서 개별 데이터 추출 및 변환
@@ -196,7 +192,6 @@ export function UnifiedDashboard() {
     }));
   }, [dashboardData]);
 
-  // 🎯 새로운 상태별 통계 계산
   const orderStatistics = useMemo(() => {
     if (!dashboardData?.orders) return {
       pending: 0,

@@ -115,7 +115,6 @@ export const isFinalStatus = (status: OrderStatus): boolean => {
   return ['rejected', 'completed', 'cancelled'].includes(status);
 };
 
-// 상태 변경 로그 메시지 생성
 export const getStatusChangeMessage = (
   fromStatus: OrderStatus, 
   toStatus: OrderStatus,
