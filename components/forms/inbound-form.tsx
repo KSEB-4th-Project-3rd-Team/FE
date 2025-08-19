@@ -8,12 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ItemAutocomplete } from "./item-autocomplete"
 import { CompanyAutocomplete } from "./company-autocomplete"
-import { CalendarIcon } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { format } from "date-fns"
-import { cn } from "@/components/utils"
 import { useQueryData } from "@/contexts/query-data-context"
 
 interface InboundFormData {
@@ -62,7 +58,6 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
     notes: "",
     status: 'pending', // 기본값은 항상 '승인대기'
   })
-  const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedArea, setSelectedArea] = useState<string>(""); // UI용 구역 선택
   const [selectedNumber, setSelectedNumber] = useState<string>(""); // UI용 번호 선택
   
@@ -128,7 +123,6 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
     })
     setSelectedArea(""); // 구역 선택 초기화
     setSelectedNumber(""); // 번호 선택 초기화
-    setDate(new Date());
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -229,41 +223,14 @@ export default function InboundForm({ onSubmit, onClose, items: propsItems }: In
 
       <div>
         <Label htmlFor="expected-date">예정일 *</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              id="expected-date"
-              variant={"outline"}
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !date && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, "yyyy-MM-dd") : <span>날짜 선택</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent 
-            className="w-auto p-0 z-[10000] bg-white border shadow-lg" 
-            align="start" 
-            style={{ pointerEvents: 'auto', position: 'fixed' }}
-            avoidCollisions={false}
-          >
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(selectedDate) => {
-                console.log("Calendar onSelect triggered! selectedDate:", selectedDate);
-                setDate(selectedDate);
-                if (selectedDate) {
-                  handleValueChange("expectedDate", format(selectedDate, "yyyy-MM-dd"));
-                }
-              }}
-              disabled={(date) => false}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
+        <Input
+          id="expected-date"
+          name="expectedDate"
+          type="date"
+          value={formData.expectedDate}
+          onChange={handleInputChange}
+          required
+        />
       </div>
 
       <div>

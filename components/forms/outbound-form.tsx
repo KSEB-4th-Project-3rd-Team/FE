@@ -10,11 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ItemAutocomplete } from "./item-autocomplete"
 import { CompanyAutocomplete } from "./company-autocomplete"
-import { CalendarIcon, Trash2 } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
+import { Trash2 } from "lucide-react"
 import { format } from "date-fns"
-import { cn } from "@/components/utils"
 import { useCompanies, useCreateOutboundOrder, useItems, useRacks, useRawInOutData, useRawInventoryData } from "@/lib/queries"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form"
@@ -197,30 +194,22 @@ export default function OutboundForm({ onClose, racksData: propsRacksData, racks
             render={({ field }) => (
               <FormItem>
                 <FormLabel>예정일 *</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? format(field.value, "yyyy-MM-dd") : <span>날짜 선택</span>}
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <FormControl>
+                  <Input
+                    type="date"
+                    value={field.value instanceof Date ? format(field.value, 'yyyy-MM-dd') : ''}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const date = new Date(e.target.value);
+                        const timezoneOffset = date.getTimezoneOffset() * 60000;
+                        const adjustedDate = new Date(date.getTime() + timezoneOffset);
+                        field.onChange(adjustedDate);
+                      } else {
+                        field.onChange(null);
+                      }
+                    }}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
