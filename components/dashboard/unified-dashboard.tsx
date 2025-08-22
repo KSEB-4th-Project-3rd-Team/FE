@@ -12,12 +12,15 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Line, XAxis, YAxis, CartesianGrid, LineChart, Pie, PieChart, Cell, Sector } from 'recharts';
-import { Package, CheckCircle, AlertTriangle, XCircle, Archive, Truck, Clock, CalendarCheck, TrendingUp, TrendingDown, Percent, CalendarIcon, Bot, Activity, AlertCircle, Building, DollarSign, ShoppingCart, Timer, CalendarDays, X } from 'lucide-react';
+import { Package, CheckCircle, AlertTriangle, XCircle, Archive, Truck, Clock, CalendarCheck, TrendingUp, TrendingDown, Percent, CalendarIcon, Bot, Activity, AlertCircle, Building, DollarSign, ShoppingCart, Timer, CalendarDays, X, Brain, Search } from 'lucide-react';
 import { CustomPagination } from '@/components/ui/custom-pagination';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { InOutRecord, InventoryItem } from '../utils';
 import { Item } from '../item/item-list';
 import { useDashboardAll } from '@/lib/queries';
 import { ORDER_STATUS_CONFIG, type OrderStatus } from '@/lib/order-status';
+import { mockAmrData, type Amr, type AmrStatus, generateSeededRandom, generateDemandForecast, getLeadTimeForItem, calculatePredictedOrderDate } from '@/lib/mockData';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const AnyPie = Pie as any;
@@ -45,18 +48,7 @@ const getIconBackground = (id: string) => {
 };
 
 // --- Mock Data Section (AMR only, as it's not in the backend) ---
-type AmrStatus = "moving" | "charging" | "idle" | "error";
-interface Amr { id: string; name: string; status: AmrStatus; battery: number; location: string; currentTask: string | null; }
-const mockAmrData: Amr[] = [
-  { id: "AMR-001", name: "Pioneer 1", status: "moving", battery: 82, location: "A-3", currentTask: "Order #1234" },
-  { id: "AMR-002", name: "Pioneer 2", status: "moving", battery: 91, location: "B-1", currentTask: "Order #1235" },
-  { id: "AMR-003", name: "Scout 1", status: "moving", battery: 76, location: "C-2", currentTask: "Order #1236" },
-  { id: "AMR-004", name: "Pioneer 3", status: "moving", battery: 65, location: "D-4", currentTask: "Order #1237" },
-  { id: "AMR-005", name: "Scout 2", status: "moving", battery: 88, location: "A-1", currentTask: "Order #1238" },
-  { id: "AMR-006", name: "Trailblazer 1", status: "moving", battery: 79, location: "B-3", currentTask: "Order #1239" },
-  { id: "AMR-007", name: "Trailblazer 2", status: "moving", battery: 95, location: "C-4", currentTask: "Order #1240" },
-  { id: "AMR-008", name: "Explorer 1", status: "moving", battery: 85, location: "D-1", currentTask: "Order #1241" },
-];
+// AMR 목업 데이터는 @/lib/mockData에서 import
 
 type MetricItem = {
     id: string;
@@ -264,6 +256,8 @@ export function UnifiedDashboard() {
   const [salesFromMonth, setSalesFromMonth] = useState(startOfMonth(subMonths(new Date(), 1)));
   const [salesToMonth, setSalesToMonth] = useState(startOfMonth(new Date()));
   const [activePieIndex, setActivePieIndex] = useState(0);
+  const [selectedItemForDemand, setSelectedItemForDemand] = useState<string>('');
+  const [itemSearchQuery, setItemSearchQuery] = useState<string>('');
 
   useEffect(() => {
     const today = new Date();
@@ -271,6 +265,13 @@ export function UnifiedDashboard() {
     setDateRange({ from: oneWeekAgo, to: today });
     setSalesDateRange({ from: oneWeekAgo, to: today });
   }, []);
+
+  // 첫 번째 품목을 기본값으로 설정
+  useEffect(() => {
+    if (inventoryData.length > 0 && !selectedItemForDemand) {
+      setSelectedItemForDemand(inventoryData[0].name);
+    }
+  }, [inventoryData, selectedItemForDemand]);
 
   const itemPriceMap = useMemo(() => {
     return items.reduce((map, item) => {
@@ -388,6 +389,39 @@ export function UnifiedDashboard() {
     const chartData = Object.entries(statusDistribution).map(([name, value]) => ({ name, displayName: amrStatusKorean[name as AmrStatus] || name, value, fill: `var(--color-${name})` }));
     return { totalAmrs, activeAmrs, errorAmrs, chartData };
   }, []);
+
+  // AI 수요 예측 분석
+  const demandAnalysis = useMemo(() => {
+    if (!selectedItemForDemand || inventoryData.length === 0) {
+      return {
+        currentStock: 0,
+        leadTime: 0,
+        predictedOrderDate: '',
+        demandForecast: []
+      };
+    }
+
+    const selectedItem = inventoryData.find(item => item.name === selectedItemForDemand);
+    const currentStock = selectedItem?.quantity || 0;
+    const leadTime = getLeadTimeForItem(selectedItemForDemand);
+    const forecast = generateDemandForecast(selectedItemForDemand);
+    const predictedOrderDate = calculatePredictedOrderDate(currentStock, forecast, leadTime);
+
+    return {
+      currentStock,
+      leadTime,
+      predictedOrderDate,
+      demandForecast: forecast
+    };
+  }, [selectedItemForDemand, inventoryData]);
+
+  // 품목 필터링
+  const filteredItems = useMemo(() => {
+    if (!itemSearchQuery) return inventoryData;
+    return inventoryData.filter(item => 
+      item.name.toLowerCase().includes(itemSearchQuery.toLowerCase())
+    );
+  }, [inventoryData, itemSearchQuery]);
 
   const salesAnalysis = useMemo(() => {
     const salesData = inOutData.filter(item => {
@@ -591,7 +625,7 @@ export function UnifiedDashboard() {
         </div>
         <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-full"></div>
       </header>
-      <Accordion type="multiple" defaultValue={['orderStatus', 'inOutAnalysis', 'inventory', 'amrPerformance', 'salesManagement']} className="w-full space-y-4">
+      <Accordion type="multiple" defaultValue={['orderStatus', 'aiDemandForecast', 'inOutAnalysis', 'inventory', 'amrPerformance', 'salesManagement']} className="w-full space-y-4">
         
         <AccordionItem value="orderStatus" className="border-2 border-green-100 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
           <AccordionTrigger className="p-6 font-bold text-xl text-green-700 hover:text-green-800">
@@ -643,6 +677,150 @@ export function UnifiedDashboard() {
               workCurrentPage,
               setWorkCurrentPage
             )}
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="aiDemandForecast" className="border-2 border-teal-100 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
+          <AccordionTrigger className="p-6 font-bold text-xl text-teal-700 hover:text-teal-800">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                <Brain className="w-5 h-5 text-teal-600" />
+              </div>
+              AI 수요 예측
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="p-6 pt-0">
+            <div className="space-y-6">
+              {/* 품목 선택 */}
+              <div className="flex items-center gap-4">
+                <label className="text-sm font-medium text-teal-700 whitespace-nowrap">품목 선택:</label>
+                <div className="flex-1 max-w-md">
+                  <Select value={selectedItemForDemand} onValueChange={setSelectedItemForDemand}>
+                    <SelectTrigger className="w-full focus:ring-0 focus:ring-offset-0">
+                      <SelectValue placeholder="품목을 선택하세요" />
+                    </SelectTrigger>
+                    <SelectContent className="z-50">
+                      <div className="p-2">
+                        <div className="relative">
+                          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                          <Input
+                            placeholder="품목명 검색..."
+                            value={itemSearchQuery}
+                            onChange={(e) => setItemSearchQuery(e.target.value)}
+                            className="pl-8 text-sm"
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-40 overflow-y-auto">
+                        {filteredItems.map((item) => (
+                          <SelectItem key={item.id} value={item.name}>
+                            {item.name}
+                          </SelectItem>
+                        ))}
+                      </div>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* 상단 네모 박스 3개 */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="border-l-4 border-l-teal-500 hover:shadow-lg transition-all duration-300">
+                  <CardContent className="p-6 bg-gradient-to-br from-white to-teal-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-wider text-teal-700">현재고</p>
+                        <p className="text-3xl font-bold text-gray-900 mt-2">{formatNumber(demandAnalysis.currentStock)}개</p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-teal-100">
+                        <Package className="h-6 w-6 text-teal-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-l-4 border-l-teal-500 hover:shadow-lg transition-all duration-300">
+                  <CardContent className="p-6 bg-gradient-to-br from-white to-teal-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-wider text-teal-700">이전 리드타임</p>
+                        <p className="text-3xl font-bold text-gray-900 mt-2">{demandAnalysis.leadTime}일</p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-teal-100">
+                        <Clock className="h-6 w-6 text-teal-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-l-4 border-l-teal-500 hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-teal-50">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-wider text-teal-700">예측 주문일</p>
+                        <p className="text-lg font-bold text-gray-900 mt-2">{demandAnalysis.predictedOrderDate}</p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-teal-100">
+                        <CalendarCheck className="h-6 w-6 text-teal-600" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* 수요 예측 그래프 */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-teal-700">30일 일일 수요 예측</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer 
+                    config={{ 
+                      demand: { 
+                        label: "예측 수요량", 
+                        color: "hsl(var(--teal-600))" 
+                      } 
+                    }} 
+                    className="h-[300px] w-full"
+                  >
+                    <LineChart 
+                      data={demandAnalysis.demandForecast} 
+                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="displayDate" 
+                        tickLine={false} 
+                        axisLine={false} 
+                        tickMargin={8} 
+                      />
+                      <YAxis label={{ value: '수량(개)', angle: -90, position: 'insideLeft' }} />
+                      <ChartTooltip 
+                        content={({ active, payload, label }) => {
+                          if (active && payload && payload.length) {
+                            return (
+                              <div className="bg-white p-3 border rounded-lg shadow-lg">
+                                <p className="font-medium">{`날짜: ${label}`}</p>
+                                <p className="text-teal-600">{`예측 수요: ${payload[0].value}개`}</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="demand" 
+                        stroke="#0d9488" 
+                        strokeWidth={2} 
+                        dot={{ fill: '#0d9488', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, fill: '#0d9488' }}
+                      />
+                    </LineChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+            </div>
           </AccordionContent>
         </AccordionItem>
 
