@@ -11,7 +11,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Line, XAxis, YAxis, CartesianGrid, LineChart, Pie, PieChart, Cell, Sector } from 'recharts';
+import { Line, XAxis, YAxis, CartesianGrid, LineChart, Pie, PieChart, Cell, Sector, Bar, BarChart, ComposedChart, ReferenceLine } from 'recharts';
 import { Package, CheckCircle, AlertTriangle, XCircle, Archive, Truck, Clock, CalendarCheck, TrendingUp, TrendingDown, Percent, CalendarIcon, Bot, Activity, AlertCircle, Building, DollarSign, ShoppingCart, Timer, CalendarDays, X, Brain, Search } from 'lucide-react';
 import { CustomPagination } from '@/components/ui/custom-pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,7 +20,7 @@ import { InOutRecord, InventoryItem } from '../utils';
 import { Item } from '../item/item-list';
 import { useDashboardAll } from '@/lib/queries';
 import { ORDER_STATUS_CONFIG, type OrderStatus } from '@/lib/order-status';
-import { mockAmrData, type Amr, type AmrStatus, generateSeededRandom, generateDemandForecast, getLeadTimeForItem, calculatePredictedOrderDate } from '@/lib/mockData';
+import { mockAmrData, type Amr, type AmrStatus, generateSeededRandom, generateDemandForecast, getLeadTimeForItem, calculatePredictedOrderDate, generateInventoryForecast, getOrderEvents, type InventoryForecastData } from '@/lib/mockData';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const AnyPie = Pie as any;
@@ -390,28 +390,34 @@ export function UnifiedDashboard() {
     return { totalAmrs, activeAmrs, errorAmrs, chartData };
   }, []);
 
-  // AI 수요 예측 분석
+  // AI 수요 예측 분석 - 리드타임을 고려한 종합 예측
   const demandAnalysis = useMemo(() => {
     if (!selectedItemForDemand || inventoryData.length === 0) {
       return {
         currentStock: 0,
         leadTime: 0,
         predictedOrderDate: '',
-        demandForecast: []
+        inventoryForecast: [] as InventoryForecastData[],
+        orderEvents: []
       };
     }
 
     const selectedItem = inventoryData.find(item => item.name === selectedItemForDemand);
     const currentStock = selectedItem?.quantity || 0;
     const leadTime = getLeadTimeForItem(selectedItemForDemand);
-    const forecast = generateDemandForecast(selectedItemForDemand);
-    const predictedOrderDate = calculatePredictedOrderDate(currentStock, forecast, leadTime);
+    const inventoryForecast = generateInventoryForecast(selectedItemForDemand, currentStock, leadTime);
+    const orderEvents = getOrderEvents(inventoryForecast);
+    
+    // 기존 방식의 예측 주문일도 유지
+    const basicForecast = generateDemandForecast(selectedItemForDemand);
+    const predictedOrderDate = calculatePredictedOrderDate(currentStock, basicForecast, leadTime);
 
     return {
       currentStock,
       leadTime,
       predictedOrderDate,
-      demandForecast: forecast
+      inventoryForecast,
+      orderEvents
     };
   }, [selectedItemForDemand, inventoryData]);
 
@@ -690,133 +696,331 @@ export function UnifiedDashboard() {
             </div>
           </AccordionTrigger>
           <AccordionContent className="p-6 pt-0">
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* 품목 선택 */}
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-medium text-teal-700 whitespace-nowrap">품목 선택:</label>
-                <div className="flex-1 max-w-md">
-                  <Select value={selectedItemForDemand} onValueChange={setSelectedItemForDemand}>
-                    <SelectTrigger className="w-full focus:ring-0 focus:ring-offset-0">
-                      <SelectValue placeholder="품목을 선택하세요" />
-                    </SelectTrigger>
-                    <SelectContent className="z-50">
-                      <div className="p-2">
-                        <div className="relative">
-                          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                          <Input
-                            placeholder="품목명 검색..."
-                            value={itemSearchQuery}
-                            onChange={(e) => setItemSearchQuery(e.target.value)}
-                            className="pl-8 text-sm"
-                          />
+              <div className="bg-white/50 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-6 shadow-sm">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-slate-500 to-slate-600 rounded-lg flex items-center justify-center">
+                      <Search className="w-4 h-4 text-white" />
+                    </div>
+                    <label className="text-sm font-semibold text-slate-700">분석 대상 품목</label>
+                  </div>
+                  <div className="flex-1 max-w-md">
+                    <Select value={selectedItemForDemand} onValueChange={setSelectedItemForDemand}>
+                      <SelectTrigger className="w-full border-slate-200/60 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm">
+                        <SelectValue placeholder="품목을 선택하세요" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 border-slate-200/60 rounded-xl shadow-xl backdrop-blur-sm">
+                        <div className="p-3">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+                            <Input
+                              placeholder="품목명 검색..."
+                              value={itemSearchQuery}
+                              onChange={(e) => setItemSearchQuery(e.target.value)}
+                              className="pl-10 text-sm border-slate-200/60 rounded-lg focus:ring-2 focus:ring-indigo-500/20"
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <div className="max-h-40 overflow-y-auto">
-                        {filteredItems.map((item) => (
-                          <SelectItem key={item.id} value={item.name}>
-                            {item.name}
-                          </SelectItem>
-                        ))}
-                      </div>
-                    </SelectContent>
-                  </Select>
+                        <div className="max-h-48 overflow-y-auto">
+                          {filteredItems.map((item) => (
+                            <SelectItem key={item.id} value={item.name} className="rounded-lg mx-2">
+                              {item.name}
+                            </SelectItem>
+                          ))}
+                        </div>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
 
-              {/* 상단 네모 박스 3개 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="border-l-4 border-l-teal-500 hover:shadow-lg transition-all duration-300">
-                  <CardContent className="p-6 bg-gradient-to-br from-white to-teal-50">
+              {/* 핵심 지표 카드 */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="group border-0 shadow-sm hover:shadow-xl transition-all duration-500 bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-2xl overflow-hidden">
+                  <CardContent className="p-6 relative">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold uppercase tracking-wider text-teal-700">현재고</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">{formatNumber(demandAnalysis.currentStock)}개</p>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                          <p className="text-sm font-medium text-slate-600">현재고</p>
+                        </div>
+                        <p className="text-3xl font-bold text-slate-900">{formatNumber(demandAnalysis.currentStock)}개</p>
                       </div>
-                      <div className="p-3 rounded-xl bg-teal-100">
-                        <Package className="h-6 w-6 text-teal-600" />
+                      <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <Package className="h-7 w-7 text-white" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-l-teal-500 hover:shadow-lg transition-all duration-300">
-                  <CardContent className="p-6 bg-gradient-to-br from-white to-teal-50">
+                <Card className="group border-0 shadow-sm hover:shadow-xl transition-all duration-500 bg-gradient-to-br from-emerald-50 via-white to-teal-50 rounded-2xl overflow-hidden">
+                  <CardContent className="p-6 relative">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold uppercase tracking-wider text-teal-700">이전 리드타임</p>
-                        <p className="text-3xl font-bold text-gray-900 mt-2">{demandAnalysis.leadTime}일</p>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                          <p className="text-sm font-medium text-slate-600">리드타임</p>
+                        </div>
+                        <p className="text-3xl font-bold text-slate-900">{demandAnalysis.leadTime}일</p>
                       </div>
-                      <div className="p-3 rounded-xl bg-teal-100">
-                        <Clock className="h-6 w-6 text-teal-600" />
+                      <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <Clock className="h-7 w-7 text-white" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-l-teal-500 hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-teal-50">
-                  <CardContent className="p-6">
+                <Card className="group border-0 shadow-sm hover:shadow-xl transition-all duration-500 bg-gradient-to-br from-violet-50 via-white to-purple-50 rounded-2xl overflow-hidden">
+                  <CardContent className="p-6 relative">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-500 to-purple-500"></div>
                     <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold uppercase tracking-wider text-teal-700">예측 주문일</p>
-                        <p className="text-lg font-bold text-gray-900 mt-2">{demandAnalysis.predictedOrderDate}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 rounded-full bg-violet-500"></div>
+                          <p className="text-sm font-medium text-slate-600">예측 주문일</p>
+                        </div>
+                        <div className="flex justify-start">
+                          <p className="text-2xl font-bold text-slate-900">{demandAnalysis.predictedOrderDate}</p>
+                        </div>
                       </div>
-                      <div className="p-3 rounded-xl bg-teal-100">
-                        <CalendarCheck className="h-6 w-6 text-teal-600" />
+                      <div className="w-14 h-14 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <CalendarCheck className="h-7 w-7 text-white" />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* 수요 예측 그래프 */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-teal-700">30일 일일 수요 예측</CardTitle>
+              {/* 주문 이벤트 정보 */}
+              {demandAnalysis.orderEvents.length > 0 && (
+                <Card className="border-0 shadow-md bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 rounded-2xl">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <Truck className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-slate-800 text-lg font-semibold">예상 주문 일정</CardTitle>
+                        <p className="text-sm text-slate-500">자동 생성된 최적 주문 계획</p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {demandAnalysis.orderEvents.map((event, index) => (
+                        <div key={index} className="group p-5 bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200/50 hover:shadow-lg transition-all duration-300">
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                  <span className="text-white text-xs font-bold">{index + 1}</span>
+                                </div>
+                                <span className="font-semibold text-slate-700">주문 #{index + 1}</span>
+                              </div>
+                              <div className="px-3 py-1 bg-slate-100 rounded-full">
+                                <span className="text-xs font-medium text-slate-600">리드타임 {event.leadTime}일</span>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              <div className="space-y-1">
+                                <p className="text-slate-500 text-xs uppercase tracking-wide">주문일</p>
+                                <p className="font-medium text-slate-800">{event.orderDate}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-slate-500 text-xs uppercase tracking-wide">도착일</p>
+                                <p className="font-medium text-slate-800">{event.arrivalDate}</p>
+                              </div>
+                            </div>
+                            <div className="pt-2 border-t border-slate-200/50">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-slate-600">주문 수량</span>
+                                <span className="font-bold text-lg text-slate-900">{formatNumber(event.orderQuantity)}개</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* 리드타임을 고려한 재고량 및 수요 예측 그래프 */}
+              <Card className="border-0 shadow-lg bg-gradient-to-br from-white via-slate-50/50 to-indigo-50/30 rounded-2xl overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-slate-800 to-slate-700 text-white p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-white text-xl font-bold">재고 예측 분석</CardTitle>
+                      <p className="text-slate-300 text-sm mt-1">
+                        30일간 재고 변화 및 수요 패턴 분석 (리드타임 반영)
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-3 bg-blue-400 rounded-sm opacity-70"></div>
+                      <span className="text-slate-200">예상 재고량 (왼쪽축)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-0.5 bg-rose-400"></div>
+                      <span className="text-slate-200">예상 출고량 (오른쪽축)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-0.5 bg-emerald-400 border-dashed border-emerald-400 border-t-2"></div>
+                      <span className="text-slate-200">주문일</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-0.5 bg-orange-400"></div>
+                      <span className="text-slate-200">도착일</span>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6 bg-white/80 backdrop-blur-sm">
                   <ChartContainer 
                     config={{ 
+                      stockLevel: { 
+                        label: "예상 재고량", 
+                        color: "#3b82f6" 
+                      },
                       demand: { 
-                        label: "예측 수요량", 
-                        color: "hsl(var(--teal-600))" 
-                      } 
+                        label: "예상 출고량", 
+                        color: "#f43f5e" 
+                      }
                     }} 
-                    className="h-[300px] w-full"
+                    className="h-[400px] w-full"
                   >
-                    <LineChart 
-                      data={demandAnalysis.demandForecast} 
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    <ComposedChart 
+                      data={demandAnalysis.inventoryForecast} 
+                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                       <XAxis 
                         dataKey="displayDate" 
                         tickLine={false} 
                         axisLine={false} 
-                        tickMargin={8} 
+                        tickMargin={8}
+                        fontSize={12}
                       />
-                      <YAxis label={{ value: '수량(개)', angle: -90, position: 'insideLeft' }} />
+                      <YAxis 
+                        yAxisId={0}
+                        orientation="left"
+                        label={{ value: '재고량(개)', angle: -90, position: 'insideLeft' }} 
+                        fontSize={12}
+                        domain={[0, 'dataMax']}
+                      />
+                      <YAxis 
+                        yAxisId={1}
+                        orientation="right"
+                        label={{ value: '출고량(개)', angle: 90, position: 'insideRight' }} 
+                        fontSize={12}
+                        domain={[0, 150]}
+                        type="number"
+                      />
+                      
+                      
                       <ChartTooltip 
                         content={({ active, payload, label }) => {
                           if (active && payload && payload.length) {
+                            const data = demandAnalysis.inventoryForecast.find(d => d.displayDate === label);
                             return (
-                              <div className="bg-white p-3 border rounded-lg shadow-lg">
-                                <p className="font-medium">{`날짜: ${label}`}</p>
-                                <p className="text-teal-600">{`예측 수요: ${payload[0].value}개`}</p>
+                              <div className="bg-white p-4 border rounded-lg shadow-lg min-w-[200px]">
+                                <p className="font-medium mb-2">{`날짜: ${label}`}</p>
+                                <div className="space-y-1 text-sm">
+                                  <p className="text-blue-600">{`예상 재고: ${payload.find(p => p.dataKey === 'stockLevel')?.value?.toLocaleString() || '0'}개`}</p>
+                                  <p className="text-rose-600">{`예상 출고: ${payload.find(p => p.dataKey === 'demand')?.value?.toLocaleString() || '0'}개`}</p>
+                                  {data?.isOrderDate && (
+                                    <p className="text-green-600 font-medium">{`🛒 주문일 (${data.orderQuantity?.toLocaleString()}개)`}</p>
+                                  )}
+                                  {data?.isArrivalDate && (
+                                    <p className="text-red-600 font-medium">📦 도착일</p>
+                                  )}
+                                </div>
                               </div>
                             );
                           }
                           return null;
                         }}
                       />
+                      <ChartLegend content={ChartLegendContent as any} />
+                      
+                      {/* 막대그래프: 재고량 */}
+                      <Bar 
+                        yAxisId={0}
+                        dataKey="stockLevel" 
+                        fill="url(#stockGradient)"
+                        opacity={0.8}
+                        name="예상 재고량"
+                        radius={[4, 4, 0, 0]}
+                      />
+
+                      {/* 주문일 세로선 (왼쪽) */}
+                      {demandAnalysis.inventoryForecast
+                        .filter(d => d.isOrderDate)
+                        .map((orderDay, index) => (
+                          <ReferenceLine 
+                            key={`order-${index}`} 
+                            x={orderDay.displayDate} 
+                            stroke="#10b981" 
+                            strokeWidth={3}
+                            strokeDasharray="8,4"
+                            label={{ 
+                              value: `주문일\n(${orderDay.orderQuantity?.toLocaleString()}개)`, 
+                              position: "top",
+                              fontSize: 10,
+                              fill: "#10b981"
+                            }}
+                          />
+                        ))}
+                      
+                      {/* 도착일 세로선 (오른쪽) */}
+                      {demandAnalysis.inventoryForecast
+                        .filter(d => d.isArrivalDate)
+                        .map((arrivalDay, index) => (
+                          <ReferenceLine 
+                            key={`arrival-${index}`} 
+                            x={arrivalDay.displayDate} 
+                            stroke="#f97316" 
+                            strokeWidth={3}
+                            strokeDasharray="6,4"
+                            label={{ 
+                              value: "도착일", 
+                              position: "top",
+                              fontSize: 10,
+                              fill: "#f97316"
+                            }}
+                          />
+                        ))}
+                      
+                      {/* 꺾은선그래프: 수요량 */}
                       <Line 
+                        yAxisId={1}
                         type="monotone" 
                         dataKey="demand" 
-                        stroke="#0d9488" 
-                        strokeWidth={2} 
-                        dot={{ fill: '#0d9488', strokeWidth: 2, r: 4 }}
-                        activeDot={{ r: 6, fill: '#0d9488' }}
+                        stroke="url(#demandGradient)" 
+                        strokeWidth={3} 
+                        dot={{ fill: '#ef4444', strokeWidth: 2, r: 4, stroke: '#fff' }}
+                        activeDot={{ r: 6, fill: '#e11d48', stroke: '#fff', strokeWidth: 2 }}
+                        name="예상 출고량"
                       />
-                    </LineChart>
+                      
+                      <defs>
+                        <linearGradient id="stockGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#2563eb" stopOpacity={0.9}/>
+                          <stop offset="100%" stopColor="#1d4ed8" stopOpacity={0.7}/>
+                        </linearGradient>
+                        <linearGradient id="demandGradient" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stopColor="#ef4444" stopOpacity={0.85}/>
+                          <stop offset="100%" stopColor="#e11d48" stopOpacity={0.8}/>
+                        </linearGradient>
+                      </defs>
+                    </ComposedChart>
                   </ChartContainer>
                 </CardContent>
               </Card>
